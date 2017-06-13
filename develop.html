@@ -1,0 +1,92 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>WebRTC p2p secure transfer</title>
+    <script src="jquery-3.2.1.js"></script>
+    <script src="bootstrap.js"></script>
+</head>
+<body>
+	<!-- Initial choice --> 
+	<div class="modal" id="createOrJoin" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+	  <div class="modal-header">
+	    <h3 id="myModalLabel">Send or Receive a file?</h3>
+	  </div>
+	  <div class="modal-footer">
+	    <button class="btn" id="joinBtn" data-dismiss="modal" aria-hidden="true">Receive</button>
+	    <button class="btn btn-primary" id="createBtn" data-dismiss="modal" aria-hidden="true">Send</button>
+	  </div>
+	</div>
+
+	<!-- Show the offer created by this PC --> 
+	<div class="modal" id="showLocalOffer" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" hidden>
+	  <div class="modal-header">
+	    <h3 id="myModalLabel">Share your offer</h3>
+	  </div>
+	  <div class="modal-body">
+	    Here's your "offer" -- it tells someone else how to connect to you.  Send the whole thing to them, for example in an instant message or e-mail.
+	  <br/>
+	  <textarea class="input-large" id="localOffer" name="localOffer" rows="10" cols="100"></textarea>
+	  </div>
+	  <div class="modal-footer">
+	    <button class="btn btn-primary" id="offerSentBtn" data-dismiss="modal" aria-hidden="true">Continue</button>
+	  </div>
+	</div>
+
+	<!-- Show the answer created by this PC --> 
+	<div class="modal" id="showLocalAnswer" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" hidden>
+	  <div class="modal-header">
+	    <h3 id="myModalLabel">Share your answer with the sender</h3>
+	  </div>
+	  <div class="modal-body">
+	    Here's your "answer" -- it tells someone else how to connect to you.  Send the whole thing to them, for example in an instant message or e-mail.
+	  <br/>
+	  <textarea class="input-large" id="localAnswer" name="localAnswer" rows="10" cols="100"></textarea>
+	  </div>
+	  <div class="modal-footer">
+	    <button class="btn btn-primary" id="answerSentBtn" data-dismiss="modal" aria-hidden="true">Continue</button>
+	  </div>
+	</div>
+
+	<!-- Paste the offer created by other PC --> 
+	<div class="modal" id="getRemoteOffer" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" hidden>
+	  <div class="modal-header">
+	    <h3 id="myModalLabel">Paste the "offer" you received</h3>
+	  </div>
+	  <div class="modal-body">
+	    The person who created the room will send you an "offer" string -- paste it here.
+	  <br/>
+	  <textarea class="input-large" id="remoteOffer" name="remoteOffer" rows="10" cols="100"></textarea>
+	  </div>
+	  <div class="modal-footer">
+	    <button class="btn btn-primary" id="offerRecdBtn" data-dismiss="modal" aria-hidden="true">Continue</button>
+	  </div>
+	</div>
+
+	<!-- Show the answer created by the other PC --> 
+	<div class="modal" id="getRemoteAnswer" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" hidden>
+	  <div class="modal-header">
+	    <h3 id="myModalLabel">Paste the "answer" you received</h3>
+	  </div>
+	  <div class="modal-body">
+	    Now paste in the "answer" that was sent back to you.
+	  <br/>
+	  <textarea class="input-large" id="remoteAnswer" name="remoteAnswer" rows="10" cols="100"></textarea>
+	  </div>
+	  <div class="modal-footer">
+	    <button class="btn btn-primary" id="answerRecdBtn" data-dismiss="modal" aria-hidden="true">Continue</button>
+	  </div>
+	</div>
+
+	<!-- Wait for the other PC to connect --> 
+	<div class="modal" id="waitForConnection" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" hidden>
+	  <div class="modal-header">
+	    <h3 id="myModalLabel">Waiting for connection</h3>
+	  </div>
+	  <div class="modal-body">
+	    This dialog will disappear when a connection is made.
+	  </div>
+	</div>
+  	<script src="develop.js"></script>
+</body>
+</html>

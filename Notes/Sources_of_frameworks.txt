@@ -1,0 +1,98 @@
+SFTP - C
+https://github.com/openssh/openssh-portable/blob/master/sftp.c
+
+SFTP-Python
+https://pypi.python.org/pypi/pysftp
+
+SCP:
+http://unix.stackexchange.com/questions/212231/how-can-i-set-up-one-way-scp
+
+Python P2P:
+http://cs.berry.edu/~nhamid/p2p/index.html
+http://zguide.zeromq.org/py:all
+https://pypi.python.org/pypi/pyp2p
+Twisted EX:
+	http://code.activestate.com/recipes/440555/
+
+
+Python WebRTC:
+https://github.com/theintencity/py-webrtc
+
+JS-exec in python:
+http://stackoverflow.com/questions/38622385/how-can-i-execute-javascript-code-from-python
+
+Python exec in JS:
+http://stackoverflow.com/questions/32288722/call-python-function-from-js
+
+SSH:
+https://www.digitalocean.com/community/tutorials/how-to-use-sftp-to-securely-transfer-files-with-a-remote-server
+https://debian-administration.org/article/87/Keeping_SSH_access_secure !!!!!!!!!
+
+	Finished:
+	http://askubuntu.com/questions/420652/how-to-setup-a-restricted-sftp-server-on-ubuntu
+	
+SFTP:
+http://www.ipsure.com/blog/2010/chrooted-sftp-with-public-key-authentication/
+SFTP is fast because of smaller meta-data needed!
+https://tools.ietf.org/html/draft-ietf-secsh-filexfer-13
+
+	VPS Reverse SSH:
+	https://www.marksanborn.net/howto/bypass-firewall-and-nat-with-reverse-ssh-tunnel/
+	https://juliansimioni.com/blog/howto-access-a-linux-machine-behind-a-home-router-with-ssh-tunnels/
+
+PGP:
+http://blog.ghostinthemachines.com/2015/03/01/how-to-use-gpg-command-line/
+
+GPG (GNU Privacy Guard) is a free open source version of PGP (Pretty Good Privacy) encryption software.
+
+TLS C:
+https://github.com/fritzy/SleekXMPP/tree/develop/examples/ibb_transfer
+https://twistedmatrix.com/documents/current/api/twisted.protocols.basic.FileSender.html
+http://stackoverflow.com/questions/11705815/client-and-server-communication-using-ssl-c-c-ssl-protocol-dont-works
+https://github.com/CloudFundoo/SSL-TLS-clientserver
+
+TURN(S) Server:
+	https://github.com/coturn/coturn
+	https://www.webrtc-experiment.com/docs/TURN-server-installation-guide.html
+
+
+USABLE TESTING FRAMEWORK: ??????????
+	https://github.com/Inria-Prosecco/proscript-messaging/blob/master/paper-longversion.pdf
+
+i2p:
+https://geti2p.net/en/
+https://github.com/i2p/i2p.i2p
+
+-----------------------------------------------
+WEBRTC:
+https://webrtc.org/
+https://github.com/js-platform/node-webrtc/wiki/Building
+
+DATACHANNEL!
+http://w3c.github.io/webrtc-pc/#rtcdatachannel
+
+SECURITY!
+http://webrtc-security.github.io/
+https://www.tutorialspoint.com/webrtc/webrtc_security.htm
+
+CERTIFICATES:
+http://w3c.github.io/webrtc-pc/#rtcdatachannel
+
+SIGNALLING:
+https://www.tutorialspoint.com/webrtc/webrtc_signaling.htm
+https://codelabs.developers.google.com/codelabs/webrtc-web/#6
+https://webrtc.github.io/samples/src/content/peerconnection/trickle-ice/
+
+Also useful
+https://github.com/erbbysam/webRTCCopy
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+Amazing USE THIS!:						 !!
+https://github.com/cjb/serverless-webrtc !!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+Flask WebRTC:
+https://github.com/rubinovitz/flaskwebrtc
+
+JAVASCRIPT FILEAPI:
+https://www.html5rocks.com/en/tutorials/file/filesystem/
+https://www.w3.org/TR/FileAPI/
