@@ -18,7 +18,9 @@ function handleFileSelect(evt) {
     output.push('<li><strong>', escape(f.name), '</strong> (', f.type || 'n/a', ') - ',
                   f.size + ' bytes','</li>');
    
-
+    //Use filemanager to stage all the local files and keep them organized TODO
+    //Need array of filemanagers, one for each file!
+    
    /* FOR ILLUSTRATION PURPOSES
     var reader = new FileReader();
     reader.onloadend = function(e) {

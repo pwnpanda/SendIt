@@ -23,10 +23,6 @@ var self = this;
           reader.onloadend = function (e) {
             if (reader.readyState == FileReader.DONE) {
               self.fileManager.stageLocalFile(file.name, file.type, reader.result);
-              self.fileInput.setAttribute("disabled", "disabled");
-              self.getButton.setAttribute("disabled", "disabled");
-              self.cancelButton.removeAttribute("disabled");
-
               self.offerShare();
             }
           };
@@ -35,130 +31,93 @@ var self = this;
       };
 
 
+      -----------------
+      offerShare: function () {
+      console.log("Offering share...");
+      this.isInitiator = true;
 
+      this.connected = true;
+      var msg = {
+        uuid: this.uuid,
+        target: this.id,
+        fName: this.fileManager.fileName,
+        fType: this.fileManager.fileType,
+        nChunks: this.fileManager.fileChunks.length,
+        action: protocol.OFFER
+      };
 
+      this.pubnub.publish({
+        channel: protocol.CHANNEL,
+        message: msg
+      });
+    },
 
-----------------------------------------------------------------
-https://github.com/tskimmett/rtc-pubnub-fileshare/blob/master/file-manager.js
-
-function FileManager(chunkSize) {
-    this.fileName = null;
-    this.buffer = null;
-    this.chunkSize = chunkSize;
-    this.fileChunks = [];
-    this.missingChunks = [];
-    this.numRequested = 0;
-    this.requestMax = 90;
-    this.requestThreshold = 70;
-    this.expireTime = 2000;
-    this.nChunksReceived = 0;
-    this.nChunksExpected = 0;
-
-    this.onrequestready = null;
-};
-
-FileManager.prototype = {
-    stageLocalFile: function (fName, fType, buffer) {
-        this.fileName = fName;
-        this.fileType = fType;
-        this.buffer = buffer;
-        var nChunks = Math.ceil(buffer.byteLength / this.chunkSize);
-        this.fileChunks = new Array(nChunks);
-        var start;
-        for (var i = 0; i < nChunks; i++) {
-            start = i * this.chunkSize;
-            this.fileChunks[i] = buffer.slice(start, start + this.chunkSize);
+    answerShare: function () {
+      console.log("Answering share...");
+      // Tell other person to join the P2P channel
+      this.pubnub.publish({
+        channel: protocol.CHANNEL,
+        message: {
+          uuid: this.uuid,
+          target: this.id,
+          action: protocol.ANSWER
         }
-        console.log("File data staged");
+      });
+      this.p2pSetup();
+      this.fileManager.requestChunks();
     },
 
-    stageRemoteFile: function (fName, fType, nChunks) {
-        this.fileName = fName;
-        this.fileType = fType;
-        this.fileChunks = [];
-        this.missingChunks = [];
-        this.numRequested = 0;
-        this.nChunksReceived = 0;
-        this.nChunksExpected = nChunks;
-        // All chunks are missing to start
-        for (var i = 0; i < nChunks; i++) {
-            this.missingChunks[i] = true;
-        }
+    send: function (data) {
+      this.pubnub.publish({
+        user: this.id,
+        message: data
+      });
     },
 
-    receiveChunk: function (data) {
-        if (!this.fileChunks[data.id]) {
-            this.fileChunks[data.id] = Base64Binary.decode(data.content);
-            this.nChunksReceived++;
-            this.numRequested--;
-            if (typeof (this.onprogress) == "function") {
-                this.onprogress(this.nChunksReceived / this.nChunksExpected);
-            }
-            if (!this.transferComplete()) {
-                if (this.numRequested < this.requestThreshold) {
-                    this.requestChunks();
-                }
-            }
-            else {
-                this.ontransfercomplete();
-            }
-        }
+    packageChunk: function (chunkId) {
+      return JSON.stringify({
+        action: protocol.DATA,
+        id: chunkId,
+        content: Base64Binary.encode(this.fileManager.fileChunks[chunkId])
+      });
     },
 
-    requestChunks: function () {
-        var self = this;
-        var chunks = [];
-        var n = 0;
-        for (var id in this.missingChunks) {
-            chunks.push(id);
-            delete this.missingChunks[id];
-            if (++n >= this.requestMax) {
-                break;
-            }
-        }
-        this.numRequested += n;
-        if (!n) {
-            return;
-        }
-
-        /***
-         * This will act as a synchronous return when requestChunks
-         * is called directly from Connection, but asynchronously
-         * when called from the timeout.
-         ***/
-        this.onrequestready(chunks);
-
-        this.chunkTimeout = setTimeout(function () {
-            var expired = 0;
-            for (var i in chunks) {
-                var id = chunks[i];
-                if (!self.fileChunks[id]) {
-                    expired++;
-                    self.numRequested--;
-                    self.missingChunks[id] = true;
-                }
-            }
-            if (expired && self.numRequested < self.requestThreshold) {
-                self.requestChunks();
-            }
-        }, this.expireTime);
+    statusBlink: function (on) {
+      var indicator = $(this.element.querySelector(".status"));
+      if (!on) {
+        clearInterval(this.blink);
+        indicator.removeAttr("style");
+        return;
+      }
+      var white = true;
+      this.blink = setInterval(function () {
+        indicator.css("background-color", (white ? "#EEEBE4" : "limegreen"));
+        white = !white;
+      }, 700);
     },
 
-    transferComplete: function () {
-        return (this.nChunksExpected == this.nChunksReceived);
-    },
+    handleSignal: function (msg) {
+      if (msg.action === protocol.ANSWER) {
+        console.log("THE OTHER PERSON IS READY");
+        this.p2pSetup();
+      }
+      else if (msg.action === protocol.OFFER) {
+        // Someone is ready to send file data. Let user opt-in to receive file data
+        this.getButton.removeAttribute("disabled");
+        this.cancelButton.removeAttribute("disabled");
+        $(this.fileInput).addClass("hidden");
 
-    downloadFile: function () {
-        var blob = new Blob(this.fileChunks, { type: this.fileType });
-        var link = document.querySelector("#download");
-        link.href = window.URL.createObjectURL(blob);
-        link.download = this.fileName;
-        link.click();
-    },
+        this.fileManager.stageRemoteFile(msg.fName, msg.fType, msg.nChunks);
 
-    clear: function () {
-        this.fileName = null;
-        this.buffer = null;
-        clearTimeout(this.chunkTimeout);
+        this.getButton.innerHTML = "Get: " + msg.fName;
+        this.statusBlink(true);
+      }
+      else if (msg.action === protocol.ERR_REJECT) {
+        alert("Unable to communicate with " + this.id);
+        this.reset();
+      }
+      else if (msg.action === protocol.CANCEL) {
+        alert(this.id + " cancelled the share.");
+        this.reset();
+      }
     }
-};

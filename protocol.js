@@ -1,3 +1,14 @@
+var protocol = {
+  CHANNEL: "get-my-file2",
+  OFFER: "offer",
+  ANSWER: "answer",
+  REQUEST: "req-chunk",
+  DATA: "data",
+  DONE: "done",
+  ERR_REJECT: "err-reject",
+  CANCEL: "cancel"
+};
+
 var nrOfFiles = 0;
 
 //https://github.com/webrtc/samples/blob/gh-pages/src/content/datachannel/filetransfer/js/main.js - INFO
