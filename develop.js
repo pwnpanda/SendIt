@@ -1,8 +1,5 @@
 //https://github.com/cjb/serverless-webrtc - INFO
 
-var sendPath = "~/tmp/Send/*"
-var recvPath = "~/tmp/Receive/"
-
 var cfg = {'iceServers': [{'url': 'stun:23.21.150.121'}]},
   con = { 'optional': [{'DtlsSrtpKeyAgreement': true}] }
 
@@ -15,6 +12,10 @@ var localCon = new RTCPeerConnection(cfg, con)
 var remoteCon = new RTCPeerConnection(cfg, con)
 var sendChannel, receiveChannel = null
 var localConicedone = false
+var nrOfFiles = 0;
+var files='';
+//According to https://github.com/tskimmett/rtc-pubnub-fileshare/blob/master/connection.js
+var MAX_FSIZE = 160;    // MiB -- browser will crash when trying to bring more than that into memory.
 
 var dataOpt = {
 	ordered: true, //Orderd transfer of packets
@@ -192,96 +193,4 @@ function receiveChannelCallback(event) {
     URL.revokeObjectURL(downloadAnchor.href);
     downloadAnchor.removeAttribute('href');
   }
-}
-
-//https://github.com/webrtc/samples/blob/gh-pages/src/content/datachannel/filetransfer/js/main.js - INFO
-//Send the data
-function sendData() {
-  var file = sendPath;
-  trace('File is ' + [file.name, file.size, file.type,
-      file.lastModifiedDate
-  ].join(' '));
-
-  // Handle 0 size files.
-  statusMessage.textContent = '';
-  downloadAnchor.textContent = '';
-  if (file.size === 0) {
-    statusMessage.textContent = 'No files to send - please put file in ~/tmp/send';
-    closeDataChannels();
-    return;
-  }
-  sendProgress.max = file.size;
-  receiveProgress.max = file.size;
-  //Set to 1200 bytes, according to:
-  //https://cs.chromium.org/chromium/src/third_party/libjingle/source/talk/media/sctp/sctpdataengine.cc?l=52
-  //https://bloggeek.me/send-file-webrtc-data-api/
-  var chunkSize = 1200;
-  var sliceFile = function(offset) {
-    var reader = new window.FileReader();
-    reader.onload = (function() {
-      return function(e) {
-      	//CHange to list with data and metadata!
-      	//Sends slice
-        sendChannel.send(e.target.result);
-        //If there is more to send, 
-        if (file.size > offset + e.target.result.byteLength) {
-          window.setTimeout(sliceFile, 0, offset + chunkSize);
-        }
-        //Update sending progress
-        sendProgress.value = offset + e.target.result.byteLength;
-      };
-    })(file);
-    var slice = file.slice(offset, offset + chunkSize);
-    reader.readAsArrayBuffer(slice);
-  };
-  sliceFile(0);
-}
-//TODO - re-do this whole section?
-//Use chunknr to identify progress!
-//https://stackoverflow.com/questions/14438187/javascript-filereader-parsing-long-file-in-chunks
-
-//https://github.com/webrtc/samples/blob/gh-pages/src/content/datachannel/filetransfer/js/main.js - INFO
-//Receive the data
-function onReceiveMessageCallback(event) {
-   trace('Received Message ' + event.data.byteLength);
-  receiveBuffer.push(event.data);
-  receivedSize += event.data.byteLength;
-
-  receiveProgress.value = receivedSize;
-
-  // we are assuming that our signaling protocol told
-  // about the expected file size (and name, hash, etc).
-  //NEED TO IMPLEMENT THIS - TODO
-  var file = fileInput.files[0];
-  if (receivedSize === file.size) {
-    var received = new window.Blob(receiveBuffer);
-    receiveBuffer = [];
-
-    downloadAnchor.href = URL.createObjectURL(received);
-    downloadAnchor.download = file.name;
-    downloadAnchor.textContent =
-      'Click to download \'' + file.name + '\' (' + file.size + ' bytes)';
-    downloadAnchor.style.display = 'block';
-
-    closeDataChannels();
-  }
-}
-
-
-//https://github.com/webrtc/samples/blob/gh-pages/src/content/datachannel/filetransfer/js/main.js - INFO
-//Close channels and cleanup
-function closeDataChannels() {
-  trace('Closing data channels');
-  sendChannel.close();
-  trace('Closed data channel with label: ' + sendChannel.label);
-  if (receiveChannel) {
-    receiveChannel.close();
-    trace('Closed data channel with label: ' + receiveChannel.label);
-  }
-  localConnection.close();
-  remoteConnection.close();
-  localConnection = null;
-  remoteConnection = null;
-  trace('Closed peer connections');
-  //TODO remove files!
 }

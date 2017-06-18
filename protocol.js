@@ -1,7 +1,5 @@
 var protocol = {
-  CHANNEL: "get-my-file2",
   OFFER: "offer",
-  ANSWER: "answer",
   REQUEST: "req-chunk",
   DATA: "data",
   DONE: "done",
@@ -9,53 +7,60 @@ var protocol = {
   CANCEL: "cancel"
 };
 
-var nrOfFiles = 0;
-
 //https://github.com/webrtc/samples/blob/gh-pages/src/content/datachannel/filetransfer/js/main.js - INFO
 //Send the data
-function sendData(file) {
-  trace('File is ' + [file.name, file.size, file.type,
-      file.lastModifiedDate
-  ].join(' '));
-
-  // Handle 0 size files.
-  if (file.size === 0) {
-  	//Todo - add notification to user
-    closeDataChannels();
+//Initiate, set up and start transfer
+//Use chunknr to identify progress! TODO
+function sendData() {
+  if(nrOfFiles == 0){
+    console.log("Error! No files to send")
     return;
   }
-  sendProgress.max = file.size;
-  receiveProgress.max = file.size;
+
+  //Chunksize
   //Set to 1200 bytes, according to:
   //https://cs.chromium.org/chromium/src/third_party/libjingle/source/talk/media/sctp/sctpdataengine.cc?l=52
   //https://bloggeek.me/send-file-webrtc-data-api/
   var chunkSize = 1200;
-  var sliceFile = function(offset) {
-    var reader = new window.FileReader();
-    reader.onload = (function() {
-      return function(e) {
-      	//CHange to list with data and metadata!
-      	//Sends slice
-        sendChannel.send(e.target.result);
-        //If there is more to send, 
-        if (file.size > offset + e.target.result.byteLength) {
-          window.setTimeout(sliceFile, 0, offset + chunkSize);
-        }
-        //Update sending progress
-        sendProgress.value = offset + e.target.result.byteLength;
-      };
-    })(file);
-    var slice = file.slice(offset, offset + chunkSize);
-    reader.readAsArrayBuffer(slice);
-  };
-  sliceFile(0);
+
+  var fileArray = new Array(nrOfFiles);
+  //For now only 1 file - TODO
+ // for(var i=0, f;f=files[i];i++){
+  var f = files[0];
+  //Use filemanager to stage all the local files and keep them organized TODO
+  if(f){
+    console.log('File being sent ' + [f.name, f.size, f.type,
+    file.lastModifiedDate].join(' '));
+    //Need array of filemanagers, one for each file!
+    fileArray[i] = new FileManager(chunkSize);
+
+    var mbSize = f.size / (1024 * 1024);
+    if (mbSize > MAX_FSIZE) {
+      console.log("Due to browser memory limitations, files greater than " + MAX_FSIZE + " MiB are unsupported. Your file is " + mbSize.toFixed(2) + " MiB.");
+      //TODO - add error-message in browser
+      continue;
+    }
+
+    var reader = new FileReader();
+    reader.onloadend = function (e) {
+      if (reader.readyState == FileReader.DONE) {
+        fileArray[i].stageLocalFile(f.name, f.type, reader.result);
+        offerShare();
+      }
+    };
+   
+    reader.readAsArrayBuffer(file);
+  } else{
+    console.log("File error! No file or no size!!!");
+    closeDataChannels();
+    return; 
+  }
+  //}
 }
-//TODO - re-do this whole section?
-//Use chunknr to identify progress!
-//https://stackoverflow.com/questions/14438187/javascript-filereader-parsing-long-file-in-chunks
 
 //https://github.com/webrtc/samples/blob/gh-pages/src/content/datachannel/filetransfer/js/main.js - INFO
 //Receive the data
+//Handle different types of messages here! TODO
 function onReceiveMessageCallback(event) {
   trace('Received Message ' + event.data.byteLength);
   receiveBuffer.push(event.data);
@@ -79,6 +84,25 @@ function onReceiveMessageCallback(event) {
 
     closeDataChannels();
   }
+}
+
+
+//https://github.com/webrtc/samples/blob/gh-pages/src/content/datachannel/filetransfer/js/main.js - INFO
+//Close channels and cleanup
+function closeDataChannels() {
+  trace('Closing data channels');
+  sendChannel.close();
+  trace('Closed data channel with label: ' + sendChannel.label);
+  if (receiveChannel) {
+    receiveChannel.close();
+    trace('Closed data channel with label: ' + receiveChannel.label);
+  }
+  localConnection.close();
+  remoteConnection.close();
+  localConnection = null;
+  remoteConnection = null;
+  trace('Closed peer connections');
+  //TODO remove files!
 }
 
 function displayProgress(){
