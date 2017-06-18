@@ -14,6 +14,15 @@ var sendChannel, receiveChannel = null
 var localConicedone = false
 var nrOfFiles = 0;
 var files='';
+var recvFM='';
+var fileArray='';
+
+//Chunksize
+//Set to 1200 bytes, according to:
+//https://cs.chromium.org/chromium/src/third_party/libjingle/source/talk/media/sctp/sctpdataengine.cc?l=52
+//https://bloggeek.me/send-file-webrtc-data-api/
+var maxChunkSize = 1200;
+
 //According to https://github.com/tskimmett/rtc-pubnub-fileshare/blob/master/connection.js
 var MAX_FSIZE = 160;    // MiB -- browser will crash when trying to bring more than that into memory.
 
@@ -155,7 +164,7 @@ remoteCon.onicecandidate = function (e) {
 //https://github.com/webrtc/samples/blob/gh-pages/src/content/datachannel/filetransfer/js/main.js - INFO
 function onSendChannelStateChange() {
   var readyState = sendChannel.readyState;
-  trace('Send channel state is: ' + readyState);
+  console.log('Send channel state is: ' + readyState);
   if (readyState === 'open') {
     startSending();
   }
@@ -164,7 +173,7 @@ function onSendChannelStateChange() {
 //https://github.com/webrtc/samples/blob/gh-pages/src/content/datachannel/filetransfer/js/main.js - INFO
 function onReceiveChannelStateChange() {
   var readyState = receiveChannel.readyState;
-  trace('Receive channel state is: ' + readyState);
+  console.log('Receive channel state is: ' + readyState);
  //HTML shit I don't need? - REMOVE
   if (readyState === 'open') {
     timestampStart = (new Date()).getTime();
@@ -177,7 +186,7 @@ function onReceiveChannelStateChange() {
 
 //https://github.com/webrtc/samples/blob/gh-pages/src/content/datachannel/filetransfer/js/main.js - INFO
 function receiveChannelCallback(event) {
-  trace('Receive Channel Callback');
+  console.log('Receive Channel Callback');
   receiveChannel = event.channel;
   receiveChannel.binaryType = 'arraybuffer';
   receiveChannel.onmessage = onReceiveMessageCallback;
@@ -186,11 +195,4 @@ function receiveChannelCallback(event) {
 
   receivedSize = 0;
   bitrateMax = 0;
-  //HTML shit I don't need? - REMOVE
-  downloadAnchor.textContent = '';
-  downloadAnchor.removeAttribute('download');
-  if (downloadAnchor.href) {
-    URL.revokeObjectURL(downloadAnchor.href);
-    downloadAnchor.removeAttribute('href');
-  }
 }
