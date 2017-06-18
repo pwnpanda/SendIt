@@ -11,7 +11,7 @@ var protocol = {
 //Send the data
 //Initiate, set up and start transfer
 //Use chunknr to identify progress! TODO
-function sendData() {
+function startSending() {
   if(nrOfFiles == 0){
     console.log("Error! No files to send")
     return;
@@ -45,7 +45,7 @@ function sendData() {
     reader.onloadend = function (e) {
       if (reader.readyState == FileReader.DONE) {
         fileArray[i].stageLocalFile(f.name, f.type, reader.result);
-        offerShare();
+        offerShare(fileArray[i]);
       }
     };
    
@@ -109,4 +109,36 @@ function displayProgress(){
 	function fileAndChunk(file, chunk){
 		document.querySelector('#transferDetails').innerHTML = 'File ' + file.name + '. Number ' + file.number + '/' + fileTotal + '. Slice ' + file.slice + '/' + totalSlices+ '.';
 	}
+}
+
+function offerShare(fm){
+  console.log("Offering share...");
+  var msg = {
+    fName: fm.fileName,
+    fType: fm.fileType,
+    nChunks: fm.fileChunks.length,
+    action: protocol.OFFER
+  }
+  doSend(msg);
+}
+
+function answerShare(fm){
+  console.log("Answering share...");
+  var msg = {action: protocol.ANSWER}
+  doSend(msg);
+
+  fm.requestChunks();
+}
+
+function doSend(msg){
+  console.log("Sending data...");
+  sendChannel.send(msg);
+}
+
+function packageChunk(chunkId, fm){
+  return JSON.stringify({
+    action: protocol.DATA,
+    id: chunkId,
+    content: Base64Binary.encode(fm.fileChunks[chunkId])
+  });
 }
