@@ -7,7 +7,8 @@ var protocol = {
   CANCEL: "cancel"
 };
 
-nChunksSent = 0;
+var nChunksSent = 0;
+var curFileName = '';
 
 //https://github.com/webrtc/samples/blob/gh-pages/src/content/datachannel/filetransfer/js/main.js - INFO
 //Send the data
@@ -26,21 +27,24 @@ function startSending() {
   //Use filemanager to stage all the local files and keep them organized TODO
   if(f){
     console.log('File being sent ' + [f.name, f.size, f.type,
-    file.lastModifiedDate].join(' '));
+    f.lastModifiedDate].join(' '));
     //Need array of filemanagers, one for each file!
-    fileArray[i] = new FileManager(maxChunkSize);
+    //ONly handles 1 file UPDATE
+    fileArray[0] = new FileManager(maxChunkSize);
 
     var mbSize = f.size / (1024 * 1024);
     if (mbSize > MAX_FSIZE) {
       console.log("Due to browser memory limitations, files greater than " + MAX_FSIZE + " MiB are unsupported. Your file is " + mbSize.toFixed(2) + " MiB.");
       //TODO - add error-message in browser
-      continue;
+      return;
+      //continue;
     }
 
     var reader = new FileReader();
     reader.onloadend = function (e) {
       if (reader.readyState == FileReader.DONE) {
-        fileArray[i].stageLocalFile(f.name, f.type, reader.result);
+        //ONly handles 1 file UPDATE
+        fileArray[0].stageLocalFile(f.name, f.type, reader.result);
         offerShare();
       }
     };
@@ -56,17 +60,17 @@ function startSending() {
 
 //https://github.com/webrtc/samples/blob/gh-pages/src/content/datachannel/filetransfer/js/main.js - INFO
 //Receive the data
-//Handle different types of messages here! TODO
+//Handle different types of messages here!
 function onReceiveMessageCallback(data) {
+
   console.log("Recieved data: ", data);
   if(data.action == protocol.DATA){
     recvFM.receiveChunk(data);
-    displayProgress(recvFM);
   }
   else if(data.action == protocol.REQUEST){
     //Only handling one file for now - TODO
     nChunksSent += data.ids.length;
-    updateProgress(data.nReceived / fileArray[0].fileChunks.length);
+    displayProgress(data.nReceived / fileArray[0].fileChunks.length);
     data.ids.forEach(function (id) {
       doSend(packageChunk(id));
     });
@@ -84,6 +88,10 @@ function onReceiveMessageCallback(data) {
 //https://github.com/webrtc/samples/blob/gh-pages/src/content/datachannel/filetransfer/js/main.js - INFO
 //Close channels and cleanup
 function closeDataChannels() {
+  $('#connectedScreen').modal('hide');
+  $('#endScreen').modal('show');
+
+
   console.log('Closing data channels');
   sendChannel.close();
   console.log('Closed data channel: send');
@@ -99,14 +107,18 @@ function closeDataChannels() {
   //TODO remove files!
 }
 
-function displayProgress(file){
-  document.querySelector('#transferDetails').innerHTML = 'File ' + file.name + '. Number ' + file.number + '/' + fileTotal + '. Slice ' + file.slice + '/' + totalSlices+ '.';
+//Show progress
+function displayProgress(perc){
+  document.querySelector('#transferDetails').innerHTML = 'File ' + curFileName /* tmp removed TODO+ '. Number ' + file.number + '/' + fileTotal */+ '. Percent: ' + perc + '/100';
 }
-
+//Everything below taken from
+//https://github.com/tskimmett/rtc-pubnub-fileshare/blob/master/connection.js
+//Create offer to share file and send
+//TODO - Gets here, then stops because receiving node does not connect!!! WHY?!
 function offerShare(){
   console.log("Offering share...");
-    //ONLY SUPPORTS ONE FILE - UPDATE
-    var fm = fileArray[0];
+  //ONLY SUPPORTS ONE FILE - UPDATE
+  var fm = fileArray[0];
   var msg = JSON.stringify({
     fName: fm.fileName,
     fType: fm.fileType,
@@ -115,7 +127,7 @@ function offerShare(){
   });
   doSend(msg);
 }
-
+//Create answer to accept sharing offer
 function answerShare(){
   console.log("Answering share...");
   var msg =JSON.stringify({action: protocol.ANSWER});
@@ -123,12 +135,12 @@ function answerShare(){
 
   recvFM.requestChunks();
 }
-
+//Send data
 function doSend(msg){
   console.log("Sending data...");
-  sendChannel.send(msg);
+  activedc.send(msg);
 }
-
+//Package data-chunks
 function packageChunk(chunkId){
   return JSON.stringify({
     action: protocol.DATA,
@@ -143,7 +155,9 @@ function handleSignal(msg) {
     console.log("THE OTHER PERSON IS READY");
   }
   else if (msg.action === protocol.OFFER) {
-    // Someone is ready to send file data. Let user opt-in to receive file data
+    $('#waitForConnection').modal('hide');
+    $('#connectedScreen').modal('show');
+    // Someone is ready to send file data. Set up receiving structure
     recvFM = new FileManager(maxChunkSize);
     recvFM.stageRemoteFile(msg.fName, msg.fType, msg.nChunks);
     recvFM.answerShare();
@@ -158,17 +172,20 @@ function handleSignal(msg) {
   }
 }
 //Called when receiving chunks!
-function chunkRequestReady = function (chunks) {
-  console.log("Chunks ready: ", chunks.length);
-  var req = JSON.stringify({
-    action: protocol.REQUEST,
-    ids: chunks,
-    nReceived: recvFM.nChunksReceived
-  });
-  doSend(req);
+//ERROR HERE - TODO
+function chunkRequestReady(){return function (chunks, fm) {
+    console.trace('Error from somewhere!')
+    console.log("Chunks ready: ", chunks.length);
+    var req = JSON.stringify({
+      action: protocol.REQUEST,
+      ids: chunks,
+      nReceived: fm.nChunksReceived
+    });
+    doSend(req);
+  };
 }
 //Called when receiving last chunk
-function transferComplete = function () {
+function transferComplete(){return function () {
     console.log("Last chunk received.");
     doSend(JSON.stringify({ action: protocol.DONE }));
     recvFM.downloadFile();
@@ -178,6 +195,6 @@ function transferComplete = function () {
 //Registers the different events
 function registerFileEvents(fm) {
       fm.onrequestready = chunkRequestReady;
-      fm.onprogress = updateProgress;
+      fm.onprogress = displayProgress;
       fm.ontransfercomplete = transferComplete;
 }

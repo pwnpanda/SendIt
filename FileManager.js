@@ -85,7 +85,7 @@ FileManager.prototype = {
          * is called directly from Connection, but asynchronously
          * when called from the timeout.
          ***/
-        this.onrequestready(chunks);
+        this.onrequestready(chunks, this);
 
         this.chunkTimeout = setTimeout(function () {
             var expired = 0;

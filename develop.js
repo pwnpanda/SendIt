@@ -7,11 +7,11 @@ var cfg = {'iceServers': [{'url': 'stun:23.21.150.121'}]},
 
 // Since the same JS file contains code for both sides of the connection,
 // activedc tracks which of the two possible datachannel variables we're using.
-var activedc
-var localCon = new RTCPeerConnection(cfg, con)
-var remoteCon = new RTCPeerConnection(cfg, con)
-var sendChannel, receiveChannel = null
-var localConicedone = false
+var activedc;
+var localCon = new RTCPeerConnection(cfg, con);
+var remoteCon = new RTCPeerConnection(cfg, con);
+var sendChannel, receiveChannel = null;
+var localConicedone = false;
 var nrOfFiles = 0;
 var files='';
 var recvFM='';
@@ -72,8 +72,6 @@ $('#answerSentBtn').click(function () {
 //P1->R1 - If connect to sender-button is pressed, Paste offer.
 $('#joinBtn').click(function () {
   $('#getRemoteOffer').modal('show')
-  //TODO - Take in filein stead of copy-pasting offer
-  //NOTE - Progress by HTML button press
 })
 
 //R1->R2 - Offer inserted and processed
@@ -166,6 +164,8 @@ function onSendChannelStateChange() {
   var readyState = sendChannel.readyState;
   console.log('Send channel state is: ' + readyState);
   if (readyState === 'open') {
+    $('#waitForConnection').modal('hide');
+    $('#connectedScreen').modal('show');
     startSending();
   }
 }
@@ -174,14 +174,7 @@ function onSendChannelStateChange() {
 function onReceiveChannelStateChange() {
   var readyState = receiveChannel.readyState;
   console.log('Receive channel state is: ' + readyState);
- //HTML shit I don't need? - REMOVE
-  if (readyState === 'open') {
-    timestampStart = (new Date()).getTime();
-    timestampPrev = timestampStart;
-    statsInterval = window.setInterval(displayStats, 500);
-    window.setTimeout(displayStats, 100);
-    window.setTimeout(displayStats, 300);
-  }
+  
 }
 
 //https://github.com/webrtc/samples/blob/gh-pages/src/content/datachannel/filetransfer/js/main.js - INFO
@@ -192,7 +185,4 @@ function receiveChannelCallback(event) {
   receiveChannel.onmessage = onReceiveMessageCallback;
   receiveChannel.onopen = onReceiveChannelStateChange;
   receiveChannel.onclose = onReceiveChannelStateChange;
-
-  receivedSize = 0;
-  bitrateMax = 0;
 }
