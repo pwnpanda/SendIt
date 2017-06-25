@@ -9,6 +9,11 @@ var protocol = {
 
 var nChunksSent = 0;
 var curFileName = '';
+var active2;
+
+function setActive(active){
+  active2=active;
+}
 
 //https://github.com/webrtc/samples/blob/gh-pages/src/content/datachannel/filetransfer/js/main.js - INFO
 //Send the data
@@ -16,7 +21,7 @@ var curFileName = '';
 //Use chunknr to identify progress! TODO
 function startSending() {
   if(nrOfFiles == 0){
-    console.log("Error! No files to send")
+    console.log("Error! No files to send");
     return;
   }
 
@@ -61,8 +66,9 @@ function startSending() {
 //https://github.com/webrtc/samples/blob/gh-pages/src/content/datachannel/filetransfer/js/main.js - INFO
 //Receive the data
 //Handle different types of messages here!
-function onReceiveMessageCallback(data) {
-
+function onReceiveMessageCallback(event) {
+  console.log(event);
+  var data = event.data;
   console.log("Recieved data: ", data);
   if(data.action == protocol.DATA){
     recvFM.receiveChunk(data);
@@ -95,14 +101,11 @@ function closeDataChannels() {
   console.log('Closing data channels');
   sendChannel.close();
   console.log('Closed data channel: send');
-  if (receiveChannel) {
-    receiveChannel.close();
-    console.log('Closed data channel: receive');
-  }
-  localConnection.close();
-  remoteConnection.close();
-  localConnection = null;
-  remoteConnection = null;
+
+  p1.close();
+  p2.close();
+  p1 = null;
+  p2 = null;
   console.log('Closed peer connections');
   //TODO remove files!
 }
@@ -125,12 +128,14 @@ function offerShare(){
     nChunks: fm.fileChunks.length,
     action: protocol.OFFER
   });
-  doSend(msg);
+  console.log(msg);
+  var test = {message: 'asd'};
+  doSend(test);
 }
 //Create answer to accept sharing offer
 function answerShare(){
   console.log("Answering share...");
-  var msg =JSON.stringify({action: protocol.ANSWER});
+  var msg ={action: protocol.ANSWER};
   doSend(msg);
 
   recvFM.requestChunks();
@@ -138,7 +143,9 @@ function answerShare(){
 //Send data
 function doSend(msg){
   console.log("Sending data...");
-  activedc.send(msg);
+  console.log(active);
+  console.log(active2);
+  active2.send(msg);
 }
 //Package data-chunks
 function packageChunk(chunkId){
@@ -151,6 +158,7 @@ function packageChunk(chunkId){
 }
 //Handles received signal
 function handleSignal(msg) {
+  console.log(msg);
   if (msg.action === protocol.ANSWER) {
     console.log("THE OTHER PERSON IS READY");
   }
@@ -181,13 +189,14 @@ function chunkRequestReady(){return function (chunks, fm) {
       ids: chunks,
       nReceived: fm.nChunksReceived
     });
+    console.log('Resend: ', req);
     doSend(req);
   };
 }
 //Called when receiving last chunk
 function transferComplete(){return function () {
     console.log("Last chunk received.");
-    doSend(JSON.stringify({ action: protocol.DONE }));
+    doSend({ action: protocol.DONE });
     recvFM.downloadFile();
     closeDataChannels();
   };
