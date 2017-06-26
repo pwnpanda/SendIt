@@ -1,297 +1,183 @@
-//https://github.com/cjb/serverless-webrtc - INFO
+/* See also:
+    http://www.html5rocks.com/en/tutorials/webrtc/basics/
+    https://code.google.com/p/webrtc-samples/source/browse/trunk/apprtc/index.html
+
+    https://webrtc-demos.appspot.com/html/pc1.html
+*/
 
 var cfg = {'iceServers': [{'url': 'stun:23.21.150.121'}]},
   con = { 'optional': [{'DtlsSrtpKeyAgreement': true}] }
 
-var sdp = {
+/* THIS IS ALICE, THE CALLER/SENDER */
+
+var pc1 = new RTCPeerConnection(cfg, con),
+  dc1 = null
+
+// Since the same JS file contains code for both sides of the connection,
+// activedc tracks which of the two possible datachannel variables we're using.
+var activedc
+
+var sdpConstraints = {
   optional: [],
   mandatory: {
-    OfferToReceiveAudio: false,
-    OfferToReceiveVideo: false
+    OfferToReceiveAudio: true,
+    OfferToReceiveVideo: true
   }
 }
 
-// Since the same JS file contains code for both sides of the connection,
-var p1 = new RTCPeerConnection(cfg, con);
-var p2 = new RTCPeerConnection(cfg, con);
-var sendChannel, receiveChannel = null;
-var active;
-var p1icedone = false;
-var nrOfFiles = 0;
-var files='';
-var recvFM='';
-var fileArray='';
-var ice;
-
-//Chunksize
-//Set to 1200 bytes, according to:
-//https://cs.chromium.org/chromium/src/third_party/libjingle/source/talk/media/sctp/sctpdataengine.cc?l=52
-//https://bloggeek.me/send-file-webrtc-data-api/
-var maxChunkSize = 1200;
-
-//According to https://github.com/tskimmett/rtc-pubnub-fileshare/blob/master/connection.js
-var MAX_FSIZE = 160;    // MiB -- browser will crash when trying to bring more than that into memory.
-
-var dataOpt = {
-	ordered: true, //Orderd transfer of packets
-	reliable: true //reliable transfer
-}
-
-//BUTTONS
 $('#showLocalOffer').modal('hide')
 $('#getRemoteAnswer').modal('hide')
 $('#waitForConnection').modal('hide')
 $('#createOrJoin').modal('show')
 
-
-//S1->S2 / R2->Trans - Offer sent button -  action
-//TODO - Skip this and make it automatic after creation of file
-$('#offerSentBtn').click(function () {
-  $('#getRemoteAnswer').modal('show')
-})
-
-//S2->Trans / R1->R2
-$('#answerSentBtn').click(function () {
-  $('#waitForConnection').modal('show')
-})
-
-//-----------------------------ALICE--------------------
-//P1->S1 - If createbutton is pressed, create offer and show
 $('#createBtn').click(function () {
   $('#showLocalOffer').modal('show')
   createLocalOffer()
-  //NOTE - Progress by HTML button press
 })
 
-//Trans - Show transport info
-$('#answerRecdBtn').click(function () {
-  var answer = $('#remoteAnswer').val();
-  answer = JSON.parse(answer);
-  var answerDesc = new RTCSessionDescription(answer);
-  handleAnswerFromRemoteCon(answerDesc);
-  //handleCandidateFromPC2(answer.ICE);
-  $('#waitForConnection').modal('show');
-})
-
-
-//https://github.com/cjb/serverless-webrtc - INFO
-//Sets up a datachannel
-function setupDC () {
-  try {
-    sendChannel = p1.createDataChannel('test', /*dataOpt*/{reliable: true});
-    active = sendChannel;
-    //sendChannel.binaryType = 'arraybuffer';
-    console.log('Created datachannel (p1)')
-    //sendChannel.onopen = onSendChannelStateChange;
-    //sendChannel.onmessage = onReceiveMessageCallback;
-    sendChannel.onopen = function(e){
-      console.log('data channel 1 connect');
-      setActive(active);
-      doSend(JSON.stringify({message: 'Testing'}));
-      //sendChannel.send({data: 'hello'});
-    }
-    sendChannel.onmessage = function(e){
-      console.log('Got message (p1)', e.data);
-      //MOAR
-    }
-    //sendChannel.onclose = onSendChannelStateChange;
-  } catch (e) { console.warn('No data channel (p1)', e); }
-}
-
-
-//https://github.com/cjb/serverless-webrtc - INFO
-//Creates a connection promise
-function createLocalOffer () {
-  setupDC();
-  p1.createOffer(function (desc) {
-    p1.setLocalDescription(desc, function () {}, function () {})
-    console.log('created local offer', desc)
-  },
-  function () { console.warn("Couldn't create offer") },
-  sdp)
-}
-
-//https://github.com/cjb/serverless-webrtc - INFO
-//Adds connection-info from p2
-function handleAnswerFromRemoteCon (answerDesc) {
-  console.log('Received remote answer: ', answerDesc)
-  p1.setRemoteDescription(answerDesc);
-}
-
-//https://github.com/cjb/serverless-webrtc - INFO
-//What happens when ICE-candidate is found
-p1.onicecandidate = function (e) {
-  console.log('ICE candidate (p1)', e)
-  if (e.candidate == null) {
-    //Pastes the offer in the correct box
-    //var complString = JSON.stringify({offer: p1.localDescription, ICE: ice});
-    var complString = JSON.stringify(p1.localDescription);
-    $('#localOffer').html(complString);
-  }else{
-    ice = e.candidate;
-  }
-}
-
-//LOGGING - CAN REMOVE
-
-function handleOnconnection(){
-  console.log('datachannel connected');
-}
-p1.onconnection = handleOnconnection
-
-function onsignalingstatechange (state) {
-  console.log('Signal STATE p1: ', p1.signalingState);
-  console.log('Signal STATE p2: ', p2.signalingState);
-  //console.info('signaling state change:', state)
-}
-
-function oniceconnectionstatechange (state) {
-  console.log('Ice STATE p1: ', p1.connectionState);
-  console.log('Ice STATE p2: ', p2.connectionState);
-  //console.info('ice connection state change:', state)
-}
-
-function onicegatheringstatechange (state) {
-  console.log('Gathering STATE p1: ', p1.iceGatheringState);
-  console.log('Gathering STATE p2: ', p2.iceGatheringState);
-  //console.info('ice gathering state change:', state)
-}
-
-p1.onsignalingstatechange = onsignalingstatechange
-p1.oniceconnectionstatechange = oniceconnectionstatechange
-p1.onicegatheringstatechange = onicegatheringstatechange
-
-//WHERE IS IT CALLED FROM?
-function handleCandidateFromPC2 (iceCandidate) {
-  console.log('adding ice: ', iceCandidate);
-  p1.addIceCandidate(new RTCIceCandidate(iceCandidate))
-  .then(
-    function(){
-      console.log('ICE success');
-    },
-    function(err){
-      console.log('ICE fail: ' + err.toString());
-    }
-  );
-}
-//--------------------------------------BOB-----------------------
-
-//P1->R1 - If connect to sender-button is pressed, Paste offer.
 $('#joinBtn').click(function () {
   $('#getRemoteOffer').modal('show')
 })
 
-//R1->R2 - Offer inserted and processed
-$('#offerRecdBtn').click(function () {
-  var offer = $('#remoteOffer').val();
-  answer = JSON.parse(offer);
- // handleCandidateFromPC1(answer.ICE);
-  var offerDesc = new RTCSessionDescription(answer);
-  console.log('Received remote offer', offerDesc);
-  handleOfferFromLocalCon(offerDesc);
-  $('#showLocalAnswer').modal('show');
+$('#offerSentBtn').click(function () {
+  $('#getRemoteAnswer').modal('show')
 })
 
+$('#offerRecdBtn').click(function () {
+  var offer = $('#remoteOffer').val()
+  var offerDesc = new RTCSessionDescription(JSON.parse(offer))
+  console.log('Received remote offer', offerDesc)
+  handleOfferFromPC1(offerDesc)
+  $('#showLocalAnswer').modal('show')
+})
 
-//https://github.com/cjb/serverless-webrtc - INFO
-//Adds connection-info from p1
-function handleOfferFromLocalCon (offerDesc) {
-  p2.setRemoteDescription(offerDesc);
-  p2.createAnswer(function (answerDesc) {
-    console.log('Created local answer: ', answerDesc)
-    p2.setLocalDescription(answerDesc)
+$('#answerSentBtn').click(function () {
+  $('#waitForConnection').modal('show')
+})
+
+$('#answerRecdBtn').click(function () {
+  var answer = $('#remoteAnswer').val()
+  var answerDesc = new RTCSessionDescription(JSON.parse(answer))
+  handleAnswerFromPC2(answerDesc)
+  $('#waitForConnection').modal('show')
+})
+
+function setupDC1 () {
+  try {
+    dc1 = pc1.createDataChannel('test', {reliable: true})
+    activedc = dc1
+    console.log('Created datachannel (pc1)')
+    dc1.onopen = function (e) {
+      console.log('data channel connect')
+      $('#waitForConnection').modal('hide')
+      $('#waitForConnection').remove()
+    }
+    dc1.onmessage = function (e) {
+      console.log('Got message (pc1)', e.data)
+      //Handle message
+    }
+  } catch (e) { console.warn('No data channel (pc1)', e); }
+}
+
+function createLocalOffer () {
+  setupDC1()
+  pc1.createOffer(function (desc) {
+    pc1.setLocalDescription(desc, function () {}, function () {})
+    console.log('created local offer', desc)
   },
   function () { console.warn("Couldn't create offer") },
-  sdp)
+    sdpConstraints)
 }
 
-//https://github.com/cjb/serverless-webrtc - INFO
-//What happens when ICE-candidate is found
-p2.onicecandidate = function (e) {
-  console.log('ICE candidate (p2)', e);
+pc1.onicecandidate = function (e) {
+  console.log('ICE candidate (pc1)', e)
   if (e.candidate == null) {
-    //Pastes the offer in the correct box
-    //var complString = JSON.stringify({offer: p2.localDescription, ICE: ice});
-    var complString = JSON.stringify(p2.localDescription);
-    $('#localAnswer').html(complString);
-  } else{
-    ice = e.candidate;
+    $('#localOffer').html(JSON.stringify(pc1.localDescription))
   }
 }
 
-// LOGGING
+function handleOnconnection () {
+  console.log('Datachannel connected')
+  $('#waitForConnection').modal('hide')
+  // If we didn't call remove() here, there would be a race on pc2:
+  //   - first onconnection() hides the dialog, then someone clicks
+  //     on answerSentBtn which shows it, and it stays shown forever.
+  $('#waitForConnection').remove()
+  $('#showLocalAnswer').modal('hide')
+  $('#messageTextBox').focus()
+}
 
-p2.onsignalingstatechange = onsignalingstatechange;
-p2.oniceconnectionstatechange = oniceconnectionstatechange;
-p2.onicegatheringstatechange = onicegatheringstatechange;
+pc1.onconnection = handleOnconnection
+
+function onsignalingstatechange (state) {
+  console.info('signaling state change:', state)
+}
+
+function oniceconnectionstatechange (state) {
+  console.info('ice connection state change:', state)
+}
+
+function onicegatheringstatechange (state) {
+  console.info('ice gathering state change:', state)
+}
+
+pc1.onsignalingstatechange = onsignalingstatechange
+pc1.oniceconnectionstatechange = oniceconnectionstatechange
+pc1.onicegatheringstatechange = onicegatheringstatechange
+
+function handleAnswerFromPC2 (answerDesc) {
+  console.log('Received remote answer: ', answerDesc)
+  pc1.setRemoteDescription(answerDesc)
+}
+
+function handleCandidateFromPC2 (iceCandidate) {
+  pc1.addIceCandidate(iceCandidate)
+}
+
+/* THIS IS BOB, THE ANSWERER/RECEIVER */
+
+var pc2 = new RTCPeerConnection(cfg, con),
+  dc2 = null
+
+pc2.ondatachannel = function (e) {
+  var datachannel = e.channel || e; // Chrome sends event, FF sends raw channel
+  console.log('Received datachannel (pc2)', arguments)
+  dc2 = datachannel
+  activedc = dc2
+  dc2.onopen = function (e) {
+    console.log('data channel connect')
+    $('#waitForConnection').modal('hide')
+    $('#waitForConnection').remove()
+  }
+  dc2.onmessage = function (e) {
+    console.log('Got message (pc2)', e.data);
+    //handle message!
+  }
+}
+
+function handleOfferFromPC1 (offerDesc) {
+  pc2.setRemoteDescription(offerDesc)
+  pc2.createAnswer(function (answerDesc) {
+    console.log('Created local answer: ', answerDesc)
+    pc2.setLocalDescription(answerDesc)
+  },
+  function () { console.warn("Couldn't create offer") },
+  sdpConstraints)
+}
+
+pc2.onicecandidate = function (e) {
+  console.log('ICE candidate (pc2)', e)
+  if (e.candidate == null) {
+    $('#localAnswer').html(JSON.stringify(pc2.localDescription))
+  }
+}
+
+pc2.onsignalingstatechange = onsignalingstatechange
+pc2.oniceconnectionstatechange = oniceconnectionstatechange
+pc2.onicegatheringstatechange = onicegatheringstatechange
 
 function handleCandidateFromPC1 (iceCandidate) {
-  console.log('adding ice: ', iceCandidate);
-  p2.addIceCandidate(new RTCIceCandidate(iceCandidate))
-  .then(
-    function(){
-      console.log('ICE success');
-    },
-    function(err){
-      console.log('ICE fail: ' + err.toString());
-    }
-  );
+  pc2.addIceCandidate(iceCandidate)
 }
 
-p2.onconnection = handleOnconnection;
-
-p2.onDataChannel = function(e){
-    console.log('data channel 2 connect');
-    var datachannel = e.channel || e;
-    active = datachannel;
-    datachannel.onopen = function(e){
-      console.log('datachannel connected');
-      //datachannel.send({data: 'Hi back!'})
-    }
-    datachannel.onmessage = function(e){
-      console.log('got message: ', e.data);
-      console.log(e.data.message);
-    }
-}
-
-//p2.ondatachannnel = receiveChannelCallback;
-//------------------------END-------------------------------
-
-
-
-
-//https://github.com/webrtc/samples/blob/gh-pages/src/content/datachannel/filetransfer/js/main.js - INFO
-function onSendChannelStateChange() {
-  var readyState = sendChannel.readyState;
-  console.log('Send channel state is: ' + readyState);
-  if (readyState === 'open') {
-    $('#waitForConnection').modal('hide');
-    $('#connectedScreen').modal('show');
-    startSending();
-  }
-}
-
-//https://github.com/webrtc/samples/blob/gh-pages/src/content/datachannel/filetransfer/js/main.js - INFO
-function onReceiveChannelStateChange() {
-  var readyState = receiveChannel.readyState;
-  $('#waitForConnection').modal('hide');
-  $('#connectedScreen').modal('show');
-  console.log('Receive channel state is: ' + readyState);
-}
-
-
-//https://github.com/webrtc/samples/blob/gh-pages/src/content/datachannel/filetransfer/js/main.js - INFO
-//p2.onDataChannel = 
-function receiveChannelCallback(event) {
-  console.log('Receive Channel Callback');
-  console.log(event);
-  /*p2.onopen= function(){
-    console.log('data channel connect');
-  }*/
-  receiveChannel = event.channel;
-  sendChannel = receiveChannel;
-  receiveChannel.binaryType = 'arraybuffer';
-  receiveChannel.onmessage = onReceiveMessageCallback;
-  receiveChannel.onopen = onReceiveChannelStateChange;
-  receiveChannel.onclose = onReceiveChannelStateChange;
-}
+pc2.onconnection = handleOnconnection

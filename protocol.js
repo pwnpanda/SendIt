@@ -7,13 +7,18 @@ var protocol = {
   CANCEL: "cancel"
 };
 
+//Chunksize
+//Set to 1200 bytes, according to:
+//https://cs.chromium.org/chromium/src/third_party/libjingle/source/talk/media/sctp/sctpdataengine.cc?l=52
+//https://bloggeek.me/send-file-webrtc-data-api/
+var maxChunkSize = 1200;
+
+//According to https://github.com/tskimmett/rtc-pubnub-fileshare/blob/master/connection.js
+var MAX_FSIZE = 160;    // MiB -- browser will crash when trying to bring more than that into memory.
+
+
 var nChunksSent = 0;
 var curFileName = '';
-var active2;
-
-function setActive(active){
-  active2=active;
-}
 
 //https://github.com/webrtc/samples/blob/gh-pages/src/content/datachannel/filetransfer/js/main.js - INFO
 //Send the data
@@ -128,8 +133,7 @@ function offerShare(){
     nChunks: fm.fileChunks.length,
     action: protocol.OFFER
   });
-  console.log(msg);
-  var test = {message: 'asd'};
+
   doSend(test);
 }
 //Create answer to accept sharing offer
@@ -143,9 +147,7 @@ function answerShare(){
 //Send data
 function doSend(msg){
   console.log("Sending data...");
-  console.log(active);
-  console.log(active2);
-  active2.send(msg);
+  activedc.send(msg);
 }
 //Package data-chunks
 function packageChunk(chunkId){
