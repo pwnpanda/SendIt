@@ -1,5 +1,6 @@
 var protocol = {
   OFFER: "offer",
+  ANSWER: "answer",
   REQUEST: "req-chunk",
   DATA: "data",
   DONE: "done",
@@ -16,7 +17,7 @@ var maxChunkSize = 1200;
 //According to https://github.com/tskimmett/rtc-pubnub-fileshare/blob/master/connection.js
 var MAX_FSIZE = 160;    // MiB -- browser will crash when trying to bring more than that into memory.
 
-
+var recvFM;
 var nChunksSent = 0;
 var curFileName = '';
 
@@ -38,9 +39,11 @@ function startSending() {
   if(f){
     console.log('File being sent ' + [f.name, f.size, f.type,
     f.lastModifiedDate].join(' '));
+    curFileName = f.name;
     //Need array of filemanagers, one for each file!
     //ONly handles 1 file UPDATE
     fileArray[0] = new FileManager(maxChunkSize);
+    registerFileEvents(fileArray[0]);
 
     var mbSize = f.size / (1024 * 1024);
     if (mbSize > MAX_FSIZE) {
@@ -73,7 +76,7 @@ function startSending() {
 //Handle different types of messages here!
 function onReceiveMessageCallback(event) {
   console.log(event);
-  var data = event.data;
+  var data = JSON.parse(event.data);
   console.log("Recieved data: ", data);
   if(data.action == protocol.DATA){
     recvFM.receiveChunk(data);
@@ -81,7 +84,7 @@ function onReceiveMessageCallback(event) {
   else if(data.action == protocol.REQUEST){
     //Only handling one file for now - TODO
     nChunksSent += data.ids.length;
-    displayProgress(data.nReceived / fileArray[0].fileChunks.length);
+    displayProgress((data.nReceived / fileArray[0].fileChunks.length)*100);
     data.ids.forEach(function (id) {
       doSend(packageChunk(id));
     });
@@ -127,50 +130,51 @@ function offerShare(){
   console.log("Offering share...");
   //ONLY SUPPORTS ONE FILE - UPDATE
   var fm = fileArray[0];
-  var msg = JSON.stringify({
+  var msg = {
     fName: fm.fileName,
     fType: fm.fileType,
     nChunks: fm.fileChunks.length,
     action: protocol.OFFER
-  });
-
-  doSend(test);
+  };
+  doSend(msg);
 }
 //Create answer to accept sharing offer
 function answerShare(){
   console.log("Answering share...");
-  var msg ={action: protocol.ANSWER};
+  var msg = {
+    action: protocol.ANSWER
+  };
   doSend(msg);
 
   recvFM.requestChunks();
 }
 //Send data
 function doSend(msg){
-  console.log("Sending data...");
-  activedc.send(msg);
+  console.log("Sending data...: ", msg);
+  activedc.send(JSON.stringify(msg));
 }
 //Package data-chunks
 function packageChunk(chunkId){
-  return JSON.stringify({
+  return {
     action: protocol.DATA,
     id: chunkId,
     //ONLY SUPPORTS ONE FILE - UPDATE
     content: Base64Binary.encode(fileArray[0].fileChunks[chunkId])
-  });
+  };
 }
 //Handles received signal
 function handleSignal(msg) {
-  console.log(msg);
+  console.log('Handle signal: ', msg);
   if (msg.action === protocol.ANSWER) {
     console.log("THE OTHER PERSON IS READY");
   }
   else if (msg.action === protocol.OFFER) {
-    $('#waitForConnection').modal('hide');
-    $('#connectedScreen').modal('show');
     // Someone is ready to send file data. Set up receiving structure
     recvFM = new FileManager(maxChunkSize);
+    registerFileEvents(recvFM);
     recvFM.stageRemoteFile(msg.fName, msg.fType, msg.nChunks);
-    recvFM.answerShare();
+    curFileName = msg.fName;
+    answerShare();
   }
   else if (msg.action === protocol.ERR_REJECT) {
     alert("Unable to communicate! Stopping transfer!");
@@ -183,25 +187,24 @@ function handleSignal(msg) {
 }
 //Called when receiving chunks!
 //ERROR HERE - TODO
-function chunkRequestReady(){return function (chunks, fm) {
-    console.trace('Error from somewhere!')
-    console.log("Chunks ready: ", chunks.length);
-    var req = JSON.stringify({
-      action: protocol.REQUEST,
-      ids: chunks,
-      nReceived: fm.nChunksReceived
-    });
-    console.log('Resend: ', req);
-    doSend(req);
+//Don't return a function!
+function chunkRequestReady(chunks, fm){
+  console.trace('Error from somewhere!')
+  console.log("Chunks ready: ", chunks.length);
+  var req = {
+    action: protocol.REQUEST,
+    ids: chunks,
+    nReceived: fm.nChunksReceived
   };
+  console.log('Resend: ', req);
+  doSend(req);
 }
 //Called when receiving last chunk
-function transferComplete(){return function () {
-    console.log("Last chunk received.");
-    doSend({ action: protocol.DONE });
-    recvFM.downloadFile();
-    closeDataChannels();
-  };
+function transferComplete(){
+  console.log("Last chunk received.");
+  doSend({ action: protocol.DONE });
+  recvFM.downloadFile();
+  closeDataChannels();
 }
 //Registers the different events
 function registerFileEvents(fm) {

@@ -43,6 +43,7 @@ FileManager.prototype = {
         for (var i = 0; i < nChunks; i++) {
             this.missingChunks[i] = true;
         }
+        console.log('FileManager prepared to receive file!');
     },
 
     receiveChunk: function (data) {
@@ -79,12 +80,12 @@ FileManager.prototype = {
         if (!n) {
             return;
         }
-
         /***
          * This will act as a synchronous return when requestChunks
          * is called directly from Connection, but asynchronously
          * when called from the timeout.
          ***/
+        console.log('calling onrequestready!');
         this.onrequestready(chunks, this);
 
         this.chunkTimeout = setTimeout(function () {

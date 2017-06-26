@@ -1,5 +1,4 @@
 // Setup the dnd listeners.
-$('#offerSentBtn').prop('disabled', true);
 var dropZone = document.getElementById('drop_zone');
 dropZone.addEventListener('dragover', handleDragOver, false);
 dropZone.addEventListener('drop', handleFileSelect, false);
@@ -7,8 +6,8 @@ dropZone.addEventListener('drop', handleFileSelect, false);
 function handleFileSelect(evt) {
   evt.stopPropagation();
   evt.preventDefault();
-$('#offerSentBtn').prop('disabled', false);
-
+  fileReady = true;
+  isReady();
 
   files = evt.dataTransfer.files; // FileList object.
 

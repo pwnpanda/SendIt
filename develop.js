@@ -24,13 +24,21 @@ var sdpConstraints = {
     OfferToReceiveVideo: true
   }
 }
+// MY ADDITION---------------
+var fileReady = false;
+var iceReady = false;
+$('#offerSentBtn').prop('disabled', true);
+$('#answerSentBtn').prop('disabled', true);
+//-------------------------------
 
 $('#showLocalOffer').modal('hide')
 $('#getRemoteAnswer').modal('hide')
 $('#waitForConnection').modal('hide')
+$('#createOrJoin').modal('show')
+//MY ADDITION-------------------------
 $('#connectedScreen').modal('hide')
 $('#endScreen').modal('hide')
-$('#createOrJoin').modal('show')
+//----------------------------
 
 $('#createBtn').click(function () {
   $('#showLocalOffer').modal('show')
@@ -74,12 +82,11 @@ function setupDC1 () {
       $('#waitForConnection').modal('hide')
       $('#waitForConnection').remove()
       $('#connectedScreen').modal('show')
-
     }
-    dc1.onmessage = onReceiveMessageCallback;/*function (e) {
-      console.log('Got message (pc1)', e.data)
-      //Handle message
-    }*/
+    dc1.onmessage = function (e) {
+      console.log('Got message (pc1)');
+      onReceiveMessageCallback(e);
+    }
   } catch (e) { console.warn('No data channel (pc1)', e); }
 }
 
@@ -96,6 +103,8 @@ function createLocalOffer () {
 pc1.onicecandidate = function (e) {
   console.log('ICE candidate (pc1)', e)
   if (e.candidate == null) {
+    iceReady = true;
+    isReady();
     $('#localOffer').html(JSON.stringify(pc1.localDescription))
   }
 }
@@ -147,19 +156,19 @@ var pc2 = new RTCPeerConnection(cfg, con),
 pc2.ondatachannel = function (e) {
   var datachannel = e.channel || e; // Chrome sends event, FF sends raw channel
   console.log('Received datachannel (pc2)', arguments)
+  $('#waitForConnection').modal('hide')
+  $('#waitForConnection').remove()
   $('#connectedScreen').modal('show')
+  $('#init').attr("hidden", true);
   dc2 = datachannel
   activedc = dc2
   dc2.onopen = function (e) {
     console.log('data channel connect')
-    $('#waitForConnection').modal('hide')
-    $('#waitForConnection').remove()
-    
   }
-  dc2.onmessage = onReceiveMessageCallback;/*function (e) {
-    console.log('Got message (pc2)', e.data);
-    //handle message!
-  }*/
+  dc2.onmessage = function (e) {
+    console.log('Got message (pc2)');
+    onReceiveMessageCallback(e);
+  }
 }
 
 function handleOfferFromPC1 (offerDesc) {
@@ -175,6 +184,7 @@ function handleOfferFromPC1 (offerDesc) {
 pc2.onicecandidate = function (e) {
   console.log('ICE candidate (pc2)', e)
   if (e.candidate == null) {
+    $('#answerSentBtn').prop('disabled', false);
     $('#localAnswer').html(JSON.stringify(pc2.localDescription))
   }
 }
@@ -188,3 +198,14 @@ function handleCandidateFromPC1 (iceCandidate) {
 }
 
 pc2.onconnection = handleOnconnection
+
+function isReady(){
+  if (fileReady && iceReady) {
+    $('#offerSentBtn').prop('disabled', false);
+  }
+}
+
+function initiateSnd(){
+  console.log('Initiating!');
+  startSending();
+}
