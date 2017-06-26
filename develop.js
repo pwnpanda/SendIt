@@ -28,6 +28,8 @@ var sdpConstraints = {
 $('#showLocalOffer').modal('hide')
 $('#getRemoteAnswer').modal('hide')
 $('#waitForConnection').modal('hide')
+$('#connectedScreen').modal('hide')
+$('#endScreen').modal('hide')
 $('#createOrJoin').modal('show')
 
 $('#createBtn').click(function () {
@@ -71,11 +73,13 @@ function setupDC1 () {
       console.log('data channel connect')
       $('#waitForConnection').modal('hide')
       $('#waitForConnection').remove()
+      $('#connectedScreen').modal('show')
+
     }
-    dc1.onmessage = function (e) {
+    dc1.onmessage = onReceiveMessageCallback;/*function (e) {
       console.log('Got message (pc1)', e.data)
       //Handle message
-    }
+    }*/
   } catch (e) { console.warn('No data channel (pc1)', e); }
 }
 
@@ -104,7 +108,8 @@ function handleOnconnection () {
   //     on answerSentBtn which shows it, and it stays shown forever.
   $('#waitForConnection').remove()
   $('#showLocalAnswer').modal('hide')
-  $('#messageTextBox').focus()
+  $('#connectedScreen').modal('show')
+
 }
 
 pc1.onconnection = handleOnconnection
@@ -142,17 +147,19 @@ var pc2 = new RTCPeerConnection(cfg, con),
 pc2.ondatachannel = function (e) {
   var datachannel = e.channel || e; // Chrome sends event, FF sends raw channel
   console.log('Received datachannel (pc2)', arguments)
+  $('#connectedScreen').modal('show')
   dc2 = datachannel
   activedc = dc2
   dc2.onopen = function (e) {
     console.log('data channel connect')
     $('#waitForConnection').modal('hide')
     $('#waitForConnection').remove()
+    
   }
-  dc2.onmessage = function (e) {
+  dc2.onmessage = onReceiveMessageCallback;/*function (e) {
     console.log('Got message (pc2)', e.data);
     //handle message!
-  }
+  }*/
 }
 
 function handleOfferFromPC1 (offerDesc) {
