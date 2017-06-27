@@ -17,10 +17,11 @@ var maxChunkSize = 1200;
 //According to https://github.com/tskimmett/rtc-pubnub-fileshare/blob/master/connection.js
 var MAX_FSIZE = 160;    // MiB -- browser will crash when trying to bring more than that into memory.
 
-var recvFM;
 var nChunksSent = 0;
-var curFileName = '';
-
+var curFileNum=0;
+var files;
+var nrOfFiles;
+var fmArray;
 //https://github.com/webrtc/samples/blob/gh-pages/src/content/datachannel/filetransfer/js/main.js - INFO
 //Send the data
 //Initiate, set up and start transfer
@@ -30,44 +31,50 @@ function startSending() {
     return;
   }
 
-  fileArray = new Array(nrOfFiles);
-  //For now only 1 file - TODO
- // for(var i=0, f;f=files[i];i++){
-  var f = files[0];
-  //Use filemanager to stage all the local files and keep them organized TODO
-  if(f){
-    console.log('File being sent ' + [f.name, f.size, f.type,
-    f.lastModifiedDate].join(' '));
-    curFileName = f.name;
-    //Need array of filemanagers, one for each file!
-    //ONly handles 1 file UPDATE
-    fileArray[0] = new FileManager(maxChunkSize);
-    registerFileEvents(fileArray[0]);
+  fmArray = new Array(nrOfFiles);
+  for(var i=0, f;f=files[i];i++){
+    console.log("Creates fms for sending!");
+    //Use filemanager to stage all the local files and keep them organized TODO
+    if(f){
+      console.log('File being sent ' + [f.name, f.size, f.type,
+      f.lastModifiedDate].join(' '));
+      //Need array of filemanagers, one for each file!
+      fmArray[i] = new FileManager(maxChunkSize);
+      registerFileEvents(fmArray[i]);
 
-    var mbSize = f.size / (1024 * 1024);
-    if (mbSize > MAX_FSIZE) {
-      console.log("Due to browser memory limitations, files greater than " + MAX_FSIZE + " MiB are unsupported. Your file is " + mbSize.toFixed(2) + " MiB.");
-      //TODO - add error-message in browser
-      return;
-      //continue;
+      var mbSize = f.size / (1024 * 1024);
+      if (mbSize > MAX_FSIZE) {
+        console.log("Due to browser memory limitations, files greater than " + MAX_FSIZE + " MiB are unsupported. Your file is " + mbSize.toFixed(2) + " MiB.");
+        //TODO - add error-message in browser
+        return;
+        //continue;
+      }
+    } else{
+      console.log("File error! No file or no size!!! File name: ", f.name);
+      closeDataChannels();
+      return; 
     }
+  }
+  readFileInfo(0);
+}
 
-    var reader = new FileReader();
+function readFileInfo(x){
+  console.log("Cur " + x + " Tot " + nrOfFiles);
+  if (x >= nrOfFiles) {
+    offerShare();
+    return;
+  }
+  console.log("Here");
+  var f = files[x];
+  var reader = new FileReader();
     reader.onloadend = function (e) {
       if (reader.readyState == FileReader.DONE) {
-        //ONly handles 1 file UPDATE
-        fileArray[0].stageLocalFile(f.name, f.type, reader.result);
-        offerShare();
+        console.log(f.name);
+        fmArray[x].stageLocalFile(f.name, f.type, reader.result);
+        readFileInfo(x+1);
       }
-    };
-   
+    };   
     reader.readAsArrayBuffer(f);
-  } else{
-    console.log("File error! No file or no size!!!");
-    closeDataChannels();
-    return; 
-  }
-  //}
 }
 
 //https://github.com/webrtc/samples/blob/gh-pages/src/content/datachannel/filetransfer/js/main.js - INFO
@@ -78,12 +85,11 @@ function onReceiveMessageCallback(event) {
   var data = JSON.parse(event.data);
   console.log("Recieved data: ", data);
   if(data.action == protocol.DATA){
-    recvFM.receiveChunk(data);
+    fmArray[curFileNum].receiveChunk(data);
   }
   else if(data.action == protocol.REQUEST){
-    //Only handling one file for now - TODO
     nChunksSent += data.ids.length;
-    displayProgress((data.nReceived / fileArray[0].fileChunks.length)*100);
+    displayProgress(data.nReceived / fmArray[curFileNum].fileChunks.length);
     data.ids.forEach(function (id) {
       doSend(packageChunk(id));
     });
@@ -91,8 +97,14 @@ function onReceiveMessageCallback(event) {
   else if(data.action == protocol.DONE){
     //File recieved by partner
     console.log("File recieved by partner!");
-    closeDataChannels();
-  document.querySelector('#transferDetailsEnd').innerHTML = 'File ' + curFileName /* tmp removed TODO+ '. Number ' + file.number + '/' + fileTotal */+ '. Percent: 100/100';
+    curFileNum++;
+    if(curFileNum == nrOfFiles){
+      closeDataChannels();
+      document.querySelector('#transferDetailsEnd').innerHTML = 'File ' + fmArray[curFileNum-1].fileName + '. Number ' + curFileNum + '/' + nrOfFiles + '. Percent: 100/100';
+      
+    } else{
+      offerShare();
+    }
   } else{
     handleSignal(data);
   }
@@ -119,17 +131,18 @@ function closeDataChannels() {
 
 //Show progress
 function displayProgress(perc){
-  document.querySelector('#transferDetails').innerHTML = 'File ' + curFileName /* tmp removed TODO+ '. Number ' + file.number + '/' + fileTotal */+ '. Percent: ' + perc + '/100';
+  document.querySelector('#transferDetails').innerHTML = 'File ' + fmArray[curFileNum].fileName + '. Number ' + (curFileNum+1) + '/' + nrOfFiles + '. Percent: ' + (perc*100).toFixed(2) + '/100';
+
 }
 //Everything below taken from
 //https://github.com/tskimmett/rtc-pubnub-fileshare/blob/master/connection.js
 //Create offer to share file and send
-//TODO - Gets here, then stops because receiving node does not connect!!! WHY?!
 function offerShare(){
-  console.log("Offering share...");
-  //ONLY SUPPORTS ONE FILE - UPDATE
-  var fm = fileArray[0];
+  console.log("Offering share of file nr ", curFileNum);
+  var fm = fmArray[curFileNum];
+  console.log("fm info:" + fm.fileName);
   var msg = {
+    totFiles: nrOfFiles,
     fName: fm.fileName,
     fType: fm.fileType,
     nChunks: fm.fileChunks.length,
@@ -145,7 +158,7 @@ function answerShare(){
   };
   doSend(msg);
 
-  recvFM.requestChunks();
+  fmArray[curFileNum].requestChunks();
 }
 //Send data
 function doSend(msg){
@@ -157,8 +170,7 @@ function packageChunk(chunkId){
   return {
     action: protocol.DATA,
     id: chunkId,
-    //ONLY SUPPORTS ONE FILE - UPDATE
-    content: Base64Binary.encode(fileArray[0].fileChunks[chunkId])
+    content: Base64Binary.encode(fmArray[curFileNum].fileChunks[chunkId])
   };
 }
 //Handles received signal
@@ -169,10 +181,14 @@ function handleSignal(msg) {
   }
   else if (msg.action === protocol.OFFER) {
     // Someone is ready to send file data. Set up receiving structure
-    recvFM = new FileManager(maxChunkSize);
-    registerFileEvents(recvFM);
-    recvFM.stageRemoteFile(msg.fName, msg.fType, msg.nChunks);
-    curFileName = msg.fName;
+    console.log("Receiving file nr: " + (curFileNum+1) + " of " + msg.totFiles)
+    if(curFileNum == 0){
+      nrOfFiles = msg.totFiles;
+      fmArray = new Array(msg.totFiles);
+    }
+    fmArray[curFileNum] = new FileManager(maxChunkSize);
+    registerFileEvents(fmArray[curFileNum]);
+    fmArray[curFileNum].stageRemoteFile(msg.fName, msg.fType, msg.nChunks);
     answerShare();
   }
   else if (msg.action === protocol.ERR_REJECT) {
@@ -199,9 +215,12 @@ function chunkRequestReady(chunks, fm){
 function transferComplete(){
   console.log("Last chunk received.");
   doSend({ action: protocol.DONE });
-  closeDataChannels();
-  document.querySelector('#transferDetailsEnd').innerHTML = 'File ' + curFileName /* tmp removed TODO+ '. Number ' + file.number + '/' + fileTotal */+ '. Percent: 100/100';
-  recvFM.downloadFile();
+  document.querySelector('#transferDetailsEnd').innerHTML = 'File ' + fmArray[curFileNum].fileName + '. Number ' + (curFileNum+1) + '/' + nrOfFiles + '. Percent: 100/100';
+  fmArray[curFileNum].downloadFile();
+  curFileNum++;
+  if(curFileNum == nrOfFiles){
+    closeDataChannels();
+  }
 }
 //Registers the different events
 function registerFileEvents(fm) {

@@ -118,7 +118,8 @@ FileManager.prototype = {
             href:window.URL.createObjectURL(blob),
             download:this.fileName
         });
-        link.appendTo(div);
+        link.appendTo(div).before("</br></br>");
+
         //Bonus Functionality - Todo!
         //link.click();
     },
