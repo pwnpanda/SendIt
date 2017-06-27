@@ -16,7 +16,7 @@ function handleFileSelect(evt) {
   for(var i=0, f;f=files[i];i++){
     // files is a FileList of File objects. List some properties.
     output.push('<li><strong>', escape(f.name), '</strong> (', f.type || 'n/a', ') - ',
-                  f.size + ' bytes','</li>');
+    f.size + ' bytes','</li>');
 
    /* FOR ILLUSTRATION PURPOSES
     var reader = new FileReader();

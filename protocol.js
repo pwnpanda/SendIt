@@ -24,7 +24,6 @@ var curFileName = '';
 //https://github.com/webrtc/samples/blob/gh-pages/src/content/datachannel/filetransfer/js/main.js - INFO
 //Send the data
 //Initiate, set up and start transfer
-//Use chunknr to identify progress! TODO
 function startSending() {
   if(nrOfFiles == 0){
     console.log("Error! No files to send");
@@ -93,6 +92,7 @@ function onReceiveMessageCallback(event) {
     //File recieved by partner
     console.log("File recieved by partner!");
     closeDataChannels();
+  document.querySelector('#transferDetailsEnd').innerHTML = 'File ' + curFileName /* tmp removed TODO+ '. Number ' + file.number + '/' + fileTotal */+ '. Percent: 100/100';
   } else{
     handleSignal(data);
   }
@@ -106,16 +106,15 @@ function closeDataChannels() {
   $('#endScreen').modal('show');
 
 
-  console.log('Closing data channels');
-  sendChannel.close();
-  console.log('Closed data channel: send');
+  console.log('Closing data channel');
+  activedc.close();
+  console.log('Closed data channel');
 
-  p1.close();
-  p2.close();
-  p1 = null;
-  p2 = null;
+  pc1.close();
+  pc2.close();
+  pc1 = null;
+  pc2 = null;
   console.log('Closed peer connections');
-  //TODO remove files!
 }
 
 //Show progress
@@ -186,10 +185,7 @@ function handleSignal(msg) {
   }
 }
 //Called when receiving chunks!
-//ERROR HERE - TODO
-//Don't return a function!
 function chunkRequestReady(chunks, fm){
-  console.trace('Error from somewhere!')
   console.log("Chunks ready: ", chunks.length);
   var req = {
     action: protocol.REQUEST,
@@ -203,8 +199,9 @@ function chunkRequestReady(chunks, fm){
 function transferComplete(){
   console.log("Last chunk received.");
   doSend({ action: protocol.DONE });
-  recvFM.downloadFile();
   closeDataChannels();
+  document.querySelector('#transferDetailsEnd').innerHTML = 'File ' + curFileName /* tmp removed TODO+ '. Number ' + file.number + '/' + fileTotal */+ '. Percent: 100/100';
+  recvFM.downloadFile();
 }
 //Registers the different events
 function registerFileEvents(fm) {

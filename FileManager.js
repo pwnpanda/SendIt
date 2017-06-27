@@ -111,10 +111,16 @@ FileManager.prototype = {
     downloadFile: function () {
         var blob = new Blob(this.fileChunks, { type: this.fileType });
         //Customize to work with your HTML TODO
-        var link = document.querySelector("#download");
-        link.href = window.URL.createObjectURL(blob);
-        link.download = this.fileName;
-        link.click();
+        var div = document.querySelector("#download");
+        var link = $('<a>',{
+            id:this.fileName,
+            text:this.fileName,
+            href:window.URL.createObjectURL(blob),
+            download:this.fileName
+        });
+        link.appendTo(div);
+        //Bonus Functionality - Todo!
+        //link.click();
     },
 
     clear: function () {

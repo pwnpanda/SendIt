@@ -1,4 +1,8 @@
 <!doctype html>
+<!-- 
+*	TAKEN FROM: https://github.com/cjb/serverless-webrtc 
+*	Bugfixes and small alterations made!
+-->
 <html>
 <head>
     <meta charset="utf-8">
@@ -106,15 +110,14 @@
 	  </div>
 	</div>
 
-	<!-- Connected screen-->
+	<!-- Connected screen -->
 	<div class="modal" id="connectedScreen" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" hidden>
 	  <div class="modal-header">
 	    <h3 id="myModalLabel">Connected!</h3>
 	  </div>
 	  <div class="modal-body">
-		<div id='transferDetails'>
 	    <button id="init" onclick="initiateSnd()">Start transfer</button>
-	    <!-- INSERT CODE HERE! -->
+		<div id='transferDetails'></div>
 	  </div>
 	</div>
 
@@ -125,6 +128,9 @@
 	  </div>
 	  <div class="modal-body">
 	    <!-- INSERT CODE HERE! -->
+		<div id='transferDetailsEnd'></div>
+	  	<div id="download"></div>
+
 	  </div>
 	</div>
 

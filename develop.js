@@ -1,4 +1,8 @@
-/* See also:
+/* 
+  Taken from:
+    https://github.com/cjb/serverless-webrtc
+    Bugfixes and small alterations made!
+  See also:
     http://www.html5rocks.com/en/tutorials/webrtc/basics/
     https://code.google.com/p/webrtc-samples/source/browse/trunk/apprtc/index.html
 
@@ -199,6 +203,7 @@ function handleCandidateFromPC1 (iceCandidate) {
 
 pc2.onconnection = handleOnconnection
 
+//My own!------------------------------------
 function isReady(){
   if (fileReady && iceReady) {
     $('#offerSentBtn').prop('disabled', false);
@@ -209,3 +214,4 @@ function initiateSnd(){
   console.log('Initiating!');
   startSending();
 }
+//---------------------------------------------

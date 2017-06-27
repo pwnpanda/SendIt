@@ -29,6 +29,8 @@
  * References:
  * https://developer.mozilla.org/en/JavaScript_typed_arrays/ArrayBuffer
  * https://developer.mozilla.org/en/JavaScript_typed_arrays/Uint8Array
+ * 
+ * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
  * TAKEN FROM:
  * https://github.com/tskimmett/rtc-pubnub-fileshare/blob/master/base64binary.js
  */
