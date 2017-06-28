@@ -47,7 +47,6 @@ function startSending() {
       //TODO - handle if one file is too big
       if (mbSize > MAX_FSIZE) {
         console.warn("Due to browser memory limitations, files greater than " + MAX_FSIZE + " MiB are unsupported. Your file is " + mbSize.toFixed(2) + " MiB.");
-        //TODO - add error-message in browser
         var error = document.querySelector("#Error");
         error.innerHTML = "File " + f.name + " is to big for the browser! It cannot be sent!";
         throw new Error("File to big! Stop execution");

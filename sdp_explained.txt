@@ -1,0 +1,72 @@
+"type":"offer", 
+	-Offer/Reply
+"sdp":
+	-This is SDP-protocol
+"v=0
+	-Version 0
+
+o=- 8220883610889387011 2 IN IP4 127.0.0.1
+	-Originator and session identifier:
+	o=<username> <sess-id> <sess-version> <nettype> <addrtype><unicast-address>
+
+s=-
+	-Session name
+
+t=0 0
+	-time the session is active
+	 t=<start-time> <stop-time>
+
+a=group:BUNDLE data
+	-Atrribute
+	
+
+a=msid-semantic: WMS
+	-Attribute
+
+m=application 62541 DTLS/SCTP 5000
+	-Media name and transport address
+	m=<media> <port> <proto> <fmt> ... FMT is subprotocol specific
+
+c=IN IP4 133.27.247.120
+	-Connection information
+	c=<nettype> <addrtype> <connection-address>
+
+a=candidate:1629190404 1 udp 2113937151 133.27.247.120 62541 typ host generation 0 network-cost 50
+	-Attribute
+	ICE parameters
+
+a=candidate:2068642225 1 udp 2113939711 2001:200:1c0:3508:151b:16dc:32c2:fc82 62542 typ host generation 0 network-cost 50
+	-Attribute
+	ICE candidate
+
+a=ice-ufrag:Cec1
+	-Attribute
+	ICE parameters
+
+a=ice-pwd:qP+LBdhHLYIC7TVuUg3SZn6M
+	-Attribute
+	ICE parameters
+
+a=fingerprint:sha-256 B4:78:5A:2F:51:AC:0C:45:5B:92:46:C0:5E:E1:4F:BE:C1:3F:63:C8:7A:29:81:0E:D6:DA:A2:D6:36:40:4F:6A
+	-Attribute
+	DTLS parameters
+
+a=setup:actpass
+	-Attribute
+	DTLS parameters
+
+a=mid:data
+	-Attribute
+	Codec parameter
+
+a=sctpmap:5000 webrtc-datachannel 1024
+	-Attribute
+	Codec parameter
+
+Attributes:
+ a=<attribute>
+ a=<attribute>:<value>
+
+
+https://tools.ietf.org/html/rfc4566#section-5
+
