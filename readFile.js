@@ -13,20 +13,13 @@ function handleFileSelect(evt) {
 
   var output = [];
   nrOfFiles = files.length;
+
   for(var i=0, f;f=files[i];i++){
     // files is a FileList of File objects. List some properties.
     output.push('<li><strong>', escape(f.name), '</strong> (', f.type || 'n/a', ') - ',
     Math.ceil((f.size / 1024)) + ' kbytes','</li>');
-
-   /* FOR ILLUSTRATION PURPOSES
-    var reader = new FileReader();
-    reader.onloadend = function(e) {
-      console.log(this.result);
-    };
-     
-    reader.readAsText(f);
-    */
   }
+  
   document.getElementById('list').innerHTML = '<ul>' + output.join('') + '</ul>';
 }
 

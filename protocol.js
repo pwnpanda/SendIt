@@ -22,49 +22,51 @@ var curFileNum=0;
 var files;
 var nrOfFiles;
 var fmArray;
+
 //https://github.com/webrtc/samples/blob/gh-pages/src/content/datachannel/filetransfer/js/main.js - INFO
 //Send the data
 //Initiate, set up and start transfer
 function startSending() {
   if(nrOfFiles == 0){
-    console.log("Error! No files to send");
-    return;
+    console.error("Error! No files to send");
+    throw new Error("No files to send!");
   }
 
   fmArray = new Array(nrOfFiles);
   for(var i=0, f;f=files[i];i++){
     console.log("Creates fms for sending!");
-    //Use filemanager to stage all the local files and keep them organized TODO
+    //Use filemanager to stage all the local files and keep them organized
     if(f){
-      console.log('File being sent ' + [f.name, f.size, f.type,
+      console.info('File being staged ' + [f.name, f.size, f.type,
       f.lastModifiedDate].join(' '));
       //Need array of filemanagers, one for each file!
       fmArray[i] = new FileManager(maxChunkSize);
       registerFileEvents(fmArray[i]);
 
-      var mbSize = f.size / (1024 * 1024);
+      var mbSize = Math.ceil(f.size / (1024 * 1024));
+      //TODO - handle if one file is too big
       if (mbSize > MAX_FSIZE) {
-        console.log("Due to browser memory limitations, files greater than " + MAX_FSIZE + " MiB are unsupported. Your file is " + mbSize.toFixed(2) + " MiB.");
+        console.warn("Due to browser memory limitations, files greater than " + MAX_FSIZE + " MiB are unsupported. Your file is " + mbSize.toFixed(2) + " MiB.");
         //TODO - add error-message in browser
-        return;
-        //continue;
+        var error = document.querySelector("#Error");
+        error.innerHTML = "File " + f.name + " is to big for the browser! It cannot be sent!";
+        throw new Error("File to big! Stop execution");
       }
     } else{
-      console.log("File error! No file or no size!!! File name: ", f.name);
+      console.error("File error! No file or no size!!!");
       closeDataChannels();
-      return; 
+      throw new Error("File does not exist!");
     }
   }
   readFileInfo(0);
 }
-
+//Belongs to the above function - Heavily altered from original code
 function readFileInfo(x){
   console.log("Cur " + x + " Tot " + nrOfFiles);
   if (x >= nrOfFiles) {
     offerShare();
     return;
   }
-  console.log("Here");
   var f = files[x];
   var reader = new FileReader();
     reader.onloadend = function (e) {
@@ -76,14 +78,14 @@ function readFileInfo(x){
     };   
     reader.readAsArrayBuffer(f);
 }
+//----------------------------------------------------------
 
 //https://github.com/webrtc/samples/blob/gh-pages/src/content/datachannel/filetransfer/js/main.js - INFO
 //Receive the data
 //Handle different types of messages here!
 function onReceiveMessageCallback(event) {
-  console.log(event);
   var data = JSON.parse(event.data);
-  console.log("Recieved data: ", data);
+  console.info("Recieved data: ", data);
   if(data.action == protocol.DATA){
     fmArray[curFileNum].receiveChunk(data);
   }
@@ -100,7 +102,7 @@ function onReceiveMessageCallback(event) {
     curFileNum++;
     if(curFileNum == nrOfFiles){
       closeDataChannels();
-      document.querySelector('#transferDetailsEnd').innerHTML = 'File ' + fmArray[curFileNum-1].fileName + '. Number ' + curFileNum + '/' + nrOfFiles + '. Percent: 100/100';
+      document.querySelector('#transferDetailsEnd').innerHTML = 'Filename: ' + fmArray[curFileNum-1].fileName + '. Filenumber ' + curFileNum + '/' + nrOfFiles + '. Percent: 100/100';
       
     } else{
       offerShare();
@@ -120,18 +122,18 @@ function closeDataChannels() {
 
   console.log('Closing data channel');
   activedc.close();
-  console.log('Closed data channel');
+  console.info('Closed data channel');
 
   pc1.close();
   pc2.close();
   pc1 = null;
   pc2 = null;
-  console.log('Closed peer connections');
+  console.info('Closed peer connections');
 }
 
 //Show progress
 function displayProgress(perc){
-  document.querySelector('#transferDetails').innerHTML = 'File ' + fmArray[curFileNum].fileName + '. Number ' + (curFileNum+1) + '/' + nrOfFiles + '. Percent: ' + (perc*100).toFixed(2) + '/100';
+  document.querySelector('#transferDetails').innerHTML = 'Filename: ' + fmArray[curFileNum].fileName + '. Filenumber: ' + (curFileNum+1) + '/' + nrOfFiles + '. Percent: ' + (perc*100).toFixed(2) + '/100';
 
 }
 //Everything below taken from
@@ -140,7 +142,7 @@ function displayProgress(perc){
 function offerShare(){
   console.log("Offering share of file nr ", curFileNum);
   var fm = fmArray[curFileNum];
-  console.log("fm info:" + fm.fileName);
+  console.info("Offering share of file: " + fm.fileName);
   var msg = {
     totFiles: nrOfFiles,
     fName: fm.fileName,
@@ -162,7 +164,7 @@ function answerShare(){
 }
 //Send data
 function doSend(msg){
-  console.log("Sending data...: ", msg);
+  console.info("Sending data...: ", msg);
   activedc.send(JSON.stringify(msg));
 }
 //Package data-chunks
@@ -175,13 +177,13 @@ function packageChunk(chunkId){
 }
 //Handles received signal
 function handleSignal(msg) {
-  console.log('Handle signal: ', msg);
+  console.info('Handle signal: ', msg);
   if (msg.action === protocol.ANSWER) {
     console.log("THE OTHER PERSON IS READY");
   }
   else if (msg.action === protocol.OFFER) {
     // Someone is ready to send file data. Set up receiving structure
-    console.log("Receiving file nr: " + (curFileNum+1) + " of " + msg.totFiles)
+    console.info("Receiving file nr: " + (curFileNum+1) + " of " + msg.totFiles)
     if(curFileNum == 0){
       nrOfFiles = msg.totFiles;
       fmArray = new Array(msg.totFiles);
@@ -202,20 +204,20 @@ function handleSignal(msg) {
 }
 //Called when receiving chunks!
 function chunkRequestReady(chunks, fm){
-  console.log("Chunks ready: ", chunks.length);
+  console.info("Chunks ready: ", chunks.length);
   var req = {
     action: protocol.REQUEST,
     ids: chunks,
     nReceived: fm.nChunksReceived
   };
-  console.log('Resend: ', req);
+  console.info('Resend: ', req);
   doSend(req);
 }
 //Called when receiving last chunk
 function transferComplete(){
   console.log("Last chunk received.");
   doSend({ action: protocol.DONE });
-  document.querySelector('#transferDetailsEnd').innerHTML = 'File ' + fmArray[curFileNum].fileName + '. Number ' + (curFileNum+1) + '/' + nrOfFiles + '. Percent: 100/100';
+  document.querySelector('#transferDetailsEnd').innerHTML = 'Filename: ' + fmArray[curFileNum].fileName + '. Filenumber: ' + (curFileNum+1) + '/' + nrOfFiles + '. Percent: 100/100';
   fmArray[curFileNum].downloadFile();
   curFileNum++;
   if(curFileNum == nrOfFiles){

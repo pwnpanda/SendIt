@@ -110,7 +110,6 @@ FileManager.prototype = {
 
     downloadFile: function () {
         var blob = new Blob(this.fileChunks, { type: this.fileType });
-        //Customize to work with your HTML TODO
         var div = document.querySelector("#download");
         var link = $('<a>',{
             id:this.fileName,

@@ -5,29 +5,25 @@
   See also:
     http://www.html5rocks.com/en/tutorials/webrtc/basics/
     https://code.google.com/p/webrtc-samples/source/browse/trunk/apprtc/index.html
-
     https://webrtc-demos.appspot.com/html/pc1.html
 */
 
 var cfg = {'iceServers': [{'url': 'stun:23.21.150.121'}]},
   con = { 'optional': [{'DtlsSrtpKeyAgreement': true}] }
 
-/* THIS IS ALICE, THE CALLER/SENDER */
-
-var pc1 = new RTCPeerConnection(cfg, con),
-  dc1 = null
-
 // Since the same JS file contains code for both sides of the connection,
 // activedc tracks which of the two possible datachannel variables we're using.
 var activedc
-
+//Declares necessary information about the connection
 var sdpConstraints = {
   optional: [],
   mandatory: {
-    OfferToReceiveAudio: true,
-    OfferToReceiveVideo: true
+    OfferToReceiveAudio: false,
+    OfferToReceiveVideo: false
   }
 }
+//Comment out for production code! Removes error output
+//console.log = console.debug = console.info = function(){};
 // MY ADDITION---------------
 var fileReady = false;
 var iceReady = false;
@@ -43,6 +39,12 @@ $('#createOrJoin').modal('show')
 $('#connectedScreen').modal('hide')
 $('#endScreen').modal('hide')
 //----------------------------
+
+/* THIS IS ALICE, THE CALLER/SENDER */
+
+var pc1 = new RTCPeerConnection(cfg, con),
+  dc1 = null
+
 
 $('#createBtn').click(function () {
   $('#showLocalOffer').modal('show')
@@ -60,7 +62,7 @@ $('#offerSentBtn').click(function () {
 $('#offerRecdBtn').click(function () {
   var offer = $('#remoteOffer').val()
   var offerDesc = new RTCSessionDescription(JSON.parse(offer))
-  console.log('Received remote offer', offerDesc)
+  console.info('Received remote offer', offerDesc)
   handleOfferFromPC1(offerDesc)
   $('#showLocalAnswer').modal('show')
 })
@@ -82,7 +84,7 @@ function setupDC1 () {
     activedc = dc1
     console.log('Created datachannel (pc1)')
     dc1.onopen = function (e) {
-      console.log('data channel connect')
+      console.info('data channel connect')
       $('#waitForConnection').modal('hide')
       $('#waitForConnection').remove()
       $('#connectedScreen').modal('show')
@@ -98,14 +100,14 @@ function createLocalOffer () {
   setupDC1()
   pc1.createOffer(function (desc) {
     pc1.setLocalDescription(desc, function () {}, function () {})
-    console.log('created local offer', desc)
+    console.info('created local offer', desc)
   },
   function () { console.warn("Couldn't create offer") },
     sdpConstraints)
 }
 
 pc1.onicecandidate = function (e) {
-  console.log('ICE candidate (pc1)', e)
+  console.info('ICE candidate (pc1)', e)
   if (e.candidate == null) {
     iceReady = true;
     isReady();
@@ -144,12 +146,8 @@ pc1.oniceconnectionstatechange = oniceconnectionstatechange
 pc1.onicegatheringstatechange = onicegatheringstatechange
 
 function handleAnswerFromPC2 (answerDesc) {
-  console.log('Received remote answer: ', answerDesc)
+  console.info('Received remote answer: ', answerDesc)
   pc1.setRemoteDescription(answerDesc)
-}
-
-function handleCandidateFromPC2 (iceCandidate) {
-  pc1.addIceCandidate(iceCandidate)
 }
 
 /* THIS IS BOB, THE ANSWERER/RECEIVER */
@@ -159,7 +157,7 @@ var pc2 = new RTCPeerConnection(cfg, con),
 
 pc2.ondatachannel = function (e) {
   var datachannel = e.channel || e; // Chrome sends event, FF sends raw channel
-  console.log('Received datachannel (pc2)', arguments)
+  console.info('Received datachannel (pc2)', arguments)
   $('#waitForConnection').modal('hide')
   $('#waitForConnection').remove()
   $('#connectedScreen').modal('show')
@@ -167,7 +165,7 @@ pc2.ondatachannel = function (e) {
   dc2 = datachannel
   activedc = dc2
   dc2.onopen = function (e) {
-    console.log('data channel connect')
+    console.info('data channel connect')
   }
   dc2.onmessage = function (e) {
     console.log('Got message (pc2)');
@@ -178,7 +176,7 @@ pc2.ondatachannel = function (e) {
 function handleOfferFromPC1 (offerDesc) {
   pc2.setRemoteDescription(offerDesc)
   pc2.createAnswer(function (answerDesc) {
-    console.log('Created local answer: ', answerDesc)
+    console.info('Created local answer: ', answerDesc)
     pc2.setLocalDescription(answerDesc)
   },
   function () { console.warn("Couldn't create offer") },
@@ -196,10 +194,6 @@ pc2.onicecandidate = function (e) {
 pc2.onsignalingstatechange = onsignalingstatechange
 pc2.oniceconnectionstatechange = oniceconnectionstatechange
 pc2.onicegatheringstatechange = onicegatheringstatechange
-
-function handleCandidateFromPC1 (iceCandidate) {
-  pc2.addIceCandidate(iceCandidate)
-}
 
 pc2.onconnection = handleOnconnection
 
