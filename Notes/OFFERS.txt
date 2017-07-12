@@ -1,0 +1,6 @@
+{"type":"offer","sdp":"v=0\r\no=- 3216859205500323228 2 IN IP4 127.0.0.1\r\ns=-\r\nt=0 0\r\na=group:BUNDLE data\r\na=msid-semantic: WMS\r\nm=application 49600 DTLS/SCTP 5000\r\nc=IN IP4 192.168.43.78\r\na=candidate:2019098499 1 udp 2113937151 192.168.43.78 49600 typ host generation 0 network-cost 50\r\na=ice-ufrag:ZGlJ\r\na=ice-pwd:2rr8WxFY/o10Km8+XlNLqvl/\r\na=fingerprint:sha-256 8A:6C:39:4A:9C:90:FB:33:E3:9F:9E:6B:F7:BF:9D:9D:55:8C:5A:4B:02:AA:77:C4:B9:98:3F:09:A2:E7:E6:B1\r\na=setup:actpass\r\na=mid:data\r\na=sctpmap:5000 webrtc-datachannel 1024\r\n"}
+
+-----------------------------------------------------------------
+
+{"type":"answer","sdp":"v=0\r\no=- 527756138590549073 2 IN IP4 127.0.0.1\r\ns=-\r\nt=0 0\r\na=group:BUNDLE data\r\na=msid-semantic: WMS\r\nm=application 65412 DTLS/SCTP 5000\r\nc=IN IP4 192.168.43.78\r\nb=AS:30\r\na=candidate:2019098499 1 udp 2113937151 192.168.43.78 65412 typ host generation 0 network-cost 50\r\na=ice-ufrag:FWTT\r\na=ice-pwd:1lkNOdlDcdi4luB5UMVNrEul\r\na=fingerprint:sha-256 DC:B5:BF:61:6E:0A:1E:5A:8D:A4:71:6A:8F:7F:B9:C0:45:E4:67:E7:AC:B3:4F:F7:6A:D6:49:85:FA:7E:94:5E\r\na=setup:active\r\na=mid:data\r\na=sctpmap:5000 webrtc-datachannel 1024\r\n"}
+
