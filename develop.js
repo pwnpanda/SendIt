@@ -27,6 +27,10 @@ var sdpConstraints = {
 // MY ADDITION---------------
 var fileReady = false;
 var iceReady = false;
+var Cryptofile = new File("cryptofile");
+var cfExists = Cryptofile.exists;
+var myMail = null;
+var otherMail = null;
 $('#offerSentBtn').prop('disabled', true);
 $('#answerSentBtn').prop('disabled', true);
 //-------------------------------
@@ -38,7 +42,37 @@ $('#createOrJoin').modal('show')
 //MY ADDITION-------------------------
 $('#connectedScreen').modal('hide')
 $('#endScreen').modal('hide')
-//----------------------------
+//See if CRYPTOFILE exists
+
+//If file doesn't exist, require text-field input to continue.
+//If it exists, hide text-field!
+if(!cfExists){
+  $('#txtMyMail').show();
+  $('#createBtn').prop('disabled', true);
+  $('#joinBtn').prop('disabled', true);
+  $("#myMail").show();
+  $("#myMail").keyup( function() {
+    if( $(this).val() != '') {
+      $('#createBtn').prop('disabled', false);
+      $('#joinBtn').prop('disabled', false);
+    }else{
+      $('#createBtn').prop('disabled', true);
+      $('#joinBtn').prop('disabled', true);
+    }
+  });
+}else{
+  $('#txtRecMail').hide();
+}
+
+$("#recMail").keyup( function() {
+    if( $(this).val() != '') {
+      $('#offerSentBtn').prop('disabled', false);
+    }else{
+      $('#offerSentBtn').prop('disabled', true);
+    }
+  });
+
+//MY ADDITION END----------------------------
 
 /* THIS IS ALICE, THE CALLER/SENDER */
 
@@ -46,16 +80,29 @@ var pc1 = new RTCPeerConnection(cfg, con),
   dc1 = null
 
 
+
 $('#createBtn').click(function () {
+  //If we need to create the crypto-file, read own e-mail address & store
+  if(!cfExists){
+    myMail = $('#myMail').val();
+    console.info("Mail address registered: " + myMail);
+  }
   $('#showLocalOffer').modal('show')
   createLocalOffer()
 })
 
 $('#joinBtn').click(function () {
+  //If we need to create the crypto-file, read own e-mail address & store
+  if(!cfExists){
+    myMail = $('#myMail').val();
+    console.info("Mail address registered: " + myMail);
+  }
   $('#getRemoteOffer').modal('show')
 })
 
 $('#offerSentBtn').click(function () {
+  //Read receiver's E-mail address & Store
+  otherMail = $("#recMail").value();
   $('#getRemoteAnswer').modal('show')
 })
 
@@ -206,6 +253,7 @@ function isReady(){
 
 function initiateSnd(){
   console.log('Initiating!');
+  var button = $("#init").hide();
   startSending();
 }
 //---------------------------------------------

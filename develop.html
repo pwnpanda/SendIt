@@ -30,7 +30,10 @@
 	  </div>
 	  <div class="modal-footer">
 	    <button class="btn btn-primary" id="createBtn" data-dismiss="modal" aria-hidden="true">Send</button>
-	    <button class="btn" id="joinBtn" data-dismiss="modal" aria-hidden="true">Receive</button>
+	    <button class="btn" id="joinBtn" data-dismiss="modal" aria-hidden="true">Receive</button><br>
+	    <h5 id="txtMyMail" hidden>Your e-mail address:
+	    <input id="myMail" type="text" name="mailAddr">
+	    </h5>
 	  </div>
 	</div>
 
@@ -45,11 +48,12 @@
 	  <textarea class="input-large" id="localOffer" name="localOffer" rows="10" cols="100"></textarea>
 	  </div>
 	  <div>
-	  <!-- TODO - require input to continue!-->
 	  	<div id="drop_zone">Drop files here</div>
 		<output id="list"></output>
 		<div style='color:red' id='error'></div>
 	  </div>
+	  <h5 id="txtRecMail">Receiver's e-mail address:
+	    <input id="recMail" type="text" name="mailAddr">
 	  <div class="modal-footer">
 	    <button class="btn btn-primary" id="offerSentBtn" data-dismiss="modal" aria-hidden="true">Continue</button>
 	  </div>
