@@ -18,8 +18,11 @@ function KeyManager(data){
   //Decode raw file
   //Extract mail
   //Extract keys
-
+  //Email of this node
   this.email = 
+  //Public&Private key of this node
+  this.key =
+  //Public keys and e-mails of other nodes
   this.keys = 
   this.challenge = null;
   this.curHash = null;
