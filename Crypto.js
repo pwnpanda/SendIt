@@ -29,17 +29,22 @@ if(!cfExists){
 	$('#txtRecMail').hide();
 }
 */
+//Hits, but is supposed to be implemented - WHY!?!
+if (!window.crypto || !window.crypto.subtle) {
+    console.error("Your current browser does not support the Web Cryptography API! This page will not work.");
+}
 //Main crypto function
 function crypto(){
 	if (findCrypto()){
 		readCrypto();
 	}else{
-		createCrypto();
+		//Ask for users e-mail!
+		$('#txtMyMail').show();
 	}
 }
 //Behaviour to test for existing cryptofile
 function findCrypto(){
-	return;//true or false
+	return false;//true or false
 }
 //Behaviour for instancing a new keymanager and Cryptofile
 function createCrypto(){

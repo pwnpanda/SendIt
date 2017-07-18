@@ -63,11 +63,12 @@ KeyManager.prototype = {
     return window.crypto.subtle.exportKey(
     	//TODO change to SPKI
 	    "jwk", //can be "jwk" (public or private), "spki" (public only), or "pkcs8" (private only)
-	    this.key.publicKey; //can be a publicKey or privateKey, as long as extractable was true
+	    this.key.publicKey //can be a publicKey or privateKey, as long as extractable was true
 	)
 	.then(function(keydata){
 	    //returns the exported key data
 	    console.log(keydata);
+      //TODO - convert to JSON?
 	    return keydata;
 	})
 	.catch(function(err){
@@ -77,6 +78,8 @@ KeyManager.prototype = {
 
   //Returns the public key-object converted from keydata
   importKey: function(key){
+    //TODO Convert from JSON?
+
   	//Taken from: https://github.com/diafygi/webcrypto-examples#rsa-oaep
   	return window.crypto.subtle.importKey(
   		//TODO change to SPKI

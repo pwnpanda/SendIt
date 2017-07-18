@@ -28,8 +28,11 @@ var sdpConstraints = {
 var fileReady = false;
 var iceReady = false;
 var mailReady = false;
+//TODO REMOVE - let it be handled by Crypto.js
 var Cryptofile;
 var cfExists;
+var KeyManager;
+//TODO - Store myMail in keymanager REMOVE
 var myMail = null;
 var otherMail = null;
 $('#offerSentBtn').prop('disabled', true);
@@ -43,9 +46,9 @@ $('#createOrJoin').modal('show')
 //MY ADDITION-------------------------
 $('#connectedScreen').modal('hide')
 $('#endScreen').modal('hide')
-//TODO REMOVE - For testing purposes:
- $('#txtMyMail').show();
 
+//TODO - full crypto-functionality when starting program
+crypto();
 
 //Makes sure the user inputs a receiver before proceeding
 $("#recMail").keyup( function() {
@@ -67,28 +70,24 @@ var pc1 = new RTCPeerConnection(cfg, con),
 
 
 $('#createBtn').click(function () {
-  //If we need to create the crypto-file, read own e-mail address & store
-  /*if(!cfExists){
+  //Read in email and initiate new KeyManager if neccesary
+  if($("#txtMyMail").is(":visible")){
     myMail = $('#myMail').val();
     console.info("Mail address registered: " + myMail);
-  }*/
-  //For testing purposes! TODO REMOVE
-  myMail = $('#myMail').val();
-  console.info("Mail address registered: " + myMail);
+    createCrypto();
+  }
   //--------------------------
   $('#showLocalOffer').modal('show')
   createLocalOffer()
 })
 
 $('#joinBtn').click(function () {
-  //If we need to create the crypto-file, read own e-mail address & store
-  /*if(!cfExists){
+  //Read in email and initiate new KeyManager if neccesary
+  if($("#txtMyMail").is(":visible")){
     myMail = $('#myMail').val();
     console.info("Mail address registered: " + myMail);
-  }*/
-  //For testing purposes! TODO REMOVE
-  myMail = $('#myMail').val();
-  console.info("Mail address registered: " + myMail);
+    createCrypto();
+  }
   //--------------------------
   $('#getRemoteOffer').modal('show')
 })
