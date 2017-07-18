@@ -29,3 +29,29 @@ if(!cfExists){
 	$('#txtRecMail').hide();
 }
 */
+//Main crypto function
+function crypto(){
+	if (findCrypto()){
+		readCrypto();
+	}else{
+		createCrypto();
+	}
+}
+//Behaviour to test for existing cryptofile
+function findCrypto(){
+	return;//true or false
+}
+//Behaviour for instancing a new keymanager and Cryptofile
+function createCrypto(){
+	//Create new manager
+	KeyManager = new KeyManager(null);
+}
+//Behaviour for reading an old cryptofile in to a keymanager
+function readCrypto(){
+	//read data
+	KeyManager = new KeyManager(data);
+}
+//Behaviour for writing keymanager to cryptofile
+function writeCrypto(){
+	return;
+}

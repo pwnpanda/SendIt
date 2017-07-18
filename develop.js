@@ -43,7 +43,11 @@ $('#createOrJoin').modal('show')
 //MY ADDITION-------------------------
 $('#connectedScreen').modal('hide')
 $('#endScreen').modal('hide')
+//TODO REMOVE - For testing purposes:
+ $('#txtMyMail').show();
 
+
+//Makes sure the user inputs a receiver before proceeding
 $("#recMail").keyup( function() {
   if( $(this).val() != '') {
     mailReady=true;
@@ -68,6 +72,10 @@ $('#createBtn').click(function () {
     myMail = $('#myMail').val();
     console.info("Mail address registered: " + myMail);
   }*/
+  //For testing purposes! TODO REMOVE
+  myMail = $('#myMail').val();
+  console.info("Mail address registered: " + myMail);
+  //--------------------------
   $('#showLocalOffer').modal('show')
   createLocalOffer()
 })
@@ -78,6 +86,10 @@ $('#joinBtn').click(function () {
     myMail = $('#myMail').val();
     console.info("Mail address registered: " + myMail);
   }*/
+  //For testing purposes! TODO REMOVE
+  myMail = $('#myMail').val();
+  console.info("Mail address registered: " + myMail);
+  //--------------------------
   $('#getRemoteOffer').modal('show')
 })
 

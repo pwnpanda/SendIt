@@ -2,8 +2,9 @@ function KeyManager(data){
   //If file exists
   if(data != null){
     //Decode raw file
+    //TODO - Decrypt file (and encrypt)
     //var dec = decodeMethod(data);
-    //dec = JSON.parse(data);
+    var dec = JSON.parse(data);
     //Extract mail
     this.email = dec.email;
     //Extract own key - stored as objects
@@ -56,11 +57,11 @@ KeyManager.prototype = {
     });
   },
 
-  //Exports the public key-object as keydata
+  //Exports the keydata from a public key-object
   //Taken from: https://github.com/diafygi/webcrypto-examples#rsa-oaep
   exportKey: function(){
     return window.crypto.subtle.exportKey(
-    	//todo change to SPKI
+    	//TODO change to SPKI
 	    "jwk", //can be "jwk" (public or private), "spki" (public only), or "pkcs8" (private only)
 	    this.key.publicKey; //can be a publicKey or privateKey, as long as extractable was true
 	)
@@ -119,9 +120,22 @@ KeyManager.prototype = {
   
   //Create hash
   createHash: function (data) {
-    //HashFunction TODO
-    this.curHash = hashfunction(data);
-
+    //Taken from: https://github.com/diafygi/webcrypto-examples#sha-256---digest
+    this.curHash = window.crypto.subtle.digest(
+      {
+          name: "SHA-256",
+      },
+      data //The data you want to hash as an ArrayBuffer
+    )
+    .then(function(hash){
+      //returns the hash as an ArrayBuffer
+      var hashed = new Uint8Array(hash);
+      console.log(hashed);
+      return hashed;
+    })
+    .catch(function(err){
+        console.error(err);
+    });
   },
   
   //Compare local with remote hash
@@ -132,9 +146,9 @@ KeyManager.prototype = {
   //Generate random challenge
   generateRandom: function (){
     //Generate challenge
-    //TODO
-    this.challenge = 0;//randomgenerator
-    this.curHash = 0//hashFunction(this.challenge);
+    this.challenge = window.crypto.getRandomValues(new Uint8Array(16));
+    //Generate hash
+    this.createHash(this.challenge);
   },
   
   //Encrypt data by using key-object
@@ -183,14 +197,13 @@ KeyManager.prototype = {
 	});
   },
   
-  //Write to disk
-  writeToDisk: function (){
+  //getObjectData
+  getObjectData: function (){
     //Erase session data
     this.challenge=null;
     this.hash=null;
     //Stringify object
-    var write = JSON.stringify(this.self);
-    write = 0;//encodeMethod(write)
-    //Write to disk
+    return JSON.stringify(this.self);
+    //TODO - encrypt data before returning!
   }
 };

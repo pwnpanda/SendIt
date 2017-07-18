@@ -15,10 +15,7 @@ if(CRYPTOFILE){
   //Ask for local email address
   crypto = new KeyManager(null);
 }
-
---------------------------------
-
-Authenticate -> OfferShare
+--------------------------------------------------------------
 
 var dict = {}
 dict["key1"] = "val1";
