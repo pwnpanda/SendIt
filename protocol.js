@@ -19,65 +19,9 @@ var MAX_FSIZE = 160;    // MiB -- browser will crash when trying to bring more t
 
 var nChunksSent = 0;
 var curFileNum=0;
-var files;
 var nrOfFiles;
 var fmArray;
 
-//https://github.com/webrtc/samples/blob/gh-pages/src/content/datachannel/filetransfer/js/main.js - INFO
-//Send the data
-//Initiate, set up and start transfer
-function startSending() {
-  if(nrOfFiles == 0){
-    console.error("Error! No files to send");
-    throw new Error("No files to send!");
-  }
-
-  fmArray = new Array(nrOfFiles);
-  for(var i=0, f;f=files[i];i++){
-    console.log("Creates fms for sending!");
-    //Use filemanager to stage all the local files and keep them organized
-    if(f){
-      console.info('File being staged ' + [f.name, f.size, f.type,
-      f.lastModifiedDate].join(' '));
-      //Need array of filemanagers, one for each file!
-      fmArray[i] = new FileManager(maxChunkSize);
-      registerFileEvents(fmArray[i]);
-
-      var mbSize = Math.ceil(f.size / (1024 * 1024));
-      //TODO - handle if one file is too big
-      if (mbSize > MAX_FSIZE) {
-        console.warn("Due to browser memory limitations, files greater than " + MAX_FSIZE + " MiB are unsupported. Your file is " + mbSize.toFixed(2) + " MiB.");
-        var error = document.querySelector("#Error");
-        error.innerHTML = "File " + f.name + " is to big for the browser! It cannot be sent!";
-        throw new Error("File to big! Stop execution");
-      }
-    } else{
-      console.error("File error! No file or no size!!!");
-      closeDataChannels();
-      throw new Error("File does not exist!");
-    }
-  }
-  readFileInfo(0);
-}
-//Belongs to the above function - Heavily altered from original code
-function readFileInfo(x){
-  console.log("Cur " + x + " Tot " + nrOfFiles);
-  if (x >= nrOfFiles) {
-    offerShare();
-    return;
-  }
-  var f = files[x];
-  var reader = new FileReader();
-    reader.onloadend = function (e) {
-      if (reader.readyState == FileReader.DONE) {
-        console.log(f.name);
-        fmArray[x].stageLocalFile(f.name, f.type, reader.result);
-        readFileInfo(x+1);
-      }
-    };   
-    reader.readAsArrayBuffer(f);
-}
-//----------------------------------------------------------
 
 //https://github.com/webrtc/samples/blob/gh-pages/src/content/datachannel/filetransfer/js/main.js - INFO
 //Receive the data

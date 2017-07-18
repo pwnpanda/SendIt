@@ -238,6 +238,6 @@ function isReady(){
 function initiateSnd(){
   console.log('Initiating!');
   var button = $("#init").hide();
-  startSending();
+  stageFiles();
 }
 //---------------------------------------------

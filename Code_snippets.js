@@ -20,10 +20,6 @@ if(CRYPTOFILE){
 
 Authenticate -> OfferShare
 
-
-
-
-
 var dict = {}
 dict["key1"] = "val1";
 dict["key2"] = "val2";
@@ -36,3 +32,5 @@ for(key in dict){
   var value = dict[key];
   /* use key/value for intended purpose */
 }
+
+!("key" in obj) // true if "key" doesn't exist in object
