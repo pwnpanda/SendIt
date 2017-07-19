@@ -31,3 +31,6 @@ for(key in dict){
 }
 
 !("key" in obj) // true if "key" doesn't exist in object
+
+
+//https://github.com/gabrielizalo/JavaScript-Crypto-Libraries/blob/master/js-crypto-libraries.md
