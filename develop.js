@@ -48,7 +48,7 @@ $('#connectedScreen').modal('hide')
 $('#endScreen').modal('hide')
 
 //TODO - full crypto-functionality when starting program
-crypto();
+//crypto();
 
 //Makes sure the user inputs a receiver before proceeding
 $("#recMail").keyup( function() {
