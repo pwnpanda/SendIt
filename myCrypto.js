@@ -29,12 +29,13 @@ if(!cfExists){
 	$('#txtRecMail').hide();
 }
 */
+
 //Hits, but is supposed to be implemented - WHY!?!
 if (!window.crypto || !window.crypto.subtle) {
     console.error("Your current browser does not support the Web Cryptography API! This page will not work.");
 }
 //Main crypto function
-function crypto(){
+function existCrypto(){
 	if (findCrypto()){
 		readCrypto();
 	}else{
