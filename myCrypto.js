@@ -1,34 +1,8 @@
 /*
 File for calling correct order of keyManager methods.
 Also for checking for crypto-file and managing other semi-related crypto-things
-
-function readCrypto(){
-	cryptofile = $("#cryptoFile");
-	console.log(cryptofile);
-}
-
-
-//If file doesn't exist, require text-field input to continue.
-//If it exists, hide text-field!
-console.log(cfExists);
-if(!cfExists){
-  $('#txtMyMail').show();
-  $('#createBtn').prop('disabled', true);
-  $('#joinBtn').prop('disabled', true);
-  $("#myMail").show();
-  $("#myMail").keyup( function() {
-    if( $(this).val() != '') {
-      $('#createBtn').prop('disabled', false);
-      $('#joinBtn').prop('disabled', false);
-    }else{
-      $('#createBtn').prop('disabled', true);
-      $('#joinBtn').prop('disabled', true);
-    }
-  });
-}else{
-	$('#txtRecMail').hide();
-}
 */
+var cryptoFile;
 
 //Hits, but is supposed to be implemented - WHY!?!
 if (!window.crypto || !window.crypto.subtle) {
@@ -36,28 +10,40 @@ if (!window.crypto || !window.crypto.subtle) {
 }
 //Main crypto function
 function existCrypto(){
-	if (findCrypto()){
-		readCrypto();
+	cryptoFile = $("#cryptoFile")[0].files[0];
+	console.log(cryptoFile);
+	if(!cryptoFile){
+		$('#txtMyMail').show();
 	}else{
 		//Ask for users e-mail!
-		$('#txtMyMail').show();
+		$('#txtMyMail').hide();
 	}
-}
-//Behaviour to test for existing cryptofile
-function findCrypto(){
-	return false;//true or false
 }
 //Behaviour for instancing a new keymanager and Cryptofile
 function createCrypto(){
 	//Create new manager
 	KeyManager = new KeyManager(null);
 }
-//Behaviour for reading an old cryptofile in to a keymanager
+//Behaviour for reading an old cryptoFile in to a keymanager
 function readCrypto(){
 	//read data
-	KeyManager = new KeyManager(data);
+	console.log("read");
+	//read cryptoFile
+	//https://stackoverflow.com/questions/3146483/html5-file-api-read-as-text-and-binary/3146509#3146509
+	var fr = new FileReader ();
+	//Declare callback function
+	fr.onloadend = function (e){
+		if(fr.readyState == FileReader.DONE){
+			console.info("File read");
+		 	console.log(fr.result);
+			//create KeyManager
+			KeyManager = new KeyManager(fr.result);
+		}
+	};
+	//May have to change to String or BinaryString!
+	fr.readAsArrayBuffer(cryptoFile);
 }
-//Behaviour for writing keymanager to cryptofile
+//Behaviour for writing keymanager to cryptoFile
 function writeCrypto(){
 	return;
 }
