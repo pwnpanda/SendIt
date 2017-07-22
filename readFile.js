@@ -77,7 +77,7 @@ function readFileInfo(x){
   var f = files[x];
   var reader = new FileReader();
     reader.onloadend = function (e) {
-      if (reader.readyState == FileReader.DONE) {
+      if(reader.readyState == FileReader.DONE){
         console.log(f.name);
         fmArray[x].stageLocalFile(f.name, f.type, reader.result);
         readFileInfo(x+1);
