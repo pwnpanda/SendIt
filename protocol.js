@@ -4,7 +4,7 @@ var protocol = {
   AUTH_RESPONSE: "response",
   AUTH_SETUP: "setup",
   AUTH_S_REPLY: "setup_reply",
-  //MINE END--------------------------->
+  //MINE END-------------------------->
   OFFER: "offer",
   ANSWER: "answer",
   REQUEST: "req-chunk",
@@ -27,28 +27,6 @@ var nChunksSent = 0;
 var curFileNum=0;
 var nrOfFiles;
 var fmArray;
-
-//Try to authenticate user
-function beginAuth (){
-  //if receivers email is in the list:
-    //create challenge and tempHash
-    //Encrypt challenge with pub key
-    //Send challenge and await reply
-  //If setup:
-    //Share e-mail and public key
-}
-//Process the reply from receiver and authenticate/deny connection
-function endAuth(reply){
-  //If challenge-reply:
-    //Decrypt reply with private key
-    //Compare decrypted reply and temp hash
-    //Call stageFiles(); or throw error!
-  //If setup
-    //Assert e-mail and key - reply
-    //Store e-mail and public key
-    //Call stageFiles();
-    return;
-}
 
 //https://github.com/webrtc/samples/blob/gh-pages/src/content/datachannel/filetransfer/js/main.js - INFO
 //Receive the data
@@ -104,7 +82,55 @@ function closeDataChannels() {
 //Show progress
 function displayProgress(perc){
   document.querySelector('#transferDetails').innerHTML = 'Filename: ' + fmArray[curFileNum].fileName + '. Filenumber: ' + (curFileNum+1) + '/' + nrOfFiles + '. Percent: ' + (perc*100).toFixed(2) + '/100';
-
+}
+//Create the Authentication message to send
+function createAuth(type){
+  var msg;
+  console.log("Creating message of type ", type);
+  switch (type){
+    //Sending authentication challenge
+    case protocol.AUTH_CHALLENGE:
+      //Send the encrypted challenge
+      msg = {
+        challenge: KeyManager.encryptData(KeyManager.challenge);
+        sender: KeyManager.email,
+        action: type
+      };
+      break;
+    //Sending authentication response
+    case protocol.AUTH_RESPONSE:
+      //Send the encrypted calculated hash
+      msg = {
+        challenge: KeyManager.encryptData(KeyManager.curHash);
+        sender: KeyManager.email,
+        action: type
+      }
+      break;
+    //Sending authentication setup information  
+    case protocol.AUTH_SETUP:
+      //Share the public key
+      msg = {
+        key: KeyManager.exportKey(),
+        sender: KeyManager.email,
+        action: type
+      };
+      break;
+    //Sending authentication setup reply
+    case protocol.AUTH_S_REPLY:
+      //Share the public key
+      msg = {
+        key: KeyManager.exportKey(),
+        sender: KeyManager.email,
+        action: type
+      };
+      break;
+    //Error!
+    default: 
+      console.error("Malformed message type: ", type);
+      break;
+  }
+  //Send message
+  doSend(msg);
 }
 //Everything below taken from
 //https://github.com/tskimmett/rtc-pubnub-fileshare/blob/master/connection.js

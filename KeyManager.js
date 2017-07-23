@@ -1,38 +1,53 @@
-function KeyManager(data){
-  //If file exists
-  if(data != null){
-    //Decode raw file
-    //TODO - Decrypt file (and encrypt)
-    //var dec = decodeMethod(data);
-    var dec = JSON.parse(data);
-    //Extract mail
-    this.email = dec.email;
-    //Extract own key - stored as objects
-    this.key = dec.key;
-    //Extract keys - stored as objects
-    //Todo - handle 0-n keys!
-    this.keys = dec.keys;
-  //Else
-  } else{
-  	//Email of this node
-  	this.email = myMail;
-  	//Public&Private key of this node
-  	this.key = this.createKeyPair();
-  	//Dictionary of public keys and e-mails of other nodes
-  	//Key = email, value = Public key
-  	this.keys = {};
-  }
+function KeyManager(cmd, data){
   //Reference to itself
   this.self = this;
   //Random string generated
   this.challenge = null;
   //Hash of generated string
   this.curHash = null;
-
-  console.info("This keymanager: ", this.self);
+  //Other end of the connection
+  this.otherEnd = null;
+  if(cmd == "existing"){
+    this.loadData(data);
+  }else if (cmd == "new"){
+    this.newManager(data);
+  }else {
+    console.error("Malformed command! Command: " + cmd);
+  }
 }
 
 KeyManager.prototype = {
+  //Initialize with file
+  loadData: function(data){
+    //If file exists
+    if(data != null){
+      //Decode raw file
+      //TODO - Decrypt file (and encrypt)
+      //var dec = decodeMethod(data);
+      var dec = JSON.parse(data);
+      //Extract mail
+      this.email = dec.email;
+      //Extract own key - stored as objects
+      this.key = dec.key;
+      //Extract keys - stored as objects
+      //Todo - handle 0-n keys!
+      this.keys = dec.keys;
+    //Else
+    } else{
+      console.error("No data to read! Data: ", data);
+    }
+    console.info("This keymanager: ", this.self);
+  },
+  //Create new KeyManager
+  newManager: function(myMail){
+    //Email of this node
+    this.email = myMail;
+    //Public&Private key of this node
+    this.key = this.createKeyPair();
+    //Dictionary of public keys and e-mails of other nodes
+    //Key = email, value = Public key
+    this.keys = {};
+  },
   //Create key pair as keyPair object
   createKeyPair: function () {
     //Taken from: https://github.com/diafygi/webcrypto-examples#rsa-oaep
@@ -62,21 +77,22 @@ KeyManager.prototype = {
 
   //Exports the keydata from a public key-object
   //Taken from: https://github.com/diafygi/webcrypto-examples#rsa-oaep
-  exportKey: function(){
+  exportKey: function() {
     return window.crypto.subtle.exportKey(
     	//TODO change to SPKI
 	    "jwk", //can be "jwk" (public or private), "spki" (public only), or "pkcs8" (private only)
 	    this.key.publicKey //can be a publicKey or privateKey, as long as extractable was true
-	)
-	.then(function(keydata){
-	    //returns the exported key data
-	    console.log(keydata);
-      //TODO - convert to JSON?
-	    return keydata;
-	})
-	.catch(function(err){
-	    console.error(err);
-	});
+  	)
+  	.then(function(keydata){
+  	    //returns the exported key data
+  	    console.log(keydata);
+        //TODO - convert to JSON?
+  	    return keydata;
+  	})
+  	.catch(function(err){
+  	   console.error(err);
+  	 }
+    );
   },
 
   //Returns the public key-object converted from keydata
@@ -135,6 +151,7 @@ KeyManager.prototype = {
     )
     .then(function(hash){
       //returns the hash as an ArrayBuffer
+      console.log(hash);
       var hashed = new Uint8Array(hash);
       console.log(hashed);
       return hashed;
@@ -157,9 +174,10 @@ KeyManager.prototype = {
     this.createHash(this.challenge);
   },
   
-  //Encrypt data by using key-object
-  encryptData: function(data, email){
-  	var useKey = findKey(email);
+  //Encrypt data by using receiver's public key-object
+  encryptData: function(data){
+  	console.info("Encrypting: ", data);
+    var useKey = findKey(this.otherEnd);
   	if(useKey == null){
   		console.error("There is no key associated with this address!!!");
   	}
@@ -182,7 +200,7 @@ KeyManager.prototype = {
 	});
   },
 
-  //Decrypt data by using key-object
+  //Decrypt data by using own private key-object
   decryptData: function(data){
   	return window.crypto.subtle.decrypt(
 	    {

@@ -30,9 +30,6 @@ var iceReady = false;
 var mailReady = false;
 var cfExists;
 var keyManager;
-//TODO - Store myMail in keymanager REMOVE
-var myMail = null;
-var otherMail = null;
 $('#offerSentBtn').prop('disabled', true);
 $('#answerSentBtn').prop('disabled', true);
 //-------------------------------
@@ -66,10 +63,12 @@ var pc1 = new RTCPeerConnection(cfg, con),
 $('#createBtn').click(function () {
   //Read in email and initiate new KeyManager if neccesary
   if($("#txtMyMail").is(":visible")){
-    myMail = $('#myMail').val();
+    var myMail = $('#myMail').val();
     console.info("Mail address registered: " + myMail);
-    keyManager = new KeyManager(null);
+    keyManager = new KeyManager("new", myMail);
+
   }else{
+    //Read file and create KeyManager-object
     readCrypto();
   }
   //--------------------------
@@ -80,11 +79,11 @@ $('#createBtn').click(function () {
 $('#joinBtn').click(function () {
   //Read in email and initiate new KeyManager if neccesary
   if($("#txtMyMail").is(":visible")){
-    myMail = $('#myMail').val();
+    var myMail = $('#myMail').val();
     console.info("Mail address registered: " + myMail);
-    createCrypto();
-    keyManager = new KeyManager(null);
+    keyManager = new KeyManager("new", myMail);
   }else{
+    //Read file and create KeyManager-object
     readCrypto();
   }
   //--------------------------
@@ -93,8 +92,9 @@ $('#joinBtn').click(function () {
 
 $('#offerSentBtn').click(function () {
   //Read receiver's E-mail address & Store
-  otherMail = $("#recMail").val();
-  console.info(otherMail);
+  var otherMail = $("#recMail").val();
+  console.info("Receiver's mail: " + otherMail);
+  KeyManager.otherEnd = otherMail;
   $('#getRemoteAnswer').modal('show')
 })
 
