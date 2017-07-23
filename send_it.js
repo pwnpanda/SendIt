@@ -248,6 +248,6 @@ function isReady(){
 function initiateSnd(){
   console.log('Initiating!');
   var button = $("#init").hide();
-  stageFiles();
+  beginAuth();
 }
 //---------------------------------------------

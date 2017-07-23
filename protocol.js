@@ -1,4 +1,10 @@
 var protocol = {
+  //MINE------------------------------>
+  AUTH_CHALLENGE: "challenge",
+  AUTH_RESPONSE: "response",
+  AUTH_SETUP: "setup",
+  AUTH_S_REPLY: "setup_reply",
+  //MINE END--------------------------->
   OFFER: "offer",
   ANSWER: "answer",
   REQUEST: "req-chunk",
@@ -22,6 +28,27 @@ var curFileNum=0;
 var nrOfFiles;
 var fmArray;
 
+//Try to authenticate user
+function beginAuth (){
+  //if receivers email is in the list:
+    //create challenge and tempHash
+    //Encrypt challenge with pub key
+    //Send challenge and await reply
+  //If setup:
+    //Share e-mail and public key
+}
+//Process the reply from receiver and authenticate/deny connection
+function endAuth(reply){
+  //If challenge-reply:
+    //Decrypt reply with private key
+    //Compare decrypted reply and temp hash
+    //Call stageFiles(); or throw error!
+  //If setup
+    //Assert e-mail and key - reply
+    //Store e-mail and public key
+    //Call stageFiles();
+    return;
+}
 
 //https://github.com/webrtc/samples/blob/gh-pages/src/content/datachannel/filetransfer/js/main.js - INFO
 //Receive the data

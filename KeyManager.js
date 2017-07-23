@@ -49,10 +49,11 @@ KeyManager.prototype = {
     .then(function(key){
         //returns a keypair object
         return key;
-        /*
-        console.log(key.publicKey);
-        console.log(key.privateKey);
-        */
+        
+        //TODO - Remove! SENSITIVE
+        console.info(key.publicKey);
+        console.info(key.privateKey);
+        
     })
     .catch(function(err){
         console.error(err);
