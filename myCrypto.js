@@ -19,11 +19,6 @@ function existCrypto(){
 		$('#txtMyMail').hide();
 	}
 }
-//Behaviour for instancing a new keymanager and Cryptofile
-function createCrypto(){
-	//Create new manager
-	KeyManager = new KeyManager(null);
-}
 //Behaviour for reading an old cryptoFile in to a keymanager
 function readCrypto(){
 	//read data

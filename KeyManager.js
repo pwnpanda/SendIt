@@ -14,13 +14,13 @@ function KeyManager(data){
     this.keys = dec.keys;
   //Else
   } else{
-	//Email of this node
-	this.email = myMail;
-	//Public&Private key of this node
-	this.key = this.createKeyPair();
-	//Dictionary of public keys and e-mails of other nodes
-	//Key = email, value = Public key
-	this.keys = {};
+  	//Email of this node
+  	this.email = myMail;
+  	//Public&Private key of this node
+  	this.key = this.createKeyPair();
+  	//Dictionary of public keys and e-mails of other nodes
+  	//Key = email, value = Public key
+  	this.keys = {};
   }
   //Reference to itself
   this.self = this;
@@ -28,6 +28,8 @@ function KeyManager(data){
   this.challenge = null;
   //Hash of generated string
   this.curHash = null;
+
+  console.info("This keymanager: ", this.self);
 }
 
 KeyManager.prototype = {

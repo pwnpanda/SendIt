@@ -29,7 +29,7 @@ var fileReady = false;
 var iceReady = false;
 var mailReady = false;
 var cfExists;
-var KeyManager;
+var keyManager;
 //TODO - Store myMail in keymanager REMOVE
 var myMail = null;
 var otherMail = null;
@@ -68,7 +68,7 @@ $('#createBtn').click(function () {
   if($("#txtMyMail").is(":visible")){
     myMail = $('#myMail').val();
     console.info("Mail address registered: " + myMail);
-    createCrypto();
+    keyManager = new KeyManager(null);
   }else{
     readCrypto();
   }
@@ -83,6 +83,7 @@ $('#joinBtn').click(function () {
     myMail = $('#myMail').val();
     console.info("Mail address registered: " + myMail);
     createCrypto();
+    keyManager = new KeyManager(null);
   }else{
     readCrypto();
   }
