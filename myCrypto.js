@@ -60,8 +60,8 @@ function beginAuth (){
 function processAuth(reply){
   switch(reply.action){
   	    
+    //Received an authentication challenge
     case protocol.AUTH_CHALLENGE:
-      //Received an authentication challenge
     	KeyManger.otherEnd = reply.sender;
   		console.assert((KeyManager.findKey(KeyManager.otherEnd) != null), "Sender is unknown! Can not exchange information!");
       	//Decrypt challenge with private key
@@ -74,7 +74,6 @@ function processAuth(reply){
 
     //Received an authentication response
     case protocol.AUTH_RESPONSE:
-
     	//Assert e-mail
     	console.assert((reply.sender === KeyManager.otherEnd), "Receivers e-mail is not correct! Security breach found! Terminating!");
 	    //Decrypt reply with private key
@@ -96,6 +95,7 @@ function processAuth(reply){
     	//Reply with own e-mail and public key in AUTH_S_REPLY
     	createAuthMsg(protocol.AUTH_S_REPLY);
     	break;
+    
     //Received authentication setup reply
     case protocol.AUTH_S_REPLY:
     	//Assert e-mail
@@ -106,6 +106,7 @@ function processAuth(reply){
     	console.log("Authentication setup complete! Starting transfer!");
     	stageFiles();
     	break;
+    
     //Error!
     default: 
     	console.error("Malformed message type: ", reply.action);
