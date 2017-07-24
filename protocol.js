@@ -34,6 +34,7 @@ var fmArray;
 function onReceiveMessageCallback(event) {
   var data = JSON.parse(event.data);
   console.info("Recieved data: ", data);
+  
   if(data.action == protocol.DATA){
     fmArray[curFileNum].receiveChunk(data);
   }
@@ -51,7 +52,6 @@ function onReceiveMessageCallback(event) {
     if(curFileNum == nrOfFiles){
       closeDataChannels();
       document.querySelector('#transferDetailsEnd').innerHTML = 'Filename: ' + fmArray[curFileNum-1].fileName + '. Filenumber ' + curFileNum + '/' + nrOfFiles + '. Percent: 100/100';
-      
     } else{
       offerShare();
     }
@@ -174,28 +174,48 @@ function packageChunk(chunkId){
 //Handles received signal
 function handleSignal(msg) {
   console.info('Handle signal: ', msg);
-  if (msg.action === protocol.ANSWER) {
-    console.log("THE OTHER PERSON IS READY");
-  }
-  else if (msg.action === protocol.OFFER) {
-    // Someone is ready to send file data. Set up receiving structure
-    console.info("Receiving file nr: " + (curFileNum+1) + " of " + msg.totFiles)
-    if(curFileNum == 0){
-      nrOfFiles = msg.totFiles;
-      fmArray = new Array(msg.totFiles);
-    }
-    fmArray[curFileNum] = new FileManager(maxChunkSize);
-    registerFileEvents(fmArray[curFileNum]);
-    fmArray[curFileNum].stageRemoteFile(msg.fName, msg.fType, msg.nChunks);
-    answerShare();
-  }
-  else if (msg.action === protocol.ERR_REJECT) {
-    alert("Unable to communicate! Stopping transfer!");
-    closeDataChannels();
-  }
-  else if (msg.action === protocol.CANCEL) {
-    alert("Partner cancelled the share. Stopping transfer!");
-    closeDataChannels();
+  //Find correct signal
+  switch(msg.action){
+    //Other side is ready
+    case protocol.ANSWER:
+      console.log("THE OTHER PERSON IS READY");
+      break;
+
+    //Received offer
+    case protocol.OFFER:
+      // Sender is ready to send file data. Set up receiving structure
+      console.info("Receiving file nr: " + (curFileNum+1) + " of " + msg.totFiles)
+      if(curFileNum == 0){
+        nrOfFiles = msg.totFiles;
+        fmArray = new Array(msg.totFiles);
+      }
+      fmArray[curFileNum] = new FileManager(maxChunkSize);
+      registerFileEvents(fmArray[curFileNum]);
+      fmArray[curFileNum].stageRemoteFile(msg.fName, msg.fType, msg.nChunks);
+      //Let sender know you received offer
+      answerShare();
+      break;
+    
+    //Some kind of error! Handled here!
+    case protocol.ERR_REJECT:
+    case protocol.CANCEL:
+      alert("Unable to communicate! Stopping transfer! Error: ", msg.action);
+      closeDataChannels();
+      break;
+    
+    //Route all authentication-signals to processAuth
+    case protocol.AUTH_CHALLENGE:
+    case protocol.AUTH_RESPONSE:
+    case protocol.AUTH_SETUP:
+    case protocol.AUTH_S_REPLY:
+      console.info("Received authentication signal: ", data.action);
+      processAuth(data);
+      break;
+    
+    //If none of the above, something strange happened!
+    default:
+      console.error("Unrecognized signal received! Signal: " + msg.action);
+      break;
   }
 }
 //Called when receiving chunks!
