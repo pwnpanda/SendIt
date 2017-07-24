@@ -14,11 +14,13 @@ function KeyManager(cmd, data){
   }else {
     console.error("Malformed command! Command: " + cmd);
   }
+  console.log("KeyManager command: " + cmd);
 }
 
 KeyManager.prototype = {
   //Initialize with file
   loadData: function(data){
+    console.log("Loading data in to KeyManager ", data);
     //If file exists
     if(data != null){
       //Decode raw file
@@ -40,6 +42,7 @@ KeyManager.prototype = {
   },
   //Create new KeyManager
   newManager: function(myMail){
+    console.log("Creating new KeyManager ", myMail);
     //Email of this node
     this.email = myMail;
     //Public&Private key of this node
@@ -68,6 +71,7 @@ KeyManager.prototype = {
         //TODO - Remove! SENSITIVE
         console.info(key.publicKey);
         console.info(key.privateKey);
+        console.log("KeyPair created!");
         
     })
     .catch(function(err){
@@ -85,8 +89,7 @@ KeyManager.prototype = {
   	)
   	.then(function(keydata){
   	    //returns the exported key data
-  	    console.log(keydata);
-        //TODO - convert to JSON?
+  	    console.log("Exported key: ", keydata);
   	    return keydata;
   	})
   	.catch(function(err){
@@ -114,7 +117,7 @@ KeyManager.prototype = {
 	)
 	.then(function(publicKey){
 	    //returns a publicKey (or privateKey if you are importing a private key)
-	    console.log(publicKey);
+	    console.log("Imported key: ", publicKey);
 	    return publicKey;
 	})
 	.catch(function(err){
@@ -125,11 +128,12 @@ KeyManager.prototype = {
   //Store a public key as keydata
   storeKey: function(email, key){
     if(email in keys){
-    	console.error("Error! Email is already associated with a key!");
+    	console.error("Error! Email is already associated with a key! This is a security breach!");
     }
     //Add key=email and value=Public key in dictionary
     //Public key stored as object
-    keys[email] = key;
+    keys[email] = this.importKey(key);
+    console.info("Key and email pair stored for: " + email);
   },
 
   //Find keydata based on mail address
@@ -151,9 +155,10 @@ KeyManager.prototype = {
     )
     .then(function(hash){
       //returns the hash as an ArrayBuffer
+      //TODO - REMOVE? Use this to test if hashed is needed
       console.log(hash);
       var hashed = new Uint8Array(hash);
-      console.log(hashed);
+      console.log("Hash created: ", hashed);
       return hashed;
     })
     .catch(function(err){
@@ -163,7 +168,7 @@ KeyManager.prototype = {
   
   //Compare local with remote hash
   compareHash: function (remoteHash){
-    return (remoteHash == this.curHash)
+    return (remoteHash == this.curHash);
   },
   
   //Generate random challenge
@@ -172,6 +177,7 @@ KeyManager.prototype = {
     this.challenge = window.crypto.getRandomValues(new Uint8Array(16));
     //Generate hash
     this.createHash(this.challenge);
+    console.info("Hash and challenge generated!");
   },
   
   //Encrypt data by using receiver's public key-object
@@ -192,7 +198,7 @@ KeyManager.prototype = {
 	.then(function(encrypted){
 	    //returns an ArrayBuffer containing the encrypted data
 	    var encrData = new Uint8Array(encrypted);
-	    console.log(encrData);
+	    console.log("Data encrypted: ", encrData);
 	    return encrData;
 	})
 	.catch(function(err){
@@ -213,7 +219,7 @@ KeyManager.prototype = {
 	.then(function(decrypted){
 	    //returns an ArrayBuffer containing the decrypted data
 	    var decrData = new Uint8Array(decrypted);
-	    console.log(decrData);
+	    console.log("Data decrypted: ", decrData);
 	    return decrData;
 	})
 	.catch(function(err){
