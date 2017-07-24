@@ -29,7 +29,7 @@ var fileReady = false;
 var iceReady = false;
 var mailReady = false;
 var cfExists;
-var keyManager;
+var km;
 $('#offerSentBtn').prop('disabled', true);
 $('#answerSentBtn').prop('disabled', true);
 //-------------------------------
@@ -64,8 +64,8 @@ $('#createBtn').click(function () {
   //Read in email and initiate new KeyManager if neccesary
   if($("#txtMyMail").is(":visible")){
     var myMail = $('#myMail').val();
-    console.info("Mail address registered: " + myMail);
-    keyManager = new KeyManager("new", myMail);
+    console.info("Mail address read: " + myMail);
+    km = new KeyManager("new", myMail);
 
   }else{
     //Read file and create KeyManager-object
@@ -80,8 +80,8 @@ $('#joinBtn').click(function () {
   //Read in email and initiate new KeyManager if neccesary
   if($("#txtMyMail").is(":visible")){
     var myMail = $('#myMail').val();
-    console.info("Mail address registered: " + myMail);
-    keyManager = new KeyManager("new", myMail);
+    console.info("Mail address read: " + myMail);
+    km = new KeyManager("new", myMail);
   }else{
     //Read file and create KeyManager-object
     readCrypto();
@@ -94,7 +94,7 @@ $('#offerSentBtn').click(function () {
   //Read receiver's E-mail address & Store
   var otherMail = $("#recMail").val();
   console.info("Receiver's mail: " + otherMail);
-  KeyManager.otherEnd = otherMail;
+  km.otherEnd = otherMail;
   $('#getRemoteAnswer').modal('show')
 })
 

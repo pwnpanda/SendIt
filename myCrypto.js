@@ -32,7 +32,7 @@ function readCrypto(){
 			console.info("File read");
 		 	console.log(fr.result);
 			//create KeyManager
-			KeyManager = new KeyManager("existing", fr.result);
+			km = new KeyManager("existing", fr.result);
 		}
 	};
 	//May have to change to String or BinaryString!
@@ -41,12 +41,12 @@ function readCrypto(){
 //Try to authenticate user
 function beginAuth (){
   console.log("Starting authentication process!")
-  var key = KeyManager.findKey(KeyManager.otherEnd);
+  var key = km.findKey(km.otherEnd);
   //if we have the receivers key in the list:
   if(key != null){
   	console.log("Creating challenge!")
     //create challenge and tempHash
-    KeyManager.generateRandom();
+    km.generateRandom();
     //Tell Protocol to send an authentication challenge!
     createAuthMsg(protocol.AUTH_CHALLENGE);
   } else {
@@ -63,11 +63,11 @@ function processAuth(reply){
     //Received an authentication challenge
     case protocol.AUTH_CHALLENGE:
     	KeyManger.otherEnd = reply.sender;
-  		console.assert((KeyManager.findKey(KeyManager.otherEnd) != null), "Sender is unknown! Can not exchange information!");
+  		console.assert((km.findKey(km.otherEnd) != null), "Sender is unknown! Can not exchange information!");
       	//Decrypt challenge with private key
-      	var decrypted = KeyManager.decryptData(reply.challenge);
+      	var decrypted = km.decryptData(reply.challenge);
 	  	//Calculate hash from challenge - stored as curHash in keymanager
-	  	KeyManager.createHash(decrypted);
+	  	km.createHash(decrypted);
 	  	//Send AUTH_RESPONSE
 	  	createAuthMsg(protocol.AUTH_RESPONSE);
     	break;
@@ -75,11 +75,11 @@ function processAuth(reply){
     //Received an authentication response
     case protocol.AUTH_RESPONSE:
     	//Assert e-mail
-    	console.assert((reply.sender === KeyManager.otherEnd), "Receivers e-mail is not correct! Security breach found! Terminating!");
+    	console.assert((reply.sender === km.otherEnd), "Receivers e-mail is not correct! Security breach found! Terminating!");
 	    //Decrypt reply with private key
-      	var decrypted = KeyManager.decryptData(reply.challenge);
+      	var decrypted = km.decryptData(reply.challenge);
 		//Compare decrypted reply and temp hash
-		if (KeyManager.compareHash(decrypted)){
+		if (km.compareHash(decrypted)){
 			console.info("Authenticated!");
 			stageFiles();
 		}else{
@@ -89,9 +89,9 @@ function processAuth(reply){
     
     //Received authentication setup information  
     case protocol.AUTH_SETUP:
-    	KeyManger.otherEnd = reply.sender;
+    	km.otherEnd = reply.sender;
     	//Store e-mail and public key
-    	KeyManager.storeKey(reply.sender, reply.key);
+    	km.storeKey(reply.sender, reply.key);
     	//Reply with own e-mail and public key in AUTH_S_REPLY
     	createAuthMsg(protocol.AUTH_S_REPLY);
     	break;
@@ -99,9 +99,9 @@ function processAuth(reply){
     //Received authentication setup reply
     case protocol.AUTH_S_REPLY:
     	//Assert e-mail
-    	console.assert((reply.sender === KeyManager.otherEnd), "Receivers e-mail is not correct! Security breach found! Terminating!");
+    	console.assert((reply.sender === km.otherEnd), "Receivers e-mail is not correct! Security breach found! Terminating!");
     	//Store e-mail and public key
-    	KeyManager.storeKey(reply.sender, reply.key);
+    	km.storeKey(reply.sender, reply.key);
     	//Authentication setup complete - start transfer!
     	console.log("Authentication setup complete! Starting transfer!");
     	stageFiles();

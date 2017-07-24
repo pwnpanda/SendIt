@@ -84,43 +84,48 @@ function displayProgress(perc){
   document.querySelector('#transferDetails').innerHTML = 'Filename: ' + fmArray[curFileNum].fileName + '. Filenumber: ' + (curFileNum+1) + '/' + nrOfFiles + '. Percent: ' + (perc*100).toFixed(2) + '/100';
 }
 //Create the Authentication message to send
-function createAuth(type){
+function createAuthMsg(type){
   var msg;
+  var tmp;
   console.log("Creating message of type ", type);
   switch (type){
     //Sending authentication challenge
     case protocol.AUTH_CHALLENGE:
       //Send the challenge encrypted with receiver's public key
+      tmp = km.encryptData(km.challenge).then(km.cryptoResolved().catch(km.err())); 
       msg = {
-        challenge: KeyManager.encryptData(KeyManager.challenge),
-        sender: KeyManager.email,
+        challenge: tmp,
+        sender: km.email,
         action: type
       };
       break;
     //Sending authentication response
     case protocol.AUTH_RESPONSE:
       //Send the calculated hash encrypted with sender's public key
+      tmp = km.encryptData(km.curHash).then(km.cryptoResolved()).catch(km.err());
       msg = {
-        challenge: KeyManager.encryptData(KeyManager.curHash),
-        sender: KeyManager.email,
+        challenge: tmp,
+        sender: km.email,
         action: type
       }
       break;
     //Sending authentication setup information  
     case protocol.AUTH_SETUP:
       //Share the public key
+      tmp = km.exportKey().then(km.keyResolved()).catch(km.err());
       msg = {
-        key: KeyManager.exportKey(),
-        sender: KeyManager.email,
+        key: tmp,
+        sender: km.email,
         action: type
       };
       break;
     //Sending authentication setup reply
     case protocol.AUTH_S_REPLY:
       //Share the public key
+      tmp = km.exportKey().then(km.keyResolved()).catch(km.err());
       msg = {
-        key: KeyManager.exportKey(),
-        sender: KeyManager.email,
+        key: tmp,
+        sender: km.email,
         action: type
       };
       break;
@@ -208,8 +213,8 @@ function handleSignal(msg) {
     case protocol.AUTH_RESPONSE:
     case protocol.AUTH_SETUP:
     case protocol.AUTH_S_REPLY:
-      console.info("Received authentication signal: ", data.action);
-      processAuth(data);
+      console.info("Received authentication signal: ", msg.action);
+      processAuth(msg);
       break;
     
     //If none of the above, something strange happened!
