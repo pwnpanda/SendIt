@@ -92,7 +92,7 @@ function createAuth(type){
     case protocol.AUTH_CHALLENGE:
       //Send the challenge encrypted with receiver's public key
       msg = {
-        challenge: KeyManager.encryptData(KeyManager.challenge);
+        challenge: KeyManager.encryptData(KeyManager.challenge),
         sender: KeyManager.email,
         action: type
       };
@@ -101,7 +101,7 @@ function createAuth(type){
     case protocol.AUTH_RESPONSE:
       //Send the calculated hash encrypted with sender's public key
       msg = {
-        challenge: KeyManager.encryptData(KeyManager.curHash);
+        challenge: KeyManager.encryptData(KeyManager.curHash),
         sender: KeyManager.email,
         action: type
       }
