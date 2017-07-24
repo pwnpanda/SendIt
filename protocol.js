@@ -90,7 +90,7 @@ function createAuth(type){
   switch (type){
     //Sending authentication challenge
     case protocol.AUTH_CHALLENGE:
-      //Send the encrypted challenge
+      //Send the challenge encrypted with receiver's public key
       msg = {
         challenge: KeyManager.encryptData(KeyManager.challenge);
         sender: KeyManager.email,
@@ -99,7 +99,7 @@ function createAuth(type){
       break;
     //Sending authentication response
     case protocol.AUTH_RESPONSE:
-      //Send the encrypted calculated hash
+      //Send the calculated hash encrypted with sender's public key
       msg = {
         challenge: KeyManager.encryptData(KeyManager.curHash);
         sender: KeyManager.email,

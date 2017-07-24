@@ -197,6 +197,8 @@ KeyManager.prototype = {
 	)
 	.then(function(encrypted){
 	    //returns an ArrayBuffer containing the encrypted data
+      //TODO - REMOVE? Use this to test if encrData is needed
+      console.log(encrypted);
 	    var encrData = new Uint8Array(encrypted);
 	    console.log("Data encrypted: ", encrData);
 	    return encrData;
@@ -218,6 +220,8 @@ KeyManager.prototype = {
 	)
 	.then(function(decrypted){
 	    //returns an ArrayBuffer containing the decrypted data
+      //TODO - REMOVE? Use this to test if decrData is needed
+      console.log(decrypted);
 	    var decrData = new Uint8Array(decrypted);
 	    console.log("Data decrypted: ", decrData);
 	    return decrData;

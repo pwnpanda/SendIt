@@ -62,17 +62,30 @@ function processAuth(reply){
   	    
     case protocol.AUTH_CHALLENGE:
       //Received an authentication challenge
+    	KeyManger.otherEnd = reply.sender;
+  		console.assert((KeyManager.findKey(KeyManager.otherEnd) != null), "Sender is unknown! Can not exchange information!");
       	//Decrypt challenge with private key
-	  	//Calculate hash
-	  	//Encrypt with sender's public key
-      	//Send AUTH_RESPONSE
+      	var decrypted = KeyManager.decryptData(reply.challenge);
+	  	//Calculate hash from challenge - stored as curHash in keymanager
+	  	KeyManager.createHash(decrypted);
+	  	//Send AUTH_RESPONSE
+	  	createAuthMsg(protocol.AUTH_RESPONSE);
     	break;
 
     //Received an authentication response
     case protocol.AUTH_RESPONSE:
+
+    	//Assert e-mail
+    	console.assert((reply.sender === KeyManager.otherEnd), "Receivers e-mail is not correct! Security breach found! Terminating!");
 	    //Decrypt reply with private key
+      	var decrypted = KeyManager.decryptData(reply.challenge);
 		//Compare decrypted reply and temp hash
-		//Call stageFiles(); or throw error!
+		if (KeyManager.compareHash(decrypted)){
+			console.info("Authenticated!");
+			stageFiles();
+		}else{
+			console.error("Authentication denied! Security issue!");
+		}
     	break;
     
     //Received authentication setup information  
