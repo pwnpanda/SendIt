@@ -49,33 +49,20 @@ KeyManager.prototype = {
 
   //Create new KeyManager
   newManager: function(myMail){
-    console.log("Creating new KeyManager. Mail: ", myMail);
+    console.log("Creating new KeyManager ", myMail);
     //Email of this node
     this.email = myMail;
-    //Public&Private key of this node
-    var p = this.createKeyPair();
-    p.then(function(key){
-      console.log("KeyPair created!");
-      //Stores a keypair object - Have to use km since we're calling function from window.
-      km.key = key;
-      
-      /*TODO - Remove! SENSITIVE
-      console.info(key.publicKey);
-      console.info(key.privateKey);
-      */
-    }
-    ).catch(function(err){
-        console.error(err);
-     });
     //Dictionary of public keys and e-mails of other nodes
     //Key = email, value = Public key
     this.keys = {};
+    //Public&Private key of this node
+    this.createKeyPair();
   },
 
   //Create key pair as keyPair object
   createKeyPair: function () {
     //Taken from: https://github.com/diafygi/webcrypto-examples#rsa-oaep
-    return window.crypto.subtle.generateKey(
+    window.crypto.subtle.generateKey(
       {
         name: "RSA-OAEP",
         modulusLength: 2048, //can be 1024, 2048, or 4096
@@ -84,25 +71,46 @@ KeyManager.prototype = {
       },
       true, //whether the key is extractable (i.e. can be used in exportKey)
       ["encrypt", "decrypt"] //must be ["encrypt", "decrypt"] or ["wrapKey", "unwrapKey"]
-    );
+    )
+    .then(function(key){
+        //returns a keypair object
+        console.log("KeyPair created!");
+        km.key = key;
+        
+        /*TODO - Remove! SENSITIVE
+        console.info(key.publicKey);
+        console.info(key.privateKey);
+        */
+        
+    })
+    .catch(function(err){
+        console.error(err);
+    });
   },
 
-  //Exports the keydata from a public key-object
+  //Exports the keydata from a public key object
   //Taken from: https://github.com/diafygi/webcrypto-examples#rsa-oaep
   exportKey: function() {
     return window.crypto.subtle.exportKey(
-    	//TODO change to SPKI
 	    "jwk", //can be "jwk" (public or private), "spki" (public only), or "pkcs8" (private only)
 	    km.key.publicKey //can be a publicKey or privateKey, as long as extractable was true
   	);
+  	/*.then(function(keydata){
+  	    //returns the exported key data
+  	    console.info("Exported key: ", keydata);
+  	    km.keydat = keydata;
+        testCrypto(keydata);
+  	})
+  	.catch(function(err){
+  	   console.error(err);
+  	 }
+    );*/
   },
 
   //Returns the public key-object converted from keydata
-  //TODOITNOW - Make key accessible from window!
   importKey: function(key){
   	//Taken from: https://github.com/diafygi/webcrypto-examples#rsa-oaep
   	return window.crypto.subtle.importKey(
-  		//TODO change to SPKI
 	    "jwk", //can be "jwk" (public or private), "spki" (public only), or "pkcs8" (private only)
 	    key,
 	    {   //these are the algorithm options
@@ -112,15 +120,15 @@ KeyManager.prototype = {
 	    true, //whether the key is extractable (i.e. can be used in exportKey)
 	    ["encrypt"] //"encrypt" or "wrapKey" for public key import or
 	                //"decrypt" or "unwrapKey" for private key imports
-	   );
-	},
-
-  //Handling when import/export key promises are resolved
-  keyResolved: function (out) {
-    //returns a key in given export/import format.
-    //jwk or CryptoKey object
-    console.log("Key resolved: ", out);
-    return out;
+	  );
+	/*.then(function(publicKey){
+	    //returns a publicKey (or privateKey if you are importing a private key)
+	    console.log("Imported key: ", publicKey);
+	    return publicKey;
+	})
+	.catch(function(err){
+	    console.error(err);
+	});*/
   },
 
   //Store a public key as keydata
@@ -130,7 +138,14 @@ KeyManager.prototype = {
     }
     //Add key=email and value=Public key in dictionary
     //Public key stored as object
-    this.keys[email] = this.importKey(key);
+    this.importKey(key)
+    .then(function(impKey){
+      console.warn("OK?", impKey);
+      km.keys[email] = impKey;
+    })
+    .catch(function(err){
+      console.error(err);
+    });
     console.info("Key and email pair stored for: " + email);
   },
 
@@ -143,8 +158,6 @@ KeyManager.prototype = {
   },
   
   //Create hash
-  //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  //TODO need to resolve promise before sending hash!!!
   createHash: function (data) {
     //Taken from: https://github.com/diafygi/webcrypto-examples#sha-256---digest
     this.curHash = window.crypto.subtle.digest(
@@ -183,41 +196,52 @@ KeyManager.prototype = {
   //Encrypt data by using receiver's public key-object
   encryptData: function(data){
   	console.info("Encrypting: ", data);
-    var useKey = this.findKey(this.otherEnd);
+    var useKey = findKey(this.otherEnd);
   	if(useKey == null){
   		console.error("There is no key associated with this address!!!");
   	}
   	return window.crypto.subtle.encrypt(
-      {
-	      name: "RSA-OAEP",
-	      //label: Uint8Array([...]) //optional
-	    },
-	    useKey, //from generateKey or importKey above
-	    data //ArrayBuffer of data you want to encrypt
-	  );
-  },
-
-  //Decrypt data by using own private key-object
-  decryptData: function(data){
-    var key = this.key.privateKey;
-    return window.crypto.subtle.decrypt(
 	    {
 	        name: "RSA-OAEP",
 	        //label: Uint8Array([...]) //optional
 	    },
-	    key, //from generateKey or importKey above
-	    data //ArrayBuffer of the data
-	  );	
+	    useKey, //from generateKey or importKey above
+	    data //ArrayBuffer of data you want to encrypt
+	)
+	.then(function(encrypted){
+	    //returns an ArrayBuffer containing the encrypted data
+      //TODO - REMOVE? Use this to test if encrData is needed
+      console.log(encrypted);
+	    var encrData = new Uint8Array(encrypted);
+	    console.log("Data encrypted: ", encrData);
+	    return encrData;
+	})
+	.catch(function(err){
+	    console.error(err);
+	});
   },
 
-  //Handling when encrypt/decrypt Data promises are resolved.
-  cryptoResolved: function(out){
-    //returns an ArrayBuffer containing the decrypted data
-    //TODO - REMOVE? Use this to test if decrData is needed
-    console.log(out);
-    var cData = new Uint8Array(out);
-    console.log("Data decrypted: ", out);
-    return cData;
+  //Decrypt data by using own private key-object
+  decryptData: function(data){
+  	return window.crypto.subtle.decrypt(
+	    {
+	        name: "RSA-OAEP",
+	        //label: Uint8Array([...]) //optional
+	    },
+	    this.key.privateKey, //from generateKey or importKey above
+	    data //ArrayBuffer of the data
+	)
+	.then(function(decrypted){
+	    //returns an ArrayBuffer containing the decrypted data
+      //TODO - REMOVE? Use this to test if decrData is needed
+      console.log(decrypted);
+	    var decrData = new Uint8Array(decrypted);
+	    console.log("Data decrypted: ", decrData);
+	    return decrData;
+	})
+	.catch(function(err){
+	    console.error(err);
+	});
   },
   
   //getObjectData
@@ -228,10 +252,5 @@ KeyManager.prototype = {
     //Stringify object
     return JSON.stringify(this.self);
     //TODO - encrypt data before returning!
-  },
-
-  //Error handling function
-  err: function(err){
-      console.error(err);
   }
 };

@@ -117,3 +117,7 @@ function processAuth(reply){
 function writeCrypto(){
 	return;
 }
+
+function testCrypto(key){
+	console.log(key);
+}

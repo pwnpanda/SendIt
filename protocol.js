@@ -86,7 +86,6 @@ function displayProgress(perc){
 //Create the Authentication message to send
 function createAuthMsg(type){
   var msg;
-  var tmp;
   console.log("Creating message of type ", type);
   switch (type){
     //Sending authentication challenge
@@ -111,31 +110,32 @@ function createAuthMsg(type){
       break;
     //Sending authentication setup information  
     case protocol.AUTH_SETUP:
-      //Share the public key
-      tmp = km.exportKey().then(km.keyResolved()).catch(km.err());
-      msg = {
-        key: tmp,
-        sender: km.email,
-        action: type
-      };
-      break;
+    //Just let it pass through, since it is identical to AUTH_S_REPLY, except the type which is already handled
     //Sending authentication setup reply
     case protocol.AUTH_S_REPLY:
-      //Share the public key
-      tmp = km.exportKey().then(km.keyResolved()).catch(km.err());
-      msg = {
-        key: tmp,
-        sender: km.email,
-        action: type
-      };
+      km.exportKey()
+      .then(function(keydata){
+        //returns the exported key data
+        console.info("Exported key: ", keydata);
+        return keydata;
+      }).then(function(key){
+        msg = {
+          key: key,
+          sender: km.email,
+          action: type
+        };
+        doSend(msg);
+      })
+      .catch(function(err){
+         console.error(err);
+       }
+      );
       break;
     //Error!
     default: 
       console.error("Malformed message type: ", type);
       break;
   }
-  //Send message
-  doSend(msg);
 }
 //Everything below taken from
 //https://github.com/tskimmett/rtc-pubnub-fileshare/blob/master/connection.js

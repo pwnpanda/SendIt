@@ -33,6 +33,13 @@ for(key in dict){
 !("key" in obj) // true if "key" doesn't exist in object
 
 
+Promise.all(array); /*Make a promise that fulfills when every item in the array fulfills, 
+and rejects if (and when) any item rejects. Each array item is passed to 
+Promise.resolve, so the array can be a mixture of promise-like objects and other 
+objects. The fulfillment value is an array (in order) of fulfillment values. The 
+rejection value is the first rejection value.*/
+Promise.race(array);  /*Make a Promise that fulfills as soon as any item fulfills,
+ or rejects as soon as any item rejects, whichever happens first.*/
 
 
 ----------------------------------------------------------------------------------------
