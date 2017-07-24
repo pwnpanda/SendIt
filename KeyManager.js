@@ -121,14 +121,6 @@ KeyManager.prototype = {
 	    ["encrypt"] //"encrypt" or "wrapKey" for public key import or
 	                //"decrypt" or "unwrapKey" for private key imports
 	  );
-	/*.then(function(publicKey){
-	    //returns a publicKey (or privateKey if you are importing a private key)
-	    console.log("Imported key: ", publicKey);
-	    return publicKey;
-	})
-	.catch(function(err){
-	    console.error(err);
-	});*/
   },
 
   //Store a public key as keydata
@@ -138,15 +130,18 @@ KeyManager.prototype = {
     }
     //Add key=email and value=Public key in dictionary
     //Public key stored as object
+    //Gets the promise for importKey
     this.importKey(key)
     .then(function(impKey){
-      console.warn("OK?", impKey);
+      //Once the object-data has been extracted, store it in the keys-array
+      //have to use km, since we're inside window.crypto. 
       km.keys[email] = impKey;
+      console.info("Key and email pair stored for: " + email + " - ", impKey);
     })
     .catch(function(err){
+      //Error-handling just in case!
       console.error(err);
     });
-    console.info("Key and email pair stored for: " + email);
   },
 
   //Find keydata based on mail address

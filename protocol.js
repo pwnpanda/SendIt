@@ -113,12 +113,14 @@ function createAuthMsg(type){
     //Just let it pass through, since it is identical to AUTH_S_REPLY, except the type which is already handled
     //Sending authentication setup reply
     case protocol.AUTH_S_REPLY:
+      //Gets the promise for exportKey.
       km.exportKey()
       .then(function(keydata){
-        //returns the exported key data
+        //Once the data has been calculated, itreturns the exported key data
         console.info("Exported key: ", keydata);
         return keydata;
       }).then(function(key){
+        //Then lastly it creates the message and sends it.
         msg = {
           key: key,
           sender: km.email,
@@ -127,7 +129,8 @@ function createAuthMsg(type){
         doSend(msg);
       })
       .catch(function(err){
-         console.error(err);
+        //Error-handling just in case
+        console.error(err);
        }
       );
       break;
