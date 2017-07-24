@@ -1,6 +1,4 @@
 function KeyManager(cmd, data) {
-  //Reference to itself
-  this.self = this;
   //Random string generated
   this.challenge = null;
   //Hash of generated string
@@ -244,8 +242,12 @@ KeyManager.prototype = {
     //Erase session data
     this.challenge=null;
     this.hash=null;
+    this.otherEnd=null;
+    //Code below is useless. Need to go through every key 
+    //and store the email-pair with the exported-key value!
+    //See: https://developers.google.com/web/fundamentals/getting-started/primers/promises
     //Stringify object
-    return JSON.stringify(this.self);
+    return JSON.stringify(this);
     //TODO - encrypt data before returning!
   }
 };
