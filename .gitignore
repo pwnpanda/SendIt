@@ -1,0 +1,4 @@
+#Ignore crypto-files
+*.crp
+#Except example file
+!example.crp

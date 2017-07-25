@@ -1,11 +1,11 @@
 /* 
   Taken from:
-    https://github.com/cjb/serverless-webrtc
-    Bugfixes and small alterations made!
+	https://github.com/cjb/serverless-webrtc
+	Bugfixes and small alterations made!
   See also:
-    http://www.html5rocks.com/en/tutorials/webrtc/basics/
-    https://code.google.com/p/webrtc-samples/source/browse/trunk/apprtc/index.html
-    https://webrtc-demos.appspot.com/html/pc1.html
+	http://www.html5rocks.com/en/tutorials/webrtc/basics/
+	https://code.google.com/p/webrtc-samples/source/browse/trunk/apprtc/index.html
+	https://webrtc-demos.appspot.com/html/pc1.html
 */
 
 var cfg = {'iceServers': [{'url': 'stun:23.21.150.121'}]},
@@ -18,8 +18,8 @@ var activedc
 var sdpConstraints = {
   optional: [],
   mandatory: {
-    OfferToReceiveAudio: false,
-    OfferToReceiveVideo: false
+	OfferToReceiveAudio: false,
+	OfferToReceiveVideo: false
   }
 }
 //Comment out for production code! Removes error output
@@ -44,12 +44,12 @@ $('#endScreen').modal('hide')
 
 //Makes sure the user inputs a receiver before proceeding
 $("#recMail").keyup( function() {
-  if( $(this).val() != '') {
-    mailReady=true;
-  }else{
-    mailReady=false;
-  }
-  isReady();
+ 	if( $(this).val() != '') {
+		mailReady=true;
+ 	}else{
+		mailReady=false;
+ 	}
+ 	isReady();
 });
 
 //MY ADDITION END----------------------------
@@ -63,12 +63,12 @@ var pc1 = new RTCPeerConnection(cfg, con),
 $('#createBtn').click(function () {
   //Read in email and initiate new KeyManager if neccesary
   if($("#txtMyMail").is(":visible")){
-    var myMail = $('#myMail').val();
-    console.info("Mail address read: " + myMail);
-    km = new KeyManager("new", myMail);
+	var myMail = $('#myMail').val();
+	console.info("Mail address read: " + myMail);
+	km = new KeyManager("new", myMail);
   }else{
-    //Read file and create KeyManager-object
-    readCrypto();
+	//Read file and create KeyManager-object
+	readCrypto();
   }
   //--------------------------
   $('#showLocalOffer').modal('show')
@@ -76,17 +76,17 @@ $('#createBtn').click(function () {
 })
 
 $('#joinBtn').click(function () {
-  //Read in email and initiate new KeyManager if neccesary
-  if($("#txtMyMail").is(":visible")){
-    var myMail = $('#myMail').val();
-    console.info("Mail address read: " + myMail);
-    km = new KeyManager("new", myMail);
-  }else{
-    //Read file and create KeyManager-object
-    readCrypto();
-  }
-  //--------------------------
-  $('#getRemoteOffer').modal('show')
+ 	//Read in email and initiate new KeyManager if neccesary
+ 	if($("#txtMyMail").is(":visible")){
+		var myMail = $('#myMail').val();
+		console.info("Mail address read: " + myMail);
+		km = new KeyManager("new", myMail);
+	}else{
+		//Read file and create KeyManager-object
+		readCrypto();
+	}
+	//--------------------------
+	$('#getRemoteOffer').modal('show')
 })
 
 $('#offerSentBtn').click(function () {
@@ -118,38 +118,38 @@ $('#answerRecdBtn').click(function () {
 
 function setupDC1 () {
   try {
-    dc1 = pc1.createDataChannel('test', {reliable: true})
-    activedc = dc1
-    console.log('Created datachannel (pc1)')
-    dc1.onopen = function (e) {
-      console.info('data channel connect')
-      $('#waitForConnection').modal('hide')
-      $('#waitForConnection').remove()
-      $('#connectedScreen').modal('show')
-    }
-    dc1.onmessage = function (e) {
-      console.log('Got message (pc1)');
-      onReceiveMessageCallback(e);
-    }
+	dc1 = pc1.createDataChannel('test', {reliable: true})
+	activedc = dc1
+	console.log('Created datachannel (pc1)')
+	dc1.onopen = function (e) {
+	  console.info('data channel connect')
+	  $('#waitForConnection').modal('hide')
+	  $('#waitForConnection').remove()
+	  $('#connectedScreen').modal('show')
+	}
+	dc1.onmessage = function (e) {
+	  console.log('Got message (pc1)');
+	  onReceiveMessageCallback(e);
+	}
   } catch (e) { console.warn('No data channel (pc1)', e); }
 }
 
 function createLocalOffer () {
   setupDC1()
   pc1.createOffer(function (desc) {
-    pc1.setLocalDescription(desc, function () {}, function () {})
-    console.info('created local offer', desc)
+	pc1.setLocalDescription(desc, function () {}, function () {})
+	console.info('created local offer', desc)
   },
   function () { console.warn("Couldn't create offer") },
-    sdpConstraints)
+	sdpConstraints)
 }
 
 pc1.onicecandidate = function (e) {
   console.info('ICE candidate (pc1)', e)
   if (e.candidate == null) {
-    iceReady = true;
-    isReady();
-    $('#localOffer').html(JSON.stringify(pc1.localDescription))
+	iceReady = true;
+	isReady();
+	$('#localOffer').html(JSON.stringify(pc1.localDescription))
   }
 }
 
@@ -203,19 +203,19 @@ pc2.ondatachannel = function (e) {
   dc2 = datachannel
   activedc = dc2
   dc2.onopen = function (e) {
-    console.info('data channel connect')
+	console.info('data channel connect')
   }
   dc2.onmessage = function (e) {
-    console.log('Got message (pc2)');
-    onReceiveMessageCallback(e);
+	console.log('Got message (pc2)');
+	onReceiveMessageCallback(e);
   }
 }
 
 function handleOfferFromPC1 (offerDesc) {
   pc2.setRemoteDescription(offerDesc)
   pc2.createAnswer(function (answerDesc) {
-    console.info('Created local answer: ', answerDesc)
-    pc2.setLocalDescription(answerDesc)
+	console.info('Created local answer: ', answerDesc)
+	pc2.setLocalDescription(answerDesc)
   },
   function () { console.warn("Couldn't create offer") },
   sdpConstraints)
@@ -224,8 +224,8 @@ function handleOfferFromPC1 (offerDesc) {
 pc2.onicecandidate = function (e) {
   console.log('ICE candidate (pc2)', e)
   if (e.candidate == null) {
-    $('#answerSentBtn').prop('disabled', false);
-    $('#localAnswer').html(JSON.stringify(pc2.localDescription))
+	$('#answerSentBtn').prop('disabled', false);
+	$('#localAnswer').html(JSON.stringify(pc2.localDescription))
   }
 }
 
@@ -261,9 +261,9 @@ console.assert  = function(cond, text){
 //My own!------------------------------------
 function isReady(){
   if (fileReady && iceReady && mailReady) {
-    $('#offerSentBtn').prop('disabled', false);
+	$('#offerSentBtn').prop('disabled', false);
   }else{
-    $('#offerSentBtn').prop('disabled', true);
+	$('#offerSentBtn').prop('disabled', true);
   }
 }
 

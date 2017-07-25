@@ -43,33 +43,15 @@ Promise.race(array);  /*Make a Promise that fulfills as soon as any item fulfill
 
 
 ----------------------------------------------------------------------------------------
-OLD CODE!
-
-if (msg.action === protocol.ANSWER) {
-    console.log("THE OTHER PERSON IS READY");
-  }
-  else if (msg.action === protocol.OFFER) {
-    // Someone is ready to send file data. Set up receiving structure
-    console.info("Receiving file nr: " + (curFileNum+1) + " of " + msg.totFiles)
-    if(curFileNum == 0){
-      nrOfFiles = msg.totFiles;
-      fmArray = new Array(msg.totFiles);
-    }
-    fmArray[curFileNum] = new FileManager(maxChunkSize);
-    registerFileEvents(fmArray[curFileNum]);
-    fmArray[curFileNum].stageRemoteFile(msg.fName, msg.fType, msg.nChunks);
-    answerShare();
-  }
-  else if (msg.action === protocol.ERR_REJECT) {
-    alert("Unable to communicate! Stopping transfer!");
-    closeDataChannels();
-  }
-  else if (msg.action === protocol.CANCEL) {
-    alert("Partner cancelled the share. Stopping transfer!");
-    closeDataChannels();
-  } else if(msg.action == protocol.AUTH_CHALLENGE || protocol.AUTH_RESPONSE || protocol.AUTH_SETUP || protocol.AUTH_S_REPLY){
-    console.info("Received authentication signal: ", data.action);
-    processAuth(data);
-  }else{
-    console.error("Unrecognized signal received! Signal: " + msg.action);
-  }
+//Gets the promise for importKey
+    this.importKey(key)
+    .then(function(impKey){
+      //Once the object-data has been extracted, store it in the keys-array
+      //have to use km, since we're inside window.crypto. 
+      km.keys[email] = impKey;
+      console.info("Key and email pair stored for: " + email + " - ", impKey);
+    })
+    .catch(function(err){
+      //Error-handling just in case!
+      console.error(err);
+    });

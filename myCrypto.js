@@ -113,7 +113,3 @@ function processAuth(reply){
     	break;
   }
 }
-//Behaviour for writing keymanager to cryptoFile
-function writeCrypto(){
-	return;
-}
