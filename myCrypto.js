@@ -36,7 +36,7 @@ function readCrypto(){
 		}
 	};
 	//May have to change to String or BinaryString!
-	fr.readAsArrayBuffer(cryptoFile);
+	fr.readAsText(cryptoFile);
 }
 //Try to authenticate user
 function beginAuth (){
@@ -116,8 +116,4 @@ function processAuth(reply){
 //Behaviour for writing keymanager to cryptoFile
 function writeCrypto(){
 	return;
-}
-
-function testCrypto(key){
-	console.log(key);
 }

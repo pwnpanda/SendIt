@@ -66,7 +66,6 @@ $('#createBtn').click(function () {
     var myMail = $('#myMail').val();
     console.info("Mail address read: " + myMail);
     km = new KeyManager("new", myMail);
-
   }else{
     //Read file and create KeyManager-object
     readCrypto();
@@ -253,6 +252,9 @@ pc2.onconnection = handleOnconnection
 console.assert  = function(cond, text){
   if( cond )  return;
   if( console.assert.useDebugger )  debugger;
+  //My addition
+  closeDataChannels();
+  //--------------
   throw new Error(text || "Assertion failed!");
 };
 

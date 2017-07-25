@@ -30,19 +30,29 @@ KeyManager.prototype = {
       //Decode raw file
       //TODO - Decrypt file (and encrypt)
       //var dec = decodeMethod(data);
-      var dec = JSON.parse(data);
+      //var dec = JSON.parse(data);
+      var dec = data.split(";\n");
+      console.log(dec);
       //Extract mail
-      this.email = dec.email;
-      //Extract own key - stored as objects
-      this.key = dec.key;
-      //Extract keys - stored as objects
+      this.email = dec[0];
+      //Extract own key - stored as object
+      this.key=new Object();
+      this.key.privateKey = dec[1];
+      this.key.publicKey = dec[2];
+      //Extract keys - stored as JWK
+      Promise.all([(this.importKey(this.key.privateKey)),
+      (this.importKey(this.key.publicKey))]).then(function (keys) {
+        km.key.privateKey = keys[0];
+        km.key.publicKey = keys[1];
+        console.warn("Keys: ", keys);
+      });
       //Todo - handle 0-n keys!
       this.keys = dec.keys;
     //Else
     } else{
       console.error("No data to read! Data: ", data);
     }
-    console.info("This keymanager: ", this.self);
+    console.info("This keymanager: ", this);
   },
 
   //Create new KeyManager
@@ -88,10 +98,10 @@ KeyManager.prototype = {
 
   //Exports the keydata from a public key object
   //Taken from: https://github.com/diafygi/webcrypto-examples#rsa-oaep
-  exportKey: function() {
+  exportKey: function(eKey) {
     return window.crypto.subtle.exportKey(
 	    "jwk", //can be "jwk" (public or private), "spki" (public only), or "pkcs8" (private only)
-	    km.key.publicKey //can be a publicKey or privateKey, as long as extractable was true
+	    eKey //can be a publicKey or privateKey, as long as extractable was true
   	);
   	/*.then(function(keydata){
   	    //returns the exported key data
@@ -127,19 +137,9 @@ KeyManager.prototype = {
     	console.error("Error! Email is already associated with a key! This is a security breach!");
     }
     //Add key=email and value=Public key in dictionary
-    //Public key stored as object
-    //Gets the promise for importKey
-    this.importKey(key)
-    .then(function(impKey){
-      //Once the object-data has been extracted, store it in the keys-array
-      //have to use km, since we're inside window.crypto. 
-      km.keys[email] = impKey;
-      console.info("Key and email pair stored for: " + email + " - ", impKey);
-    })
-    .catch(function(err){
-      //Error-handling just in case!
-      console.error(err);
-    });
+    //Public key stored in JWK-format
+    this.keys[email] = key;
+    console.info("Key and email pair stored for: " + email + " - ", key);
   },
 
   //Find keydata based on mail address
@@ -243,11 +243,18 @@ KeyManager.prototype = {
     this.challenge=null;
     this.hash=null;
     this.otherEnd=null;
-    //Code below is useless. Need to go through every key 
-    //and store the email-pair with the exported-key value!
-    //See: https://developers.google.com/web/fundamentals/getting-started/primers/promises
-    //Stringify object
-    return JSON.stringify(this);
-    //TODO - encrypt data before returning!
+    var write;
+    //Stores the own email, then own private key, then list of know hosts and public-key-pairs.
+    Promise.all([(this.exportKey(this.key.privateKey)),
+      (this.exportKey(this.key.publicKey))]).then(function (keys) {
+      write = km.email + ";\n" + JSON.stringify(keys[0]) + ";\n" + JSON.stringify(keys[1]) + ";\n";
+      for(email in km.keys){
+        write = write + email +":"+JSON.stringify(km.keys[email])+";\n";
+      }
+      //console.warn("Here: \n" + write);
+      //TODO - encrypt data before returning!
+      //Call some function that writes to file, sending write as an argument.
+      writeToFile(write);
+    });
   }
 };

@@ -85,4 +85,14 @@ function readFileInfo(x){
     };   
     reader.readAsArrayBuffer(f);
 }
-//----------------------------------------------------------
+//Write this data to file
+//https://stackoverflow.com/a/32858416
+function writeToFile(data){
+  var textFileAsBlob = new Blob([data], {type:'text/plain'});
+  var fileNameToSaveAs = "crypto.crp";
+  var downloadLink = document.createElement("a");
+  downloadLink.download = fileNameToSaveAs;
+  downloadLink.innerHTML = "Download File";
+  downloadLink.href = window.URL.createObjectURL(textFileAsBlob);
+  downloadLink.click();
+}

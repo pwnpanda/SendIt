@@ -77,6 +77,7 @@ function closeDataChannels() {
   pc1 = null;
   pc2 = null;
   console.info('Closed peer connections');
+  km.getObjectData();
 }
 
 //Show progress
@@ -114,7 +115,7 @@ function createAuthMsg(type){
     //Sending authentication setup reply
     case protocol.AUTH_S_REPLY:
       //Gets the promise for exportKey.
-      km.exportKey()
+      km.exportKey(km.key.publicKey)
       .then(function(keydata){
         //Once the data has been calculated, itreturns the exported key data
         console.info("Exported key: ", keydata);
