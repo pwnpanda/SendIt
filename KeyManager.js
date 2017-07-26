@@ -50,7 +50,7 @@ KeyManager.prototype = {
 			});
 			//Store user and public key-pairs
 			this.keys = {};
-			//Todo - handle 0-n keys!
+			//Handles any number of keys!
 			for (var i = 3; i < dec.length-1; i++) {
 				var tmp = dec[i].split(";");
 				this.storeKey(tmp[0], tmp[1]);
