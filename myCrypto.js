@@ -64,27 +64,59 @@ function processAuth(reply){
     case protocol.AUTH_CHALLENGE:
     	km.otherEnd = reply.sender;
   		console.assert((km.findKey(km.otherEnd) != null), "Sender is unknown! Can not exchange information!");
-      	//Decrypt challenge with private key
-      	var decrypted = km.decryptData(reply.challenge);
-	  	//Calculate hash from challenge - stored as curHash in keymanager
-	  	km.createHash(decrypted);
-	  	//Send AUTH_RESPONSE
-	  	createAuthMsg(protocol.AUTH_RESPONSE);
+      //Decrypt challenge with private key
+      console.log(reply.challenge);
+      var binary = new Uint8Array.from(reply.challenge);
+      console.log("First: ", binary);
+      binary = binary.buffer;
+      console.log("second", binary);
+      km.decryptData(binary)
+      .then(function(decrypted){
+				//returns an ArrayBuffer containing the decrypted data
+				var decrData = new Uint8Array(decrypted);
+				console.log("Data decrypted: ", decrData);
+				return decrData;
+			}).then(function(decrypted){
+				//Compare decrypted reply and temp hash
+				//Calculate hash from challenge - stored as curHash in keymanager
+	  		return km.createHash(decrypted);
+			}).then(function(){
+		  	//Send AUTH_RESPONSE
+		  	createAuthMsg(protocol.AUTH_RESPONSE);
+			})
+			.catch(function(err){
+					console.error(err);
+			});
     	break;
 
     //Received an authentication response
     case protocol.AUTH_RESPONSE:
     	//Assert e-mail
     	console.assert((reply.sender === km.otherEnd), "Receivers e-mail is not correct! Security breach found! Terminating!");
-	    //Decrypt reply with private key
-      	var decrypted = km.decryptData(reply.challenge);
-		//Compare decrypted reply and temp hash
-		if (km.compareHash(decrypted)){
-			console.info("Authenticated!");
-			stageFiles();
-		}else{
-			console.error("Authentication denied! Security issue!");
-		}
+	   	//Decrypt reply with private key
+      console.log(reply.challenge);
+      var binary = new Uint8Array.from(reply.challenge);
+      console.log("First: ", binary);
+      binary = binary.buffer;
+      console.log("second", binary);
+      km.decryptData(binary)
+      .then(function(decrypted){
+				//returns an ArrayBuffer containing the decrypted data
+				var decrData = new Uint8Array(decrypted);
+				console.log("Data decrypted: ", decrData);
+				return decrData;
+			}).then(function(decrypted){
+				//Compare decrypted reply and temp hash
+				if (km.compareHash(decrypted)){
+					console.info("Authenticated!");
+					stageFiles();
+				}else{
+					console.error("Authentication denied! Security issue!");
+				}
+			})
+			.catch(function(err){
+					console.error(err);
+			});
     	break;
     
     //Received authentication setup information  

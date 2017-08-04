@@ -114,19 +114,37 @@ function createAuthMsg(type){
 			})
 			.catch(function(err){
 			console.error(err);
-			}); 
-			
+			});
 			break;
+
 		//Sending authentication response
 		case protocol.AUTH_RESPONSE:
 			//Send the calculated hash encrypted with sender's public key
-			tmp = km.encryptData(km.curHash).then(km.cryptoResolved()).catch(km.err());
-			msg = {
-				challenge: tmp,
+			var key = km.findKey(km.otherEnd);
+			key = JSON.parse(key);
+			km.importKey(key, key.key_ops)
+			.then(function(keyObject){
+				return km.encryptData(keyObject, km.curHash);
+			})
+			.then(function(encrypted){
+				//returns an ArrayBuffer containing the encrypted data
+				var encrData = new Uint8Array(encrypted);
+				console.info("Data encrypted: ", encrData);
+				return encrData;
+			})
+			.then(function(encrypted){
+				msg = {
+				challenge: encrypted,
 				sender: km.email,
 				action: type
-			}
+				};
+				doSend(msg);
+			})
+			.catch(function(err){
+			console.error(err);
+			});
 			break;
+
 		//Sending authentication setup information  
 		case protocol.AUTH_SETUP:
 		//Just let it pass through, since it is identical to AUTH_S_REPLY, except the type which is already handled
@@ -153,6 +171,7 @@ function createAuthMsg(type){
 			 }
 			);
 			break;
+			
 		//Error!
 		default: 
 			console.error("Malformed message type: ", type);

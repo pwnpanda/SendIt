@@ -141,9 +141,6 @@ KeyManager.prototype = {
 
 	//Find keydata based on mail address
 	findKey: function(email){
-		console.warn("Mail in: " + email);
-		console.log("Keys:", this.keys);
-		console.log("test:", (email in this.keys));
 		if(email in this.keys){
 			return this.keys[email];
 		}
@@ -161,7 +158,6 @@ KeyManager.prototype = {
 		)
 		.then(function(hash){
 			//returns the hash as an ArrayBuffer
-			//TODO - REMOVE? Use this to test if hashed is needed
 			var hashed = new Uint8Array(hash);
 			console.log("Hash created: ", hashed);
 			return hashed;
@@ -210,18 +206,7 @@ KeyManager.prototype = {
 			},
 			this.key.privateKey, //from generateKey or importKey above
 			data //ArrayBuffer of the data
-	)
-	.then(function(decrypted){
-			//returns an ArrayBuffer containing the decrypted data
-			//TODO - REMOVE? Use this to test if decrData is needed
-			console.log(decrypted);
-			var decrData = new Uint8Array(decrypted);
-			console.log("Data decrypted: ", decrData);
-			return decrData;
-	})
-	.catch(function(err){
-			console.error(err);
-	});
+		);
 	},
 	
 	//getObjectData
