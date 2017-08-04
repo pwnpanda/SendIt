@@ -62,7 +62,7 @@ function processAuth(reply){
   	    
     //Received an authentication challenge
     case protocol.AUTH_CHALLENGE:
-    	KeyManger.otherEnd = reply.sender;
+    	km.otherEnd = reply.sender;
   		console.assert((km.findKey(km.otherEnd) != null), "Sender is unknown! Can not exchange information!");
       	//Decrypt challenge with private key
       	var decrypted = km.decryptData(reply.challenge);

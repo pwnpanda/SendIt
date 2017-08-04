@@ -110,16 +110,6 @@ KeyManager.prototype = {
 			"jwk", //can be "jwk" (public or private), "spki" (public only), or "pkcs8" (private only)
 			eKey //can be a publicKey or privateKey, as long as extractable was true
 		);
-		/*.then(function(keydata){
-				//returns the exported key data
-				console.info("Exported key: ", keydata);
-				km.keydat = keydata;
-				testCrypto(keydata);
-		})
-		.catch(function(err){
-			 console.error(err);
-		 }
-		);*/
 	},
 
 	//Returns the public key-object converted from keydata
@@ -151,6 +141,9 @@ KeyManager.prototype = {
 
 	//Find keydata based on mail address
 	findKey: function(email){
+		console.warn("Mail in: " + email);
+		console.log("Keys:", this.keys);
+		console.log("test:", (email in this.keys));
 		if(email in this.keys){
 			return this.keys[email];
 		}
@@ -169,7 +162,6 @@ KeyManager.prototype = {
 		.then(function(hash){
 			//returns the hash as an ArrayBuffer
 			//TODO - REMOVE? Use this to test if hashed is needed
-			console.log(hash);
 			var hashed = new Uint8Array(hash);
 			console.log("Hash created: ", hashed);
 			return hashed;
@@ -194,10 +186,9 @@ KeyManager.prototype = {
 	},
 	
 	//Encrypt data by using receiver's public key-object
-	encryptData: function(data){
+	encryptData: function(key, data){
 		console.info("Encrypting: ", data);
-		var useKey = this.findKey(this.otherEnd);
-		if(useKey == null){
+		if(key == null){
 			console.error("There is no key associated with this address!!!");
 		}
 		return window.crypto.subtle.encrypt(
@@ -205,20 +196,9 @@ KeyManager.prototype = {
 					name: "RSA-OAEP",
 					//label: Uint8Array([...]) //optional
 			},
-			useKey, //from generateKey or importKey above
+			key, //from generateKey or importKey above
 			data //ArrayBuffer of data you want to encrypt
-	)
-	.then(function(encrypted){
-			//returns an ArrayBuffer containing the encrypted data
-			//TODO - REMOVE? Use this to test if encrData is needed
-			console.log(encrypted);
-			var encrData = new Uint8Array(encrypted);
-			console.log("Data encrypted: ", encrData);
-			return encrData;
-	})
-	.catch(function(err){
-			console.error(err);
-	});
+		)
 	},
 
 	//Decrypt data by using own private key-object

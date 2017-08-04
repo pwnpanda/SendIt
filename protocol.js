@@ -92,12 +92,30 @@ function createAuthMsg(type){
 		//Sending authentication challenge
 		case protocol.AUTH_CHALLENGE:
 			//Send the challenge encrypted with receiver's public key
-			tmp = km.encryptData(km.challenge).then(km.cryptoResolved().catch(km.err())); 
-			msg = {
-				challenge: tmp,
+			var key = km.findKey(km.otherEnd);
+			key = JSON.parse(key);
+			km.importKey(key, key.key_ops)
+			.then(function(keyObject){
+				return km.encryptData(keyObject, km.challenge);
+			})
+			.then(function(encrypted){
+				//returns an ArrayBuffer containing the encrypted data
+				var encrData = new Uint8Array(encrypted);
+				console.info("Data encrypted: ", encrData);
+				return encrData;
+			})
+			.then(function(encrypted){
+				msg = {
+				challenge: encrypted,
 				sender: km.email,
 				action: type
-			};
+				};
+				doSend(msg);
+			})
+			.catch(function(err){
+			console.error(err);
+			}); 
+			
 			break;
 		//Sending authentication response
 		case protocol.AUTH_RESPONSE:
