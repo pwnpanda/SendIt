@@ -124,6 +124,7 @@ function createAuthMsg(type){
 			key = JSON.parse(key);
 			km.importKey(key, key.key_ops)
 			.then(function(keyObject){
+				console.warn(km.curHash);
 				return km.encryptData(keyObject, km.curHash);
 			})
 			.then(function(encrypted){
@@ -171,7 +172,7 @@ function createAuthMsg(type){
 			 }
 			);
 			break;
-			
+
 		//Error!
 		default: 
 			console.error("Malformed message type: ", type);

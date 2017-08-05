@@ -150,26 +150,24 @@ KeyManager.prototype = {
 	//Create hash
 	createHash: function (data) {
 		//Taken from: https://github.com/diafygi/webcrypto-examples#sha-256---digest
-		this.curHash = window.crypto.subtle.digest(
+		return window.crypto.subtle.digest(
 			{
 					name: "SHA-256",
 			},
 			data //The data you want to hash as an ArrayBuffer
 		)
-		.then(function(hash){
-			//returns the hash as an ArrayBuffer
-			var hashed = new Uint8Array(hash);
-			console.log("Hash created: ", hashed);
-			return hashed;
-		})
-		.catch(function(err){
-				console.error(err);
-		});
 	},
 	
 	//Compare local with remote hash
 	compareHash: function (remoteHash){
-		return (remoteHash == this.curHash);
+		//https://stackoverflow.com/a/21554107
+		if (remoteHash.byteLength != (this.curHash).byteLength) return false;
+    var dv1 = new Int8Array(remoteHash);
+    var dv2 = new Int8Array(this.curHash);
+    for (var i = 0 ; i != remoteHash.byteLength ; i++) {
+        if (dv1[i] != dv2[i]) return false;
+    }
+    return true;
 	},
 	
 	//Generate random challenge
@@ -177,13 +175,22 @@ KeyManager.prototype = {
 		//Generate challenge
 		this.challenge = window.crypto.getRandomValues(new Uint8Array(16));
 		//Generate hash
-		this.createHash(this.challenge);
+		this.createHash(this.challenge)
+		.then(function(hash){
+			//returns the hash as an ArrayBuffer
+			var hashed = new Uint8Array(hash);
+			console.log("Hash created: ", hashed);
+			km.curHash = hashed;
+		})
+		.catch(function(err){
+				console.error(err);
+		});
 		console.info("Hash and challenge generated!");
 	},
 	
 	//Encrypt data by using receiver's public key-object
 	encryptData: function(key, data){
-		console.info("Encrypting: ", data);
+		console.log("Encrypting: ", data);
 		if(key == null){
 			console.error("There is no key associated with this address!!!");
 		}

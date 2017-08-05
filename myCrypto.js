@@ -66,21 +66,27 @@ function processAuth(reply){
   		console.assert((km.findKey(km.otherEnd) != null), "Sender is unknown! Can not exchange information!");
       //Decrypt challenge with private key
       console.log(reply.challenge);
-      var binary = new Uint8Array.from(reply.challenge);
-      console.log("First: ", binary);
-      binary = binary.buffer;
-      console.log("second", binary);
-      km.decryptData(binary)
+      var data = Object.values((reply.challenge));
+      data = new Uint8Array(data);
+      km.decryptData(data.buffer)
       .then(function(decrypted){
 				//returns an ArrayBuffer containing the decrypted data
 				var decrData = new Uint8Array(decrypted);
 				console.log("Data decrypted: ", decrData);
 				return decrData;
-			}).then(function(decrypted){
+			})
+			.then(function(decrypted){
 				//Compare decrypted reply and temp hash
 				//Calculate hash from challenge - stored as curHash in keymanager
-	  		return km.createHash(decrypted);
-			}).then(function(){
+	  		return km.createHash(decrypted)
+			})
+	  	.then(function(hash){
+				//returns the hash as an ArrayBuffer
+				var hashed = new Uint8Array(hash);
+				console.log("Hash created: ", hashed);
+				km.curHash = hashed;
+			})
+			.then(function(){
 		  	//Send AUTH_RESPONSE
 		  	createAuthMsg(protocol.AUTH_RESPONSE);
 			})
@@ -95,15 +101,13 @@ function processAuth(reply){
     	console.assert((reply.sender === km.otherEnd), "Receivers e-mail is not correct! Security breach found! Terminating!");
 	   	//Decrypt reply with private key
       console.log(reply.challenge);
-      var binary = new Uint8Array.from(reply.challenge);
-      console.log("First: ", binary);
-      binary = binary.buffer;
-      console.log("second", binary);
-      km.decryptData(binary)
+      var data = Object.values((reply.challenge));
+      data = new Uint8Array(data);
+      km.decryptData(data.buffer)
       .then(function(decrypted){
 				//returns an ArrayBuffer containing the decrypted data
 				var decrData = new Uint8Array(decrypted);
-				console.log("Data decrypted: ", decrData);
+				console.info("Data decrypted: ", decrData);
 				return decrData;
 			}).then(function(decrypted){
 				//Compare decrypted reply and temp hash
@@ -111,7 +115,7 @@ function processAuth(reply){
 					console.info("Authenticated!");
 					stageFiles();
 				}else{
-					console.error("Authentication denied! Security issue!");
+					console.error("Authentication denied! Hashes are not identical!");
 				}
 			})
 			.catch(function(err){
