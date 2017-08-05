@@ -93,7 +93,6 @@ function createAuthMsg(type){
 		case protocol.AUTH_CHALLENGE:
 			//Send the challenge encrypted with receiver's public key
 			var key = km.findKey(km.otherEnd);
-			key = JSON.parse(key);
 			km.importKey(key, key.key_ops)
 			.then(function(keyObject){
 				return km.encryptData(keyObject, km.challenge);
@@ -121,10 +120,8 @@ function createAuthMsg(type){
 		case protocol.AUTH_RESPONSE:
 			//Send the calculated hash encrypted with sender's public key
 			var key = km.findKey(km.otherEnd);
-			key = JSON.parse(key);
 			km.importKey(key, key.key_ops)
 			.then(function(keyObject){
-				console.warn(km.curHash);
 				return km.encryptData(keyObject, km.curHash);
 			})
 			.then(function(encrypted){

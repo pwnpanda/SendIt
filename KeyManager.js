@@ -53,7 +53,7 @@ KeyManager.prototype = {
 			//Handles any number of keys!
 			for (var i = 3; i < dec.length-1; i++) {
 				var tmp = dec[i].split(";");
-				this.storeKey(tmp[0], tmp[1]);
+				this.storeKey(tmp[0], JSON.parse(tmp[1]));
 			}
 		//Else
 		} else{

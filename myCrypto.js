@@ -65,7 +65,6 @@ function processAuth(reply){
     	km.otherEnd = reply.sender;
   		console.assert((km.findKey(km.otherEnd) != null), "Sender is unknown! Can not exchange information!");
       //Decrypt challenge with private key
-      console.log(reply.challenge);
       var data = Object.values((reply.challenge));
       data = new Uint8Array(data);
       km.decryptData(data.buffer)
@@ -100,7 +99,6 @@ function processAuth(reply){
     	//Assert e-mail
     	console.assert((reply.sender === km.otherEnd), "Receivers e-mail is not correct! Security breach found! Terminating!");
 	   	//Decrypt reply with private key
-      console.log(reply.challenge);
       var data = Object.values((reply.challenge));
       data = new Uint8Array(data);
       km.decryptData(data.buffer)
