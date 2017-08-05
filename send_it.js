@@ -28,7 +28,6 @@ var sdpConstraints = {
 var fileReady = false;
 var iceReady = false;
 var mailReady = false;
-var cfExists;
 var km;
 $('#offerSentBtn').prop('disabled', true);
 $('#answerSentBtn').prop('disabled', true);
