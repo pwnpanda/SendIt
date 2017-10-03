@@ -1,0 +1,14 @@
+{
+  "name": "Send_it",
+  "version": "1.0.0",
+  "description": "Send it",
+  "repository": "https://github.com/Robiq/Project",
+  "main": "init.js",
+  "scripts": {
+    "start": "electron init.js"
+  },
+  "license": "ISC",
+  "devDependencies": {
+    "electron": "^1.4.12"
+  }
+}

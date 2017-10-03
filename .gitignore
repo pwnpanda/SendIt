@@ -2,3 +2,5 @@
 *.crp
 #Except example file
 !example.crp
+#ignore node modules
+Electron/node_modules/*
