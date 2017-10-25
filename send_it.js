@@ -10,6 +10,7 @@
 
 var cfg = {'iceServers': [{'url': 'stun:stun.gmx.net'}]},
   con = { 'optional': [{'DtlsSrtpKeyAgreement': true}] }
+//Goes in con { googIPv6: true }
 
 // Since the same JS file contains code for both sides of the connection,
 // activedc tracks which of the two possible datachannel variables we're using.
@@ -18,8 +19,8 @@ var activedc
 var sdpConstraints = {
   optional: [],
   mandatory: {
-	OfferToReceiveAudio: false,
-	OfferToReceiveVideo: false
+  	OfferToReceiveAudio: false,
+  	OfferToReceiveVideo: false
   }
 }
 //Comment out for production code! Removes error output
@@ -136,8 +137,8 @@ function setupDC1 () {
 function createLocalOffer () {
   setupDC1()
   pc1.createOffer(function (desc) {
-	pc1.setLocalDescription(desc, function () {}, function () {})
-	console.info('created local offer', desc)
+	 pc1.setLocalDescription(desc, function () {}, function () {})
+	   console.info('created local offer', desc)
   },
   function () { console.warn("Couldn't create offer") },
 	sdpConstraints)
@@ -146,9 +147,9 @@ function createLocalOffer () {
 pc1.onicecandidate = function (e) {
   console.info('ICE candidate (pc1)', e)
   if (e.candidate == null) {
-	iceReady = true;
-	isReady();
-	$('#localOffer').html(JSON.stringify(pc1.localDescription))
+	 iceReady = true;
+	 isReady();
+	 $('#localOffer').html(JSON.stringify(pc1.localDescription))
   }
 }
 
