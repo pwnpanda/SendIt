@@ -1,5 +1,7 @@
-//https://github.com/tskimmett/rtc-pubnub-fileshare/blob/master/file-manager.js
-
+/*
+	All credit to:
+	https://github.com/tskimmett/rtc-pubnub-fileshare/blob/master/file-manager.js
+*/
 function FileManager(chunkSize) {
 	this.fileName = null;
 	this.buffer = null;
