@@ -40,26 +40,72 @@
 		  font: 20pt bold 'Vollkorn';
 		  color: #bbb;
 		}
+
+		ul {
+			list-style-type: none;
+			margin: 0;
+			padding: 0;
+			overflow: hidden;
+			background-color: #333;
+		}
+
+		li {
+			float: left;
+			border-right:1px solid #bbb;
+		}
+
+		li:last-child {
+			border-right: none;
+		}
+
+		li a {
+			display: block;
+			color: white;
+			text-align: center;
+			padding: 14px 16px;
+			text-decoration: none;
+		}
+
+		li a:hover:not(.active) {
+			background-color: #111;
+		}
+
+		.active {
+			background-color: #4CAF50;
+		}
 	</style>
 </head>
 <body>
+
 	<!-- Initial choice --> 
 	<div class="modal" id="createOrJoin" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-	  <div class="modal-header">
-	    <h3 id="myModalLabel">Send or Receive a file?</h3>
-	  </div>
-	  <div class="modal-footer">
+		<div class="modal-header">
+		    <ul>
+			  <li><a class="active" id="home" href="">Home</a></li>
+			  <li><a id="createBtn">Send</a></li>
+			  <li><a id="joinBtn">Receive</a></li>
+			  <li><a id="config">Configuration</a></li>
+			</ul>
+		</div>
+
+	    <!-- 
+	    	CHANGE TO A PLEASANT SCREEN!
+
 	    <button class="btn btn-primary" id="createBtn" data-dismiss="modal" aria-hidden="true">Send</button>
 	    <button class="btn" id="joinBtn" data-dismiss="modal" aria-hidden="true">Receive</button><br>
-	    <h5 id="txtMyMail">Your e-mail address:
-	    	<input id="myMail" type="text" name="mailAddr">
-	    </h5>
-	    <!-- Horrible, but you have to manually select cryptoFile! -->
-	    <h5 id="txtCryptoFile">Chose cryptofile:
-	    <input type="File" id="cryptoFile" onchange="existCrypto()" accept=".crp">
-	    </h5>
-	  </div>
+		-->
+			  	
+		<div class="modal-body" id="showConfig" hidden>
+		    <h5 id="txtMyMail">Your e-mail address:
+	    		<input id="myMail" type="text" name="mailAddr">
+	    	</h5>
+	    	<!-- Horrible, but you have to manually select cryptoFile! -->
+	    	<h5 id="txtCryptoFile">Chose cryptofile:
+		    	<input type="File" id="cryptoFile" onchange="existCrypto()" accept=".crp">
+	    	</h5>
+		</div>
 	</div>
+	
 
 	<!-- Show the offer created by this PC --> 
 	<div class="modal" id="showLocalOffer" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" hidden>
@@ -81,6 +127,9 @@
 	  <div class="modal-footer">
 	    <button class="btn btn-primary" id="offerSentBtn" data-dismiss="modal" aria-hidden="true">Continue</button>
 	  </div>
+	  <div class="alert alert-success" id="success-alert">
+		<strong style="color: red; font-size: x-large;">Contents copied!</strong>
+	  </div>
 	</div>
 
 	<!-- Show the answer created by this PC --> 
@@ -95,6 +144,9 @@
 	  </div>
 	  <div class="modal-footer">
 	    <button class="btn btn-primary" id="answerSentBtn" data-dismiss="modal" aria-hidden="true">Continue</button>
+	  </div>
+	  <div class="alert alert-success" id="success-alert">
+		<strong style="color: red; font-size: x-large;">Contents copied!</strong>
 	  </div>
 	</div>
 

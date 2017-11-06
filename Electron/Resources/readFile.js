@@ -89,10 +89,13 @@ function readFileInfo(x){
 //https://stackoverflow.com/a/32858416
 function writeToFile(data){
 	var textFileAsBlob = new Blob([data], {type:'text/plain'});
-	var fileNameToSaveAs = "crypto.crp";
-	var downloadLink = document.createElement("a");
-	downloadLink.download = fileNameToSaveAs;
-	downloadLink.innerHTML = "Download File";
-	downloadLink.href = window.URL.createObjectURL(textFileAsBlob);
-	downloadLink.click();
+	var storePath = path.join(__dirname + '/Crypto/', 'Crypto.crp');
+  	ensureDirectoryExistence(storePath);
+  	fs.writeFile(storePath, textFileAsBlob, function(err) {
+	    if(err) {
+	        console.log(err);
+	    } else {
+	        alert("The crypto was saved!");
+	    }
+    })
 }

@@ -9,6 +9,10 @@
   },
   "license": "ISC",
   "devDependencies": {
-    "electron": "^1.4.12"
+    "clipboardy": "^1.1.4",
+    "electron": "1.7.9"
+  },
+  "dependencies": {
+    "clipboardy": "^1.1.4"
   }
 }

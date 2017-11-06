@@ -8,6 +8,8 @@
 	https://webrtc-demos.appspot.com/html/pc1.html
 */
 
+const copy = require('clipboardy');
+
 var cfg = {'iceServers': [{'url': 'stun:stun.gmx.net'}]},
   con = { 'optional': [{'DtlsSrtpKeyAgreement': true}] }
 
@@ -41,6 +43,8 @@ $(function () {
   //MY ADDITION-------------------------
   $('#connectedScreen').modal('hide')
   $('#endScreen').modal('hide')
+  $("#success-alert").hide();
+  $("#showConfig").modal('hide');
 })
 
 //Makes sure the user inputs a receiver before proceeding
@@ -60,16 +64,21 @@ $("#recMail").keyup( function() {
 var pc1 = new RTCPeerConnection(cfg, con),
   dc1 = null
 
+$('#config').click(function () {
+  $('#home').toggleClass("Active");
+  $('#config').toggleClass("Active");
+  $("#showConfig").modal('show');
+});
 
 $('#createBtn').click(function () {
   //Read in email and initiate new KeyManager if neccesary
   if($("#txtMyMail").is(":visible")){
-	var myMail = $('#myMail').val();
-	console.info("Mail address read: " + myMail);
-	km = new KeyManager("new", myMail);
+  	var myMail = $('#myMail').val();
+  	console.info("Mail address read: " + myMail);
+  	km = new KeyManager("new", myMail);
   }else{
-	//Read file and create KeyManager-object
-	readCrypto();
+  	//Read file and create KeyManager-object
+  	readCrypto();
   }
   //--------------------------
   $('#showLocalOffer').modal('show')
@@ -148,9 +157,15 @@ function createLocalOffer () {
 pc1.onicecandidate = function (e) {
   console.info('ICE candidate (pc1)', e)
   if (e.candidate == null) {
-	iceReady = true;
-	isReady();
-	$('#localOffer').html(JSON.stringify(pc1.localDescription))
+  	iceReady = true;
+  	isReady();
+    var off = JSON.stringify(pc1.localDescription);
+    copy.writeSync(off);
+  	$('#localOffer').html(off);
+    //https://stackoverflow.com/a/23102317/4400482
+    $("#success-alert").fadeTo(2000, 500).slideUp(500, function(){
+      $("#success-alert").slideUp(500);
+    });
   }
 }
 
@@ -225,8 +240,14 @@ function handleOfferFromPC1 (offerDesc) {
 pc2.onicecandidate = function (e) {
   console.log('ICE candidate (pc2)', e)
   if (e.candidate == null) {
-	$('#answerSentBtn').prop('disabled', false);
-	$('#localAnswer').html(JSON.stringify(pc2.localDescription))
+  	$('#answerSentBtn').prop('disabled', false);
+  	var ans = JSON.stringify(pc2.localDescription);
+    copy.writeSync(ans);
+    $('#localAnswer').html(ans);
+    //https://stackoverflow.com/a/23102317/4400482
+    $("#success-alert").fadeTo(2000, 500).slideUp(500, function(){
+      $("#success-alert").slideUp(500);
+    });
   }
 }
 

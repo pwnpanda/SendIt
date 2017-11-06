@@ -1,3 +1,7 @@
+//NodeJS imports
+var fs = require('fs');
+var path = require('path'); 
+
 var protocol = {
 	//MINE------------------------------>
 	AUTH_CHALLENGE: "challenge",
@@ -278,7 +282,16 @@ function transferComplete(){
 	console.log("Last chunk received.");
 	doSend({ action: protocol.DONE });
 	document.querySelector('#transferDetailsEnd').innerHTML = 'Filename: ' + fmArray[curFileNum].fileName + '. Filenumber: ' + (curFileNum+1) + '/' + nrOfFiles + '. Percent: 100/100';
-	fmArray[curFileNum].downloadFile();
+	var storePath = path.join(__dirname + '/Received/', fmArray[curFileNum].fileName);
+  	ensureDirectoryExistence(storePath);
+  	var blob = fmArray[curFileNum].downloadFile();
+  	fs.writeFile(storePath, blob, function(err) {
+	    if(err) {
+	        console.log(err);
+	    } else {
+	        alert("The file was saved!");
+	    }
+    })
 	curFileNum++;
 	if(curFileNum == nrOfFiles){
 		closeDataChannels();
@@ -289,4 +302,14 @@ function registerFileEvents(fm) {
 			fm.onrequestready = chunkRequestReady;
 			fm.onprogress = displayProgress;
 			fm.ontransfercomplete = transferComplete;
+}
+//Makes sure directory exists
+//https://stackoverflow.com/questions/13542667/create-directory-when-writing-to-file-in-node-js
+function ensureDirectoryExistence(filePath) {
+  var dirname = path.dirname(filePath);
+  if (fs.existsSync(dirname)) {
+    return true;
+  }
+  ensureDirectoryExistence(dirname);
+  fs.mkdirSync(dirname);
 }

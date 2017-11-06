@@ -1,5 +1,7 @@
-//https://github.com/tskimmett/rtc-pubnub-fileshare/blob/master/file-manager.js
-
+/*
+	All credit to:
+	https://github.com/tskimmett/rtc-pubnub-fileshare/blob/master/file-manager.js
+*/
 function FileManager(chunkSize) {
 	this.fileName = null;
 	this.buffer = null;
@@ -110,17 +112,7 @@ FileManager.prototype = {
 
 	downloadFile: function () {
 		var blob = new Blob(this.fileChunks, { type: this.fileType });
-		var div = document.querySelector("#download");
-		var link = $('<a>',{
-			id:this.fileName,
-			text:this.fileName,
-			href:window.URL.createObjectURL(blob),
-			download:this.fileName
-		});
-		link.appendTo(div).before("</br></br>");
-
-		//Bonus Functionality - Todo!
-		//link.click();
+		return blob;
 	},
 
 	clear: function () {

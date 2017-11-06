@@ -1,13 +1,14 @@
-var electron = require('electron') // http://electron.atom.io/docs/api
-var path = require('path')         // https://nodejs.org/api/path.html
-var url = require('url')           // https://nodejs.org/api/url.html
+var electron = require('electron'); // http://electron.atom.io/docs/api
+var path = require('path');         // https://nodejs.org/api/path.html
+var url = require('url');        // https://nodejs.org/api/url.html
+var {app, BrowserWindow} = electron;
 
 var window = null
 
 // Wait until the app is ready
-electron.app.once('ready', function () {
+app.once('ready', function () {
   // Create a new window
-  window = new electron.BrowserWindow({
+  window = new BrowserWindow({
     // Set the initial width to 800px
     width: 800,
     // Set the initial height to 600px
@@ -29,4 +30,10 @@ electron.app.once('ready', function () {
   window.once('ready-to-show', function () {
     window.show()
   })
+})
+
+app.on('window-all-closed', function() {
+    if (process.platform != 'darwin') {
+        app.quit();
+    }
 })
