@@ -67,6 +67,8 @@ KeyManager.prototype = {
 		console.log("Creating new KeyManager ", myMail);
 		//Email of this node
 		this.email = myMail;
+		//TODO EXP
+		setCfName(this.email);
 		//Dictionary of public keys and e-mails of other nodes
 		//Key = email, value = Public key
 		this.keys = {};
@@ -231,7 +233,7 @@ KeyManager.prototype = {
 					write = write + email +";"+JSON.stringify(km.keys[email])+";\n";
 				}
 				//Call some function that writes to file, sending write as an argument.
-				writeToFile(write);
+				writeToFile(write, cfPath+cfName+'.crp');
 				//console.warn("Here: \n" + write);
 				//TODO - encrypt data before returning!
 		}).catch(function(err){

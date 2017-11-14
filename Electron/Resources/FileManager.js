@@ -111,8 +111,7 @@ FileManager.prototype = {
 	},
 
 	downloadFile: function () {
-		var blob = new Blob(this.fileChunks, { type: this.fileType });
-		return blob;
+		return this.fileChunks;
 	},
 
 	clear: function () {

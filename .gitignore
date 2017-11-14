@@ -4,3 +4,10 @@
 !example.crp
 #ignore node modules
 Electron/node_modules/*
+#Ignore sending and receiving folders
+Electron/Resources/Send/*
+Electron/Resources/Received/*
+#Ignore config file
+Electron/Resources/*.conf
+#Ignore lgo files
+*.log

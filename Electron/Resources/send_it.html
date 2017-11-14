@@ -27,6 +27,7 @@
 	<script type="text/javascript" src="FileManager.js"></script>
 	<script type="text/javascript" src="myCrypto.js"></script>
 	<script type="text/javascript" src="protocol.js"></script>
+	<script type="text/javascript" src="settings.js"></script>
     <!-- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! -->
 
     <style type="text/css">
@@ -41,7 +42,7 @@
 		  color: #bbb;
 		}
 
-		ul {
+		.ul {
 			list-style-type: none;
 			margin: 0;
 			padding: 0;
@@ -49,16 +50,16 @@
 			background-color: #333;
 		}
 
-		li {
+		.li {
 			float: left;
 			border-right:1px solid #bbb;
 		}
 
-		li:last-child {
+		.li:last-child {
 			border-right: none;
 		}
 
-		li a {
+		.li a {
 			display: block;
 			color: white;
 			text-align: center;
@@ -66,11 +67,11 @@
 			text-decoration: none;
 		}
 
-		li a:hover:not(.active) {
+		.li a:hover:not(.Active) {
 			background-color: #111;
 		}
 
-		.active {
+		.Active {
 			background-color: #4CAF50;
 		}
 	</style>
@@ -80,32 +81,61 @@
 	<!-- Initial choice --> 
 	<div class="modal" id="createOrJoin" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
 		<div class="modal-header">
-		    <ul>
-			  <li><a class="active" id="home" href="">Home</a></li>
-			  <li><a id="createBtn">Send</a></li>
-			  <li><a id="joinBtn">Receive</a></li>
-			  <li><a id="config">Configuration</a></li>
+		    <ul class="ul">
+			  <li class="li"><a id="home" href="" class="Active">Home</a></li>
+			  <li class="li"><a id="createBtn">Send</a></li>
+			  <li class="li"><a id="joinBtn">Receive</a></li>
+			  <li class="li"><a id="config">Configuration</a></li>
 			</ul>
 		</div>
 
 	    <!-- 
-	    	CHANGE TO A PLEASANT SCREEN!
-
-	    <button class="btn btn-primary" id="createBtn" data-dismiss="modal" aria-hidden="true">Send</button>
-	    <button class="btn" id="joinBtn" data-dismiss="modal" aria-hidden="true">Receive</button><br>
 		-->
-			  	
+					  	
 		<div class="modal-body" id="showConfig" hidden>
 		    <h5 id="txtMyMail">Your e-mail address:
 	    		<input id="myMail" type="text" name="mailAddr">
 	    	</h5>
-	    	<!-- Horrible, but you have to manually select cryptoFile! -->
-	    	<h5 id="txtCryptoFile">Chose cryptofile:
-		    	<input type="File" id="cryptoFile" onchange="existCrypto()" accept=".crp">
-	    	</h5>
+			<form id="formInput">
+	    		<h3>File options:</h3>
+		    	<input type="radio" name="in" value="Automatic" checked> Automatic &emsp;
+		    	<input type="radio" name="in" value="Manual"> Manual<br>
+			</form>
+			<div id="curSet" style="border-style: solid;"></div>
+
+			<div id="opt" hidden>
+		    	<!-- Horrible, but you have to manually select cryptoFile! -->
+		    	<form id="formCrypt">
+		    		<h3>Cryptofile options:</h3>
+			    	<input type="radio" name="in" value="Automatic" checked> Automatic &emsp;
+			    	<input type="radio" name="in" value="Manual"> Manual<br>
+				</form>
+		    	<h5 id="txtCryptoFile" value="Manual" hidden>Manually chose cryptofile:<br>
+			    	<input type="File" id="cryptoFile" onchange="setCrypto()" accept=".crp">
+		    	</h5>
+
+		    	<form id="formDl">
+		    		<h3>Download options:</h3>
+			    	<input type="radio" name="in" value="Automatic" checked> Automatic &emsp;
+			    	<input type="radio" name="in" value="Manual"> Manual<br>
+				</form>
+		    	<h5 id="setDlLoc" hidden>Download to:<br>
+			    	<input type="File" id="downloadFolder" onchange="setDownload()" webkitdirectory directory>
+		    	</h5>
+		    	
+		    	<form id="formUl">
+		    		<h3>Upload options:</h3>
+			    	<input type="radio" name="in" value="Automatic" checked> Automatic &emsp;
+			    	<input type="radio" name="in" value="Manual"> Manual<br>
+				</form>
+		    	<h5 id="setUlLoc" hidden>Upload from:<br>
+			    	<input type="File" id="uploadFolder" onchange="setUpload()"  value="" webkitdirectory directory>
+		    	</h5>
+		    </div>
+	    	
+	    	<button class="btn btn-primary" id="storeConfBtn" data-dismiss="modal" aria-hidden="true">Save</button>
 		</div>
 	</div>
-	
 
 	<!-- Show the offer created by this PC --> 
 	<div class="modal" id="showLocalOffer" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" hidden>
@@ -210,8 +240,8 @@
 	  <div class="modal-body">
 	    <!-- INSERT CODE HERE! -->
 		<div id='transferDetailsEnd'></div>
-	  	<div id="download"></div>
-
+	  	<div id="download">Files:<br></div>
+	    <button class="btn btn-primary" id="openInFolder" data-dismiss="modal" aria-hidden="true" hidden>Open containing folder</button>	  		
 	  </div>
 	</div>
 

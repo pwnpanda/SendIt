@@ -2,7 +2,7 @@
 File for calling correct order of keyManager methods.
 Also for checking for crypto-file and managing other semi-related crypto-things
 */
-var cryptoFile;
+var fs = require('fs');
 
 //Hits, but is supposed to be implemented - WHY!?!
 if (!window.crypto || !window.crypto.subtle) {
@@ -10,33 +10,26 @@ if (!window.crypto || !window.crypto.subtle) {
 }
 //Main crypto function
 function existCrypto(){
-	cryptoFile = $("#cryptoFile")[0].files[0];
-	console.log(cryptoFile);
-	if(!cryptoFile){
-		$('#txtMyMail').show();
+	if(fs.existsSync(cfPath+cfName+'.crp')){
+		readCrypto();
+		return true;
 	}else{
-		//Ask for users e-mail!
-		$('#txtMyMail').hide();
+		return false;
 	}
 }
 //Behaviour for reading an old cryptoFile in to a keymanager
 function readCrypto(){
 	//read data
-	console.log("read");
+	//console.log("read");
+
 	//read cryptoFile
-	//https://stackoverflow.com/questions/3146483/html5-file-api-read-as-text-and-binary/3146509#3146509
-	var fr = new FileReader ();
-	//Declare callback function
-	fr.onloadend = function (e){
-		if(fr.readyState == FileReader.DONE){
-			console.info("File read");
-		 	console.log(fr.result);
-			//create KeyManager
-			km = new KeyManager("existing", fr.result);
-		}
-	};
-	//May have to change to String or BinaryString!
-	fr.readAsText(cryptoFile);
+	try{
+		var buf = fs.readFileSync(cfPath+cfName+'.crp', "utf8");
+		//console.log(buf);
+		km = new KeyManager("existing", buf);
+	}catch(err){
+		console.error("Error reading cryptofile: ", err);
+	}
 }
 //Try to authenticate user
 function beginAuth (){
@@ -90,7 +83,7 @@ function processAuth(reply){
 		  	createAuthMsg(protocol.AUTH_RESPONSE);
 			})
 			.catch(function(err){
-					console.error(err);
+				console.error(err);
 			});
     	break;
 

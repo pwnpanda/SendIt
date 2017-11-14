@@ -13,6 +13,7 @@
     "electron": "1.7.9"
   },
   "dependencies": {
-    "clipboardy": "^1.1.4"
+    "clipboardy": "^1.1.4",
+    "electron-prompt": "^0.4.0"
   }
 }

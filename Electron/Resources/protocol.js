@@ -55,7 +55,16 @@ function onReceiveMessageCallback(event) {
 		curFileNum++;
 		if(curFileNum == nrOfFiles){
 			closeDataChannels();
-			document.querySelector('#transferDetailsEnd').innerHTML = 'Filename: ' + fmArray[curFileNum-1].fileName + '. Filenumber ' + curFileNum + '/' + nrOfFiles + '. Percent: 100/100';
+			document.querySelector('#transferDetailsEnd').innerHTML = 'Filename: ' + fmArray[curFileNum-1].fileName + '. Filetype: '+fmArray[curFileNum-1].fileType + '. Filenumber ' + curFileNum + '/' + nrOfFiles + '. Percent: 100/100';
+			//TODO - Add line for each file completed!
+			var doc = document.querySelector('#download');
+			doc.innerHTML = "Files sent: <br>";
+			for (var i = 0; i < nrOfFiles; i++) {
+				 var ul = document.createElement("ul");
+				 ul.innerHTML = fmArray[i].fileName+fmArray[i].fileType + ' &emsp;  Filenumber ' + (i+1) + '/' + nrOfFiles;
+				 doc.append(ul);
+			}
+
 		} else{
 			offerShare();
 		}
@@ -86,7 +95,7 @@ function closeDataChannels() {
 
 //Show progress
 function displayProgress(perc){
-	document.querySelector('#transferDetails').innerHTML = 'Filename: ' + fmArray[curFileNum].fileName + '. Filenumber: ' + (curFileNum+1) + '/' + nrOfFiles + '. Percent: ' + (perc*100).toFixed(2) + '/100';
+	document.querySelector('#transferDetails').innerHTML = 'Filename: ' + fmArray[curFileNum].fileName+ '. Filetype: ' + fmArray[curFileNum].fileType  + '. Filenumber: ' + (curFileNum+1) + '/' + nrOfFiles + '. Percent: ' + (perc*100).toFixed(2) + '/100';
 }
 //Create the Authentication message to send
 function createAuthMsg(type){
@@ -281,19 +290,35 @@ function chunkRequestReady(chunks, fm){
 function transferComplete(){
 	console.log("Last chunk received.");
 	doSend({ action: protocol.DONE });
-	document.querySelector('#transferDetailsEnd').innerHTML = 'Filename: ' + fmArray[curFileNum].fileName + '. Filenumber: ' + (curFileNum+1) + '/' + nrOfFiles + '. Percent: 100/100';
-	var storePath = path.join(__dirname + '/Received/', fmArray[curFileNum].fileName);
+	document.querySelector('#transferDetailsEnd').innerHTML = 'Filename: ' + fmArray[curFileNum].fileName + '. Filetype: ' + fmArray[curFileNum].fileType +  '. Filenumber: ' + (curFileNum+1) + '/' + nrOfFiles + '. Percent: 100/100';
+	var storePath = path.join(dlPath, fmArray[curFileNum].fileName);
   	ensureDirectoryExistence(storePath);
-  	var blob = fmArray[curFileNum].downloadFile();
-  	fs.writeFile(storePath, blob, function(err) {
+  	//TODO - DOES NOT WORK!!!
+  	var data = fmArray[curFileNum].downloadFile();
+  	fs.writeFile(storePath+(fmArray[curFileNum].fileType), data, function(err) {
 	    if(err) {
 	        console.log(err);
 	    } else {
-	        alert("The file was saved!");
+	        alert("The file was saved: " + storePath);
 	    }
     })
 	curFileNum++;
+	
 	if(curFileNum == nrOfFiles){
+  		var div = document.querySelector("#download");
+		div.innerHTML = "Files received: <br>"
+		
+		for (var i = 0; i < nrOfFiles; i++) {
+			 var ul = document.createElement("ul");
+			 ul.innerHTML = fmArray[i].fileName+fmArray[i].fileType + ' &emsp;  Filenumber ' + (i+1) + '/' + nrOfFiles;
+			 div.append(ul);
+		}
+
+  		$('#answerSentBtn').show();
+		$('#answerSentBtn').click(function () {
+			shell.showItemInFolder(dlPath);
+		})
+
 		closeDataChannels();
 	}
 }

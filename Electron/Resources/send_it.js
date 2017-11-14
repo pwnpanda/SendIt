@@ -9,6 +9,8 @@
 */
 
 const copy = require('clipboardy');
+const {shell} = require('electron');
+const prompt = require('electron-prompt');
 
 var cfg = {'iceServers': [{'url': 'stun:stun.gmx.net'}]},
   con = { 'optional': [{'DtlsSrtpKeyAgreement': true}] }
@@ -30,22 +32,38 @@ var sdpConstraints = {
 var fileReady = false;
 var iceReady = false;
 var mailReady = false;
+var dlPath;
+var ulPath;
+var cfPath;
+var cfName;
 var km;
-$(function () {
-  $('#offerSentBtn').prop('disabled', true);
-  $('#answerSentBtn').prop('disabled', true);
-  //-------------------------------
-
-  $('#showLocalOffer').modal('hide')
-  $('#getRemoteAnswer').modal('hide')
-  $('#waitForConnection').modal('hide')
-  $('#createOrJoin').modal('show')
+function reset (){
   //MY ADDITION-------------------------
+  $('#home').addClass("Active");
+  $('#createBtn').removeClass("Active");
+  $('#joinBtn').removeClass("Active");
+  $('#config').removeClass("Active");
+  //-----------------------------------
   $('#connectedScreen').modal('hide')
   $('#endScreen').modal('hide')
   $("#success-alert").hide();
   $("#showConfig").modal('hide');
-})
+  $('#showLocalOffer').modal('hide')
+  $('#getRemoteAnswer').modal('hide')
+  $('#waitForConnection').modal('hide')
+  $('#showLocalOffer').modal('hide')
+  $('#getRemoteOffer').modal('hide')
+  $('#showLocalAnswer').modal('hide')
+
+
+  $('#createOrJoin').modal('show')
+}
+$( function(){
+  $('#offerSentBtn').prop('disabled', true);
+  $('#answerSentBtn').prop('disabled', true);
+  //-------------------------------
+  reset()
+});
 
 //Makes sure the user inputs a receiver before proceeding
 $("#recMail").keyup( function() {
@@ -65,38 +83,80 @@ var pc1 = new RTCPeerConnection(cfg, con),
   dc1 = null
 
 $('#config').click(function () {
-  $('#home').toggleClass("Active");
+  reset();
+  $('#home').removeClass("Active");
   $('#config').toggleClass("Active");
+  settings();
   $("#showConfig").modal('show');
 });
 
 $('#createBtn').click(function () {
+  reset();
+  $('#home').removeClass("Active");
+  $('#createBtn').toggleClass("Active");
   //Read in email and initiate new KeyManager if neccesary
-  if($("#txtMyMail").is(":visible")){
-  	var myMail = $('#myMail').val();
-  	console.info("Mail address read: " + myMail);
-  	km = new KeyManager("new", myMail);
+  settings();
+  if (! existCrypto()){
+    var myMail;
+    prompt({
+    title: 'E-mail',
+    label: 'Please enter your e-mail address',
+    value: cfName,
+    inputAttrs: { // attrs to be set if using 'input'
+        type: 'mail'
+    },
+    type: 'input'
+    })
+    .then((r)=>{
+      if(r==null){
+        window.location.href = "";
+      }
+      var myMail = r;
+      console.info("Mail address read: " + myMail);
+
+      km = new KeyManager("new", myMail);
+      $('#showLocalOffer').modal('show')
+      createLocalOffer()
+    }).catch(console.error);    
   }else{
-  	//Read file and create KeyManager-object
-  	readCrypto();
+    //--------------------------
+    $('#showLocalOffer').modal('show');
+    createLocalOffer();
+    loadFiles();
   }
-  //--------------------------
-  $('#showLocalOffer').modal('show')
-  createLocalOffer()
 })
 
 $('#joinBtn').click(function () {
+  reset();
+  $('#home').removeClass("Active");
+  $('#joinBtn').toggleClass("Active");
+  
  	//Read in email and initiate new KeyManager if neccesary
- 	if($("#txtMyMail").is(":visible")){
-		var myMail = $('#myMail').val();
-		console.info("Mail address read: " + myMail);
-		km = new KeyManager("new", myMail);
-	}else{
-		//Read file and create KeyManager-object
-		readCrypto();
-	}
-	//--------------------------
-	$('#getRemoteOffer').modal('show')
+  settings();
+  if (! existCrypto()){
+    var myMail;
+    prompt({
+    title: 'E-mail',
+    label: 'Please enter your e-mail address',
+    value: cfName,
+    inputAttrs: { // attrs to be set if using 'input'
+        type: 'mail'
+    },
+    type: 'input'
+    })
+    .then((r)=>{
+      if(r==null){
+        window.location.href = "";
+      }
+      var myMail = r;
+      console.info("Mail address read: " + myMail);
+      km = new KeyManager("new", myMail);
+      $('#getRemoteOffer').modal('show')
+    }).catch(console.error);    
+  }else{
+  	//--------------------------
+  	$('#getRemoteOffer').modal('show')
+  }
 })
 
 $('#offerSentBtn').click(function () {
@@ -282,10 +342,10 @@ console.assert  = function(cond, text){
 
 //My own!------------------------------------
 function isReady(){
-  if (fileReady && iceReady && mailReady) {
-	$('#offerSentBtn').prop('disabled', false);
+  if (/*fileReady &&*/ iceReady && mailReady) {
+    $('#offerSentBtn').prop('disabled', false);
   }else{
-	$('#offerSentBtn').prop('disabled', true);
+    $('#offerSentBtn').prop('disabled', true);
   }
 }
 
@@ -294,4 +354,13 @@ function initiateSnd(){
   var button = $("#init").hide();
   beginAuth();
 }
+
+$('#openInFolder').click(function () {
+  try{
+    shell.showItemInFolder(downloadPath)
+  }catch(err){
+      console.log(err);
+    }
+});
+
 //---------------------------------------------
