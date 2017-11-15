@@ -82,10 +82,13 @@ function stageFiles(){
 	    //Need array of filemanagers, one for each file!
 	    
 	    console.log("Read file in!");
-	    var buf = fs.readFileSync(file);
-	    console.warn(buf);
-	    fmArray[i].stageLocalFile(name, type, buf);
-	    	
+	   	try{
+		    var buf = fs.readFileSync(file);
+		    console.warn(buf);
+		    fmArray[i].stageLocalFile(name, type, buf);
+		}catch(e){
+			console.log('Error', e.stack);
+		}   	
 		offerShare();
     };
 }

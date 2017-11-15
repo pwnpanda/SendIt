@@ -110,8 +110,21 @@ FileManager.prototype = {
 		return (this.nChunksExpected == this.nChunksReceived);
 	},
 
+	//http://2ality.com/2015/10/concatenating-typed-arrays.html
 	downloadFile: function () {
-		return this.fileChunks;
+		//fileChunks is an array of arrays. Need one contigous array of values!
+		var totLen = 0;
+		for(let arr of this.fileChunks){
+			totLen+=arr.length;
+		}
+		let result = new Uint8Array(totLen);
+		let offset = 0;
+		for(let arr of this.fileChunks){
+			result.set(arr, offset);
+			offset+=arr.length;
+		}
+		console.log(result);
+		return result;
 	},
 
 	clear: function () {
