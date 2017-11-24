@@ -9,7 +9,7 @@ ulPath=defPath+splitter+"Send"+splitter;
 
 function curSet(){
 	var cfPrnt = cfPath+cfName+".crp";
-	var string = "<h4> Current info: </h4>  <ul>E-mail:<br>" + cfName + " </ul> <ul> Cryptography file:<br> " + cfPrnt +" </ul> <ul> Download path:<br> " + dlPath + " </ul> <ul> Upload path:<br> " + ulPath + " </ul>";
+	var string = "<ul><h4> Cryptography file:</h4>" + cfPrnt +" </ul> <ul><h4> Download path:</h4>" + dlPath + " </ul> <ul><h4> Upload path:</h4>" + ulPath + " </ul>";
 	$('#curSet').html(string);
 }
 
@@ -29,14 +29,14 @@ function readConfig(){
 
 	}catch(err){
 		console.log("No config-file found!", err);
-		saveConf();
+		saveConf(true);
 	}
-	curSet();
 };	
 
 function settings(){
 	
 	readConfig();
+	curSet();
 
 	$('#formInput input').on('change', function() {
 		if( ($('input[name=in]:checked', '#formInput').val()) == "Manual"){
@@ -94,7 +94,7 @@ function settings(){
 	});
 };
 
-function saveConf(){
+function saveConf(init=false){
 	cfName = $("#myMail").val();
 	var data = {
 			"cfName": cfName,
@@ -104,9 +104,13 @@ function saveConf(){
 			"ulPath": ulPath
 	}
 	console.log(data);
-	writeToFile(JSON.stringify(data), defPath+splitter+'config.conf');
+	writeToFile(JSON.stringify(data), defPath+splitter+'config.conf', !init);
 	ensureDirectoryExistence(ulPath+"/.");
-	window.location.href = "";
+	if(!init){
+		window.location.href = "";
+	}else{
+		alert("Please move or copy the files you want to send to: \n" + ulPath);
+	}
 }
 
 function setCrypto(){

@@ -62,7 +62,8 @@ $( function(){
   $('#offerSentBtn').prop('disabled', true);
   $('#answerSentBtn').prop('disabled', true);
   //-------------------------------
-  reset()
+  reset();
+  readConfig();
 });
 
 //Makes sure the user inputs a receiver before proceeding
@@ -357,7 +358,7 @@ function initiateSnd(){
 
 $('#openInFolder').click(function () {
   try{
-    shell.showItemInFolder(downloadPath)
+    shell.showItemInFolder(dlPath+'*');
   }catch(err){
       console.log(err);
     }

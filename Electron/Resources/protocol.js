@@ -314,11 +314,8 @@ function transferComplete(){
 			 div.append(ul);
 		}
 
-  		$('#answerSentBtn').show();
-		$('#answerSentBtn').click(function () {
-			shell.showItemInFolder(dlPath);
-		})
-
+  		$('#openInFolder').show();
+  		$('#NOTE').show();
 		closeDataChannels();
 	}
 }

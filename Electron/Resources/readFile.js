@@ -1,7 +1,8 @@
 var path = require('path');
 //Variable to handle the files we're staging
 var files;
-
+/*
+Re-enable later for dropping files in stead of loading from folder
 // Setup the dnd listeners.
 var dropZone = document.getElementById('drop_zone');
 dropZone.addEventListener('dragover', handleDragOver, false);
@@ -32,12 +33,25 @@ function handleDragOver(evt) {
 	evt.preventDefault();
 	evt.dataTransfer.dropEffect = 'copy'; // Explicitly show this is a copy.
 }
-
+*/
 function loadFiles(){
 	var output = [];
 	fs.readdir(ulPath, function(err, items) {
 		if(items.length == 0){
+			alert("No files to send! Make sure there are files present in: " + ulPath)
 			console.error("No files to send!");
+			try{
+				activedc.close();
+				pc1.close();
+				pc2.close();
+				pc1 = null;
+				pc2 = null;
+				console.info('Closed peer connections');
+			}catch(e){
+				console.log(e);
+			}
+			reset();
+			window.location.href = "";
 		}
 		files = items;
 		nrOfFiles = items.length;
@@ -84,7 +98,6 @@ function stageFiles(){
 	    console.log("Read file in!");
 	   	try{
 		    var buf = fs.readFileSync(file);
-		    console.warn(buf);
 		    fmArray[i].stageLocalFile(name, type, buf);
 		}catch(e){
 			console.log('Error', e.stack);
@@ -92,7 +105,7 @@ function stageFiles(){
 		offerShare();
     };
 }
-/*
+/* Old way of staging files - used in manual addition - Add again later!
 //https://github.com/webrtc/samples/blob/gh-pages/src/content/datachannel/filetransfer/js/main.js - INFO
 //Initiate, stage files and call method to create a offer to share files
 function stageFiles() {
@@ -149,14 +162,16 @@ function readFileInfo(x){
 */
 //Write this data to file
 //https://stackoverflow.com/a/32858416
-function writeToFile(data, dir){
+function writeToFile(data, dir, show=true){
 	console.log(dir);
   	ensureDirectoryExistence(dir);
   	fs.writeFile(dir, data, function(err) {
 	    if(err) {
 	        console.log(err);
 	    } else {
-	        alert("The file was saved: \n" + path.parse(dir).base);
+	    	if(show){
+	        	alert("The file was saved: \n" + path.parse(dir).base);
+	        }
 	    }
     })
 }
