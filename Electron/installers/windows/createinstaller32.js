@@ -12,9 +12,9 @@ function getInstallerConfig () {
   console.log('creating windows installer');
   const rootPath = path.join(__dirname, '/../..');
   const outPath = path.join(rootPath, 'release');
-  console.log("out: " + outPath);
-  console.log("dir: " + path.join(outPath, 'SendIt-win32-ia32'));
-  console.log("outDir: " + path.join(outPath, 'windows-installer-32'));
+ // console.log("out: " + outPath);
+ // console.log("dir: " + path.join(outPath, 'SendIt-win32-ia32'));
+  //console.log("outDir: " + path.join(outPath, 'windows-installer-32'));
 
   return Promise.resolve({
     appDirectory: path.join(outPath, 'SendIt-win32-ia32'),

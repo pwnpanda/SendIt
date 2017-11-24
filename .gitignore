@@ -5,9 +5,11 @@
 #ignore node modules
 Electron/node_modules/*
 #Ignore sending and receiving folders
-Electron/Resources/Send/*
-Electron/Resources/Received/*
+Electron/resources/Send/*
+Electron/resources/Received/*
 #Ignore config file
-Electron/Resources/*.conf
-#Ignore lgo files
+Electron/resources/*.conf
+#Ignore log files
 *.log
+#ignore releases for now
+Electron/release
