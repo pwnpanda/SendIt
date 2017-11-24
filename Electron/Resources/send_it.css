@@ -35,6 +35,7 @@ html {
 	color: #2A765F;
 	text-align: center;
 }
+
 div {
 	background-color: #75B19F;
 	color: #2A765F;
@@ -97,7 +98,6 @@ button:hover {
 	display: block;
 	text-align: right;
 	padding: 7px;
-	/*padding: 10px 12px;*/
 }
 .li a {
 	display: block;

@@ -27,7 +27,7 @@ var sdpConstraints = {
   }
 }
 //Comment out for production code! Removes error output
-//console.log = console.debug = console.info = function(){};
+console.log = console.debug = console.info = function(){};
 // MY ADDITION---------------
 var fileReady = false;
 var iceReady = false;
@@ -57,6 +57,8 @@ function reset (){
 
 
   $('#createOrJoin').modal('show')
+  $('#showHome').modal('show')
+
 }
 $( function(){
   $('#offerSentBtn').prop('disabled', true);
@@ -88,11 +90,13 @@ $('#config').click(function () {
   $('#home').removeClass("Active");
   $('#config').toggleClass("Active");
   settings();
+  $('#showHome').modal('hide');
   $("#showConfig").modal('show');
 });
 
 $('#createBtn').click(function () {
   reset();
+  $('#showHome').modal('hide');
   $('#home').removeClass("Active");
   $('#createBtn').toggleClass("Active");
   //Read in email and initiate new KeyManager if neccesary
@@ -129,6 +133,7 @@ $('#createBtn').click(function () {
 
 $('#joinBtn').click(function () {
   reset();
+  $('#showHome').modal('hide');
   $('#home').removeClass("Active");
   $('#joinBtn').toggleClass("Active");
   

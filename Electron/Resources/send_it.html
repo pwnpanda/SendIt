@@ -30,24 +30,27 @@
 	<script type="text/javascript" src="settings.js"></script>
     <!-- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! -->
     <link href="send_it.css" rel="stylesheet">
+
+    <div class="modal-header">
+	    <ul class="ul">
+		  <li class="li"><a id="home" href="" class="Active">Home</a></li>
+		  <li class="li"><a id="createBtn">Send</a></li>
+		  <li class="li"><a id="joinBtn">Receive</a></li>
+		  <li class="li"><a id="config">Configuration</a></li>
+		  <li class="li" style="float: right;"><img src="favicon.png" ></li>
+		</ul>
+	</div>
 </head>
 <body>
-
 	<!-- Initial choice --> 
 	<div class="modal" id="createOrJoin" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-		<div class="modal-header">
-		    <ul class="ul">
-			  <li class="li"><a id="home" href="" class="Active">Home</a></li>
-			  <li class="li"><a id="createBtn">Send</a></li>
-			  <li class="li"><a id="joinBtn">Receive</a></li>
-			  <li class="li"><a id="config">Configuration</a></li>
-			  <li class="li" style="float: right;"><img src="favicon.png" ></li>
-			</ul>
+		<div class="bg" id="showHome">
+			<img src="logo.png" style="width: 60%; height: auto;">
+			<h2>Secure, Serverless, Electron &amp; NodeJS-based, Direct Information Transfer</h2>
 		</div>
 
-	    <!-- 
+	    <!--
 		-->
-					  	
 		<div class="modal-body" id="showConfig" hidden>
 		    <h3 id="txtMyMail">Your e-mail address:<br>
 	    		<input id="myMail" type="text" name="mailAddr">

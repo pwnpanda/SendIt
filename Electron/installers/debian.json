@@ -1,0 +1,10 @@
+{
+  "dest": "/mnt/c/Users/Robin Lunde/Dropbox/School/Sem2/Project/GIT/Electron/release/",
+  "icon": "/mnt/c/Users/Robin Lunde/Dropbox/School/Sem2/Project/GIT/Electron/Icon.png",
+  "categories": [
+    "Utility"
+  ],
+  "lintianOverrides": [
+    "changelog-file-missing-in-native-package"
+  ]
+}
