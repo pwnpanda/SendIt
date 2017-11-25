@@ -1,6 +1,6 @@
 {
-  "dest": "/mnt/c/Users/Robin Lunde/Dropbox/School/Sem2/Project/GIT/Electron/release/",
-  "icon": "/mnt/c/Users/Robin Lunde/Dropbox/School/Sem2/Project/GIT/Electron/Icon.png",
+  "dest": "/home/Data/Project/Electron/release/",
+  "icon": "/home/Data/Project/Electron/Icon.png",
   "categories": [
     "Utility"
   ],
