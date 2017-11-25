@@ -1,6 +1,9 @@
 var path = require('path');
 var fs = require('fs');
-var defPath = __dirname;
+const get = require('../userDest.js');
+
+var defPath = new get();
+defPath = defPath.get();
 var splitter = path.sep;
 cfPath=defPath+splitter+'Crypto'+splitter;
 cfName='crypto';
@@ -34,7 +37,6 @@ function readConfig(){
 };	
 
 function settings(){
-	
 	readConfig();
 	curSet();
 
