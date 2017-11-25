@@ -14,6 +14,7 @@ function curSet(){
 }
 
 function readConfig(){
+	alert(defPath + splitter + "config.conf");
 	try{
 		var buf = fs.readFileSync(defPath + splitter + "config.conf", "utf8");
 		//console.log(buf);
