@@ -27,7 +27,8 @@
     "build-mac": "npm run package-mac && npm run install-mac",
     "build-win": "npm run package-win && npm run install-win",
     "build-lin": "npm run package-lin && npm run install-lin",
-    "build-all": "npm run package-all && npm run install-all"
+    "build-all": "npm run package-all && npm run install-all",
+    "clean": "rm release -r"
   },
   "license": "ISC",
   "devDependencies": {
