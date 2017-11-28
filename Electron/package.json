@@ -14,7 +14,7 @@
     "package-win": "npm run package-win32 && npm run package-win64",
     "package-lin": "npm run package-lin32 && npm run package-lin64",
     "package-all": "npm run package-mac && npm run package-win && npm run package-lin",
-    "install-mac": "electron-installer-dmg .\\SendIt-darwin-x64\\SendIt.app\\Contents\\MacOS SendIt --out=release/dmg --overwrite --icon=Icon.icns",
+    "install-mac": "electron-installer-dmg ./release/SendIt-darwin-x64/SendIt.app SendIt --out=release/ --overwrite --icon=Icon.icns",
     "install-win32": "node installers/windows/createinstaller32.js",
     "install-win64": "node installers/windows/createinstaller64.js",
     "install-lin32": "electron-installer-debian --src release/SendIt-linux-ia32/ --arch i386 --config installers/debian.json",
