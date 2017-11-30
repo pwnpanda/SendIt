@@ -1,23 +1,23 @@
 # SendIt
-## Secure, Serverless, Electron & NodeJS-based, Direct Information Transfer
+### Secure, Serverless, Electron & NodeJS-based, Direct Information Transfer
 
-### Research Project - Master thesis
+## Research Project - Master thesis
 ### Theme: Secure, direct file transfer using serverless webRTC
 
 
-### Documentation:
+#### Documentation:
 [Documentation](https://robiq.github.io/Project/)
 
-### Installers:
+#### Installers:
 [Top page](https://github.com/Robiq/SendIt_release)
-#### Windows: 
+##### Windows: 
 [Windows installers](https://github.com/Robiq/SendIt_release/tree/master/Windows)
-#### Mac:
+##### Mac:
 [Mac installers](https://github.com/Robiq/SendIt_release/tree/master/Mac)
-#### Linux:
+##### Linux:
 [Linux installers](https://github.com/Robiq/SendIt_release/tree/master/Linux)
 
-## Licence:
+#### Licence:
 Copyright 2017 Robin Lunde
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
