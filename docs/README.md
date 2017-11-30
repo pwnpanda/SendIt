@@ -4,6 +4,15 @@
 ## Research Project - Master thesis
 ### Theme: Secure, direct file transfer using serverless webRTC
 
+#### Usage:
+1. Setup preferences by clicking the '<b>Settings</b>' tab. <b>Remember to write your E-mail address!</b>
+2. Click <b>'Send'</b> or <b>'Receive'</b> depending on which functionality you will be using.
+3.	- <b>Send</b>: Make sure the files you want to send are loaded (See information right above 'Continue' button). Input the e-mail address of who you will be sending files to. Click 'Continue' and send the copied offer to the receiver, by mail/chat or anyway you want.
+	- <b>Receive</b>: Paste the offer you received and press 'Continue'
+4. 	- <b>Send</b>: Paste the reply you received and press 'Continue'.
+	- <b>Receive</b>: Send the reply back to the other person and press 'Continue'.
+5.	- <b>Send</b>: Press 'Start transfer'
+	- <b>Receive</b>: Wait for transfer to complete. Files can be accessed easily by pressing the 'Open Containing Folder' button.
 
 #### Documentation:
 [Documentation](https://robiq.github.io/Project/)
