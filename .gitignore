@@ -2,3 +2,14 @@
 *.crp
 #Except example file
 !example.crp
+#ignore node modules
+Electron/node_modules/*
+#Ignore sending and receiving folders
+Electron/resources/Send/*
+Electron/resources/Received/*
+#Ignore config file
+Electron/resources/*.conf
+#Ignore log files
+*.log
+#ignore releases for now
+Electron/release

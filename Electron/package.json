@@ -1,0 +1,46 @@
+{
+  "name": "SendIt",
+  "version": "1.0.0",
+  "description": "Sendit",
+  "repository": "https://github.com/Robiq/Project",
+  "main": "init.js",
+  "scripts": {
+    "start": "electron init.js",
+    "package-mac": "electron-packager . --overwrite --platform=darwin --arch=x64 --icon=Icon.icns --prune=true --out=release/",
+    "package-win32": "electron-packager . --overwrite --platform=win32 --arch=ia32 --icon=Icon.ico --prune=true --out=release",
+    "package-win64": "electron-packager . --overwrite --platform=win32 --arch=x64 --icon=Icon.ico --prune=true --out=release",
+    "package-lin32": "electron-packager . SendIt --overwrite --platform=linux --arch=ia32 --icon=Icon.png --prune=true --out=release",
+    "package-lin64": "electron-packager . SendIt --overwrite --platform=linux --arch=x64 --icon=Icon.png --prune=true ---out=release",
+    "package-win": "npm run package-win32 && npm run package-win64",
+    "package-lin": "npm run package-lin32 && npm run package-lin64",
+    "package-all": "npm run package-mac && npm run package-win && npm run package-lin",
+    "install-mac": "electron-installer-dmg ./release/SendIt-darwin-x64/SendIt.app SendIt --out=release/ --overwrite --icon=Icon.icns",
+    "install-win32": "node installers/windows/createinstaller32.js",
+    "install-win64": "node installers/windows/createinstaller64.js",
+    "install-lin32": "electron-installer-debian --src release/SendIt-linux-ia32/ --arch i386 --config installers/debian.json",
+    "install-lin64": "electron-installer-debian --src release/SendIt-linux-x64/ --arch amd64 --config installers/debian.json",
+    "install-win": "npm run install-win32 && npm run install-win64",
+    "install-lin": "npm run install-lin32 && npm run install-lin64",
+    "install-all": "npm run install-mac && npm run install-win && npm run install-lin",
+    "build-mac": "npm run package-mac && npm run install-mac",
+    "build-win": "npm run package-win && npm run install-win",
+    "build-lin": "npm run package-lin && npm run install-lin",
+    "build-all": "npm run package-all && npm run install-all"
+  },
+  "license": "ISC",
+  "devDependencies": {
+    "clipboardy": "^1.1.4",
+    "electron": "^1.7.9",
+    "electron-packager": "^10.1.0",
+    "electron-winstaller": "^2.6.3"
+  },
+  "dependencies": {
+    "clipboardy": "^1.1.4",
+    "electron-prompt": "^0.4.0"
+  },
+   "optionalDependencies": {
+    "electron-installer-debian": "^0.7.1",
+    "electron-installer-dmg": "^0.2.1",
+    "appdmg": "0.4.5"
+  }
+}

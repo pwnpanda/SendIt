@@ -1,0 +1,10 @@
+{
+  "dest": "/home/Data/Project/Electron/release/",
+  "icon": "/home/Data/Project/Electron/Icon.png",
+  "categories": [
+    "Utility"
+  ],
+  "lintianOverrides": [
+    "changelog-file-missing-in-native-package"
+  ]
+}
