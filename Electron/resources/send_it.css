@@ -1,0 +1,118 @@
+/*
+#drop_zone {
+	border: 2px dashed #bbb;
+	-moz-border-radius: 5px;
+	-webkit-border-radius: 5px;
+	border-radius: 5px;
+	padding: 25px;
+	text-align: center;
+	font: 20pt bold 'Vollkorn';
+	color: #bbb;
+}
+*/
+/*
+1	C1DFD6
+2	9BC9BB
+3	75B19F
+4	549C86
+5	398971
+(6: 2A765F)
+
+Compl 1:	FFE9DD
+compl 2:	FFD9C4
+compl 3:	FFC6A8
+compl 4:	ECA680
+compl 5:	CF8056
+
+Logo BG:	dbffcd
+Logo 1:		678f91
+Logo 2:		eb3e3d
+Logo 3:		355f78
+*/
+
+html {
+	background-color: #75B19F;
+	color: #2A765F;
+	text-align: center;
+}
+
+div {
+	background-color: #75B19F;
+	color: #2A765F;
+}
+
+h1, h2, h3, h4, h5, h6 {
+	color: #2A765F;
+}
+
+button {
+    background-color: #398971;
+    border: none;
+    color: #9BC9BB;
+    padding: 15px 32px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 4px 2px;
+    cursor: pointer;
+    transition-duration: 0.3s;
+}
+button:hover {
+	background-color: #549C86;
+    border-width: 1px;
+    border: solid;
+    border-color: #398971;
+    color: #9BC9BB;
+    padding: 15px 32px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 4px 2px;
+    cursor: pointer;
+}
+
+.ul {
+	list-style-type: none;
+	border-radius: 4px;
+	margin: none;
+	padding: 0;
+	overflow: hidden;
+	background-color: #9BC9BB;
+	color: #398971;
+}
+
+.li {
+	float: left;
+	padding-right: 2px;
+	border-right:0px solid #bbb;
+	color: #398971;
+}
+
+.li:last-child {
+	border-right: none;
+}
+
+.li img {
+	display: block;
+	text-align: right;
+	padding: 7px;
+}
+.li a {
+	display: block;
+	color: #398971;
+	text-align: center;
+	padding: 14px 16px;
+	text-decoration: none;
+}
+
+.li a:hover:not(.Active) {
+	background-color: #549C86;
+	color: #C1DFD6;
+}
+
+.li .Active {
+	background-color: #398971;
+	color: #C1DFD6;
+}
