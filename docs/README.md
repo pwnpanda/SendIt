@@ -9,6 +9,13 @@ https://robiq.github.io/Project/
 
 ### Installers:
 https://github.com/Robiq/SendIt_release
+#### Windows: 
+https://github.com/Robiq/SendIt_release/tree/master/Windows
+#### Mac:
+https://github.com/Robiq/SendIt_release/tree/master/Mac
+#### Linux:
+https://github.com/Robiq/SendIt_release/tree/master/Linux
+
 
 ## Licence:
 Copyright 2017 Robin Lunde
