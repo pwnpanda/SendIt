@@ -5,16 +5,16 @@
 
 
 ### Documentation:
-https://robiq.github.io/Project/
+[Documentation](https://robiq.github.io/Project/)
 
 ### Installers:
-https://github.com/Robiq/SendIt_release
+[Top page](https://github.com/Robiq/SendIt_release)
 #### Windows: 
-https://github.com/Robiq/SendIt_release/tree/master/Windows
+[Windows installers](https://github.com/Robiq/SendIt_release/tree/mast)
 #### Mac:
-https://github.com/Robiq/SendIt_release/tree/master/Mac
+[Mac installers](https://github.com/Robiq/SendIt_release/tree/master/Mac)
 #### Linux:
-https://github.com/Robiq/SendIt_release/tree/master/Linux
+[Linux installers](https://github.com/Robiq/SendIt_release/tree/master/Linux)
 
 ## Licence:
 Copyright 2017 Robin Lunde

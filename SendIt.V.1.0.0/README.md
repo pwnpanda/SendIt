@@ -4,14 +4,17 @@
 ## Description:
 ### Secure, direct file transfer using serverless webRTC
 
-## Installers:
-### Windows: 
-https://github.com/Robiq/SendIt_release/tree/master/Windows
-### Mac:
-https://github.com/Robiq/SendIt_release/tree/master/Mac
-### Linux:
-https://github.com/Robiq/SendIt_release/tree/master/Linux
+### Documentation:
+[Documentation](https://robiq.github.io/Project/)
 
+### Installers:
+[Top page](https://github.com/Robiq/SendIt_release)
+#### Windows: 
+[Windows installers](https://github.com/Robiq/SendIt_release/tree/mast)
+#### Mac:
+[Mac installers](https://github.com/Robiq/SendIt_release/tree/master/Mac)
+#### Linux:
+[Linux installers](https://github.com/Robiq/SendIt_release/tree/master/Linux)
 
 ### Licence:
 Copyright 2017 Robin Lunde
