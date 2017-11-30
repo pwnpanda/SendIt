@@ -10,7 +10,7 @@
 ### Installers:
 [Top page](https://github.com/Robiq/SendIt_release)
 #### Windows: 
-[Windows installers](https://github.com/Robiq/SendIt_release/tree/mast)
+[Windows installers](https://github.com/Robiq/SendIt_release/tree/master/Windows)
 #### Mac:
 [Mac installers](https://github.com/Robiq/SendIt_release/tree/master/Mac)
 #### Linux:
