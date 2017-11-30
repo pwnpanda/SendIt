@@ -1,8 +1,8 @@
 # SendIt
 ## Secure, Serverless, Electron & NodeJS-based, Direct Information Transfer
 
-## Research Project - Master thesis
-## Theme: Secure, direct file transfer using serverless webRTC
+### Research Project - Master thesis
+### Theme: Secure, direct file transfer using serverless webRTC
 
 
 ### Documentation:
