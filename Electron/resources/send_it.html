@@ -31,7 +31,7 @@
     <!-- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! -->
     <link href="send_it.css" rel="stylesheet">
 
-    <div class="modal-header">
+    <div class="modal-header" data-keyboard="false" data-backdrop="static">
 	    <ul class="ul">
 		  <li class="li"><a id="home" href="" class="Active">Home</a></li>
 		  <li class="li"><a id="createBtn">Send</a></li>
@@ -43,15 +43,15 @@
 </head>
 <body>
 	<!-- Initial choice --> 
-	<div class="modal" id="createOrJoin" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-		<div class="bg" id="showHome">
+	<div class="modal" id="createOrJoin" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+		<div class="bg" id="showHome" data-keyboard="false" data-backdrop="static">
 			<img src="logo.png" style="width: 60%; height: auto;">
 			<h2>Secure, Serverless, Electron &amp; NodeJS-based, Direct Information Transfer</h2>
 		</div>
 
 	    <!--
 		-->
-		<div class="modal-body" id="showConfig" hidden>
+		<div class="modal-body" id="showConfig" data-keyboard="false" data-backdrop="static" hidden>
 		    <h3 id="txtMyMail">Your e-mail address:<br>
 	    		<input id="myMail" type="text" name="mailAddr">
 	    	</h3>
@@ -98,11 +98,11 @@
 	</div>
 
 	<!-- Show the offer created by this PC --> 
-	<div class="modal" id="showLocalOffer" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" hidden>
-	  <div class="modal-header">
+	<div class="modal" id="showLocalOffer" data-keyboard="false" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" hidden>
+	  <div class="modal-header" data-keyboard="false" data-backdrop="static">
 	    <h3 id="myModalLabel">Share your offer</h3>
 	  </div>
-	  <div class="modal-body">
+	  <div class="modal-body" data-keyboard="false" data-backdrop="static">
 	    Here's your "offer" -- it tells someone else how to connect to you.  Send the whole thing to them, for example in an instant message or e-mail.
 	  <br/>
 	  <textarea class="input-large" id="localOffer" name="localOffer" rows="10" cols="100"></textarea>
@@ -120,17 +120,17 @@
 	  <h3 id="txtRecMail">Receiver's e-mail address:<br>
 	    <input id="recMail" type="text" name="mailAddr">
 	</h3>
-	  <div class="modal-footer">
+	  <div class="modal-footer" data-keyboard="false" data-backdrop="static">
 	    <button class="btn btn-primary" id="offerSentBtn" data-dismiss="modal" aria-hidden="true">Continue</button>
 	  </div>
 	</div>
 
 	<!-- Show the answer created by this PC --> 
-	<div class="modal" id="showLocalAnswer" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" hidden>
-	  <div class="modal-header">
-	    <h3 id="myModalLabel">Share your answer with the sender</h3>
+	<div class="modal" id="showLocalAnswer" data-keyboard="false" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" hidden>
+	  <div class="modal-header" data-keyboard="false" data-backdrop="static">
+	    <h3 id="myModalLabel" data-keyboard="false" data-backdrop="static">Share your answer with the sender</h3>
 	  </div>
-	  <div class="modal-body">
+	  <div class="modal-body" data-keyboard="false" data-backdrop="static">
 	    Here's your "answer" -- it tells someone else how to connect to you.  Send the whole thing to them, for example in an instant message or e-mail.
 	  <br/>
 	  <textarea class="input-large" id="localAnswer" name="localAnswer" rows="10" cols="100"></textarea>
@@ -138,57 +138,57 @@
 	  <div class="alert alert-success" id="success-alert">
 		<strong style="color: #FF5900; font-size: x-large;">Contents copied!</strong>
 	  </div>
-	  <div class="modal-footer">
+	  <div class="modal-footer" data-keyboard="false" data-backdrop="static">
 	    <button class="btn btn-primary" id="answerSentBtn" data-dismiss="modal" aria-hidden="true">Continue</button>
 	  </div>
 	</div>
 
 	<!-- Paste the offer created by other PC --> 
-	<div class="modal" id="getRemoteOffer" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" hidden>
-	  <div class="modal-header">
-	    <h3 id="myModalLabel">Paste the "offer" you received</h3>
+	<div class="modal" id="getRemoteOffer" data-keyboard="false" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" hidden>
+	  <div class="modal-header" data-keyboard="false" data-backdrop="static">
+	    <h3 id="myModalLabel" data-keyboard="false" data-backdrop="static">Paste the "offer" you received</h3>
 	  </div>
-	  <div class="modal-body">
+	  <div class="modal-body" data-keyboard="false" data-backdrop="static">
 	    The person who created the room will send you an "offer" string -- paste it here.
 	  <br/>
 	  <textarea class="input-large" id="remoteOffer" name="remoteOffer" rows="10" cols="100"></textarea>
 	  </div>
-	  <div class="modal-footer">
+	  <div class="modal-footer" data-keyboard="false" data-backdrop="static">
 	    <button class="btn btn-primary" id="offerRecdBtn" data-dismiss="modal" aria-hidden="true">Continue</button>
 	  </div>
 	</div>
 
 	<!-- Show the answer created by the other PC --> 
-	<div class="modal" id="getRemoteAnswer" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" hidden>
-	  <div class="modal-header">
+	<div class="modal" id="getRemoteAnswer" data-keyboard="false" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" hidden>
+	  <div class="modal-header" data-keyboard="false" data-backdrop="static">
 	    <h3 id="myModalLabel">Paste the "answer" you received</h3>
 	  </div>
-	  <div class="modal-body">
+	  <div class="modal-body" data-keyboard="false" data-backdrop="static">
 	    Now paste in the "answer" that was sent back to you.
 	  <br/>
 	  <textarea class="input-large" id="remoteAnswer" name="remoteAnswer" rows="10" cols="100"></textarea>
 	  </div>
-	  <div class="modal-footer">
+	  <div class="modal-footer" data-keyboard="false" data-backdrop="static">
 	    <button class="btn btn-primary" id="answerRecdBtn" data-dismiss="modal" aria-hidden="true">Continue</button>
 	  </div>
 	</div>
 
 	<!-- Wait for the other PC to connect --> 
-	<div class="modal" id="waitForConnection" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" hidden>
-	  <div class="modal-header">
+	<div class="modal" id="waitForConnection" data-keyboard="false" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" hidden>
+	  <div class="modal-header" data-keyboard="false" data-backdrop="static">
 	    <h3 id="myModalLabel">Waiting for connection</h3>
 	  </div>
-	  <div class="modal-body">
+	  <div class="modal-body" data-keyboard="false" data-backdrop="static">
 	    This dialog will disappear when a connection is made.
 	  </div>
 	</div>
 
 	<!-- Connected screen -->
-	<div class="modal" id="connectedScreen" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" hidden>
-	  <div class="modal-header">
+	<div class="modal" id="connectedScreen" data-keyboard="false" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" hidden>
+	  <div class="modal-header" data-keyboard="false" data-backdrop="static">
 	    <h3 id="myModalLabel">Connected!</h3>
 	  </div>
-	  <div class="modal-body">
+	  <div class="modal-body" data-keyboard="false" data-backdrop="static">
 	    <button id="init" onclick="initiateSnd()">Start transfer</button>
 	    <p id="Error" style="color:red"></p>
 		<div id='transferDetails'></div>
@@ -196,11 +196,11 @@
 	</div>
 
 		<!-- End screen-->
-	<div class="modal" id="endScreen" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" hidden>
-	  <div class="modal-header">
+	<div class="modal" id="endScreen" data-keyboard="false" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" hidden>
+	  <div class="modal-header" data-keyboard="false" data-backdrop="static">
 	    <h3 id="myModalLabel">Connection terminated!</h3>
 	  </div>
-	  <div class="modal-body">
+	  <div class="modal-body" data-keyboard="false" data-backdrop="static">
 	    <!-- INSERT CODE HERE! -->
 		<div id='transferDetailsEnd'></div>
 	  	<div id="download">Files:<br></div>
