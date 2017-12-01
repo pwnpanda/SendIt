@@ -36,7 +36,8 @@ function handleDragOver(evt) {
 */
 function loadFiles(){
 	var output = [];
-	fs.readdir(ulPath, function(err, items) {
+	try{
+		var items = fs.readdirSync(ulPath)
 		if(items.length == 0){
 			alert("No files to send! Make sure there are files present in: " + ulPath)
 			console.error("No files to send!");
@@ -57,7 +58,7 @@ function loadFiles(){
 		nrOfFiles = items.length;
 		fmArray = new Array(nrOfFiles);
 		for (var i=0; i<items.length; i++) {
-	        var file = ulPath + '/' + items[i];
+	        var file = ulPath + path.sep + items[i];
 	 		var name = items[i].split('.');
 	 		var type = "."+name[1];
 	 		name = name[0];
@@ -83,12 +84,14 @@ function loadFiles(){
 			Math.ceil((stats["size"] / 1024)) + ' kbytes','</li>');
 	    }
 		document.getElementById('list').innerHTML = '<ul>' + output.join('') + '</ul>';
-    });
+    }catch(e){
+    	throw new Error(e);
+    }
 }
 
 function stageFiles(){
 	for (var i=0; i<files.length; i++) {
-	    var file = ulPath + '/' + files[i];
+	    var file = ulPath + path.sep + files[i];
 	 	var name = files[i].split('.');
 	 	var type = "."+name[1];
 	 	name = name[0];
@@ -102,8 +105,8 @@ function stageFiles(){
 		}catch(e){
 			console.log('Error', e.stack);
 		}   	
-		offerShare();
     };
+	offerShare();
 }
 /* Old way of staging files - used in manual addition - Add again later!
 //https://github.com/webrtc/samples/blob/gh-pages/src/content/datachannel/filetransfer/js/main.js - INFO

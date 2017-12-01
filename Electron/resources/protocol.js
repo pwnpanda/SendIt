@@ -64,6 +64,7 @@ function onReceiveMessageCallback(event) {
 				 ul.innerHTML = fmArray[i].fileName+fmArray[i].fileType + ' &emsp;  Filenumber ' + (i+1) + '/' + nrOfFiles;
 				 doc.append(ul);
 			}
+			$("#openInFolder").hide();
 
 		} else{
 			offerShare();
@@ -321,9 +322,9 @@ function transferComplete(){
 }
 //Registers the different events
 function registerFileEvents(fm) {
-			fm.onrequestready = chunkRequestReady;
-			fm.onprogress = displayProgress;
-			fm.ontransfercomplete = transferComplete;
+	fm.onrequestready = chunkRequestReady;
+	fm.onprogress = displayProgress;
+	fm.ontransfercomplete = transferComplete;
 }
 //Makes sure directory exists
 //https://stackoverflow.com/questions/13542667/create-directory-when-writing-to-file-in-node-js

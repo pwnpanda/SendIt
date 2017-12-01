@@ -19,6 +19,7 @@
 
 #### Installers:
 [Top page](https://github.com/Robiq/SendIt_release)
+[Latest releases](https://github.com/Robiq/SendIt_release/releases/tag/V.1.0.0)
 ##### Windows: 
 [Windows installers](https://github.com/Robiq/SendIt_release/tree/master/Windows)
 ##### Mac:
