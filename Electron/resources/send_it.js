@@ -27,7 +27,7 @@ var sdpConstraints = {
   }
 }
 //Comment out for production code! Removes error output
-console.log = console.debug = console.info = function(){};
+//console.log = console.debug = console.info = function(){};
 // MY ADDITION---------------
 var fileReady = false;
 var iceReady = false;
@@ -122,6 +122,7 @@ $('#createBtn').click(function () {
       km = new KeyManager("new", myMail);
       $('#showLocalOffer').modal('show')
       createLocalOffer()
+      loadFiles();
     }).catch(console.error);    
   }else{
     //--------------------------
@@ -202,6 +203,7 @@ function setupDC1 () {
 	  $('#waitForConnection').modal('hide')
 	  $('#waitForConnection').remove()
 	  $('#connectedScreen').modal('show')
+    beginAuth();
 	}
 	dc1.onmessage = function (e) {
 	  console.log('Got message (pc1)');
@@ -281,10 +283,13 @@ pc2.ondatachannel = function (e) {
   $('#waitForConnection').modal('hide')
   $('#waitForConnection').remove()
   $('#connectedScreen').modal('show')
-  $('#init').attr("hidden", true);
+  /*//New
+  $("#init").hide();*/
   dc2 = datachannel
   activedc = dc2
   dc2.onopen = function (e) {
+  /*//FIX!!!!!!!
+  $("#init").hide();*/
 	console.info('data channel connect')
   }
   dc2.onmessage = function (e) {
@@ -354,16 +359,16 @@ function isReady(){
     $('#offerSentBtn').prop('disabled', true);
   }
 }
-
+/*
 function initiateSnd(){
   console.log('Initiating!');
-  var button = $("#init").hide();
+  $("#init").hide();
   beginAuth();
 }
-
+*/
 $('#openInFolder').click(function () {
   try{
-    shell.showItemInFolder(dlPath+'*');
+    shell.showItemInFolder(dlPath + splitter+'*');
   }catch(err){
       console.log(err);
     }
