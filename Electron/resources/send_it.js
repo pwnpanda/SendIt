@@ -316,8 +316,8 @@ pc2.onicecandidate = function (e) {
     copy.writeSync(ans);
     $('#localAnswer').html(ans);
     //https://stackoverflow.com/a/23102317/4400482
-    $("#success-alert").fadeTo(2000, 500).slideUp(500, function(){
-      $("#success-alert").slideUp(500);
+    $("#success-alert 2").fadeTo(2000, 500).slideUp(500, function(){
+      $("#success-alert 2").slideUp(500);
     });
   }
 }
