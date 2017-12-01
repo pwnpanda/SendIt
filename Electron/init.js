@@ -27,7 +27,7 @@ app.once('ready', function () {
     // Don't show the window until it ready, this prevents any white flickering
     show: false,
     title: "Send It",
-    icon: path.join(__dirname, 'icon.png'),
+    icon: path.join(__dirname, 'Icon.png'),
   });
 
   // Load a URL in the window to the local index.html path
