@@ -40,23 +40,36 @@ function readConfig(){
 function keyManagement(){
 	//Key management in settings
 	$('#cryptoOpt').html('');
+	var reset = $('<button/>', {
+				text: "Remove crypto-file!",
+				id: "removeCryptoBtn",
+				click: removeCrypto
+			});
+	$('#cryptoOpt').append(reset);
+	$('#cryptoOpt').append("<br>");
 	var html;	
 	if( existCrypto() ){
-		var txt = "<h4>Remove keys for:</h4>"
-		$('#cryptoOpt').append(txt);
-		for(email in km.keys){
-			var btn;
-			btn=$('<button/>', {
-				text: email,
-				id: email,
-				click: removeEntry
-			});
-			btn.css("text-color", "red");
-			$('#cryptoOpt').append(btn);
-			$('#cryptoOpt').append("<br>");
+		//No foreign keys
+		if($.isEmptyObject(km.keys)){
+			$('#cryptoOpt').append('<h4 style="color: red;">No Cryptography information to display!</h4>');
+		}else{
+			//Foreign keys exist
+			var txt = "<h4>Remove keys for:</h4>"
+			$('#cryptoOpt').append(txt);
+			for(email in km.keys){
+				var btn;
+				btn=$('<button/>', {
+					text: email,
+					id: email,
+					click: removeEntry
+				});
+				$('#cryptoOpt').append(btn);
+				$('#cryptoOpt').append("<br>");
+			}
 		}
+	//No cryptofile
 	} else {
-		$('#cryptoOpt').html('<h4 style="color: red;">No Cryptography information to display!</h4>');
+		$('#cryptoOpt').append('<h4 style="color: red;">No Cryptography information to display!</h4>');
 	}
 }
 
@@ -111,8 +124,10 @@ function settings(){
 		cfName='crypto.crp';
 		dlPath=defPath+splitter+"Received"+splitter;
 		ulPath=defPath+splitter+"Send"+splitter;
-		$('#curSet').html('');
-		curSet();
+		myMail='';
+		$("#myMail").val(myMail);
+
+		saveConf();
 	});
 
 	$('#storeConfBtn').click(function () {
@@ -127,20 +142,6 @@ function settings(){
 		}
 		//return;
 	});
-
-	//Delete whole file - option with confirmation
-	$('#removeCryptoBtn').click(function (){
-	
-		//ADD CONFIRMATION WINDOW
-		if( window.confirm("Are you sure you want to remove your cryptography file?") ){
-			try{
-				fs.unlinkSync(cfPath+cfName);
-				alert("Cryptography file removed!");
-			}catch(e){
-				console.log(e);
-			}
-		}
-	})
 }
 
 function saveConf(init=false){
@@ -195,4 +196,15 @@ function removeEntry(){
 	km.getObjectData();
 	window.location.href = "";
 
+}
+function removeCrypto(){
+	//ADD CONFIRMATION WINDOW
+	if( window.confirm("Are you sure you want to remove your cryptography file?") ){
+		try{
+			fs.unlinkSync(cfPath+cfName);
+			alert("Cryptography file removed!");
+		}catch(e){
+			console.log(e);
+		}
+	}
 }
