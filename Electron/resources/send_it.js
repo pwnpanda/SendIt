@@ -103,11 +103,11 @@ $('#createBtn').click(function () {
   //Read in email and initiate new KeyManager if neccesary
   settings();
   if (! existCrypto()){
-    var myMail;
+    myMail;
     prompt({
     title: 'E-mail',
     label: 'Please enter your e-mail address',
-    value: cfName,
+    value: myMail,
     inputAttrs: { // attrs to be set if using 'input'
         type: 'mail'
     },
@@ -142,11 +142,11 @@ $('#joinBtn').click(function () {
  	//Read in email and initiate new KeyManager if neccesary
   settings();
   if (! existCrypto()){
-    var myMail;
+    myMail;
     prompt({
     title: 'E-mail',
     label: 'Please enter your e-mail address',
-    value: cfName,
+    value: myMail,
     inputAttrs: { // attrs to be set if using 'input'
         type: 'mail'
     },
