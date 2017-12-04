@@ -56,7 +56,7 @@ var template = [{
     if (process.platform === 'darwin') { 
       Menu.setApplicationMenu(Menu.buildFromTemplate(template));
     }else{
-      //window.setMenu(null);
+      window.setMenu(null);
     }
     window.show()
   })
