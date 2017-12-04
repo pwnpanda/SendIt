@@ -37,6 +37,7 @@ function handleDragOver(evt) {
 function loadFiles(){
 	var output = [];
 	try{
+		//Read files in folder
 		var items = fs.readdirSync(ulPath)
 		if(items.length == 0){
 			alert("No files to send! Make sure there are files present in: " + ulPath)
@@ -58,6 +59,7 @@ function loadFiles(){
 		nrOfFiles = items.length;
 		fmArray = new Array(nrOfFiles);
 		for (var i=0; i<items.length; i++) {
+			//Full file path
 	        var file = ulPath + path.sep + items[i];
 	 		var name = items[i].split('.');
 	 		var type = "."+name[1];
@@ -96,7 +98,6 @@ function stageFiles(){
 	 	var type = "."+name[1];
 	 	name = name[0];
 	 	console.log("File: " + file + " Name: " + name + " Type: " + type);
-	    //Need array of filemanagers, one for each file!
 	    
 	    console.log("Read file in!");
 	   	try{

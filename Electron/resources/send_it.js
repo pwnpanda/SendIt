@@ -86,6 +86,7 @@ $("#recMail").keyup( function() {
 var pc1 = new RTCPeerConnection(cfg, con),
   dc1 = null
 
+//Show correct items for the config-panel
 $('#config').click(function () {
   reset();
   $('#home').removeClass("Active");

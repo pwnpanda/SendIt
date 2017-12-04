@@ -69,7 +69,7 @@ KeyManager.prototype = {
 		console.log("Creating new KeyManager ", myMail);
 		//Email of this node
 		this.email = myMail;
-		//TODO EXP
+		//Set mail for config.conf, if we create a new keymanager
 		setMail(this.email);
 		//Dictionary of public keys and e-mails of other nodes
 		//Key = email, value = Public key
