@@ -153,7 +153,7 @@ function settings(){
 //Save config to config.conf
 function saveConf(init=false){
 	myMail = $("#myMail").val();
-	if(init && cfName == 'crypto.crp'){
+	if(!init && cfName == 'crypto.crp' || cfName == '.crp'){
 		cfName = myMail+'.crp';
 		console.log('Creating cfName for ' + myMail);
 	}
