@@ -11,12 +11,14 @@ cfName='crypto.crp';
 dlPath=defPath+splitter+"Received"+splitter;
 ulPath=defPath+splitter+"Send"+splitter;
 
+//Print current settings
 function curSet(){
 	var cfPrnt = cfPath+cfName;
 	var string = "<ul><h4> Cryptography file:</h4>" + cfPrnt +" </ul> <ul><h4> Download path:</h4>" + dlPath + " </ul> <ul><h4> Upload path:</h4>" + ulPath + " </ul>";
 	$('#curSet').html(string);
 }
 
+//Read config file
 function readConfig(){
 	try{
 		var buf = fs.readFileSync(defPath + splitter + "config.conf", "utf8");
@@ -40,12 +42,13 @@ function readConfig(){
 function keyManagement(){
 	//Key management in settings
 	$('#cryptoOpt').html('');
-	var reset = $('<button/>', {
+	//Button to remove cryptofile
+	var remove = $('<button/>', {
 				text: "Remove crypto-file!",
 				id: "removeCryptoBtn",
 				click: removeCrypto
 			});
-	$('#cryptoOpt').append(reset);
+	$('#cryptoOpt').append(remove);
 	$('#cryptoOpt').append("<br>");
 	var html;	
 	if( existCrypto() ){
@@ -78,6 +81,7 @@ function settings(){
 	curSet();
 	keyManagement();
 
+	//Show selection if change in radio buttons for manual settings
 	$('#formInput input').on('change', function() {
 		if( ($('input[name=in]:checked', '#formInput').val()) == "Manual"){
 			$('#opt').show();
@@ -90,6 +94,7 @@ function settings(){
 		}
 	});
 
+	//Show selection if change in radio buttons for crypto file
 	$('#formCrypt input').on('change', function() {
 		if( ($('input[name=in]:checked', '#formCrypt').val()) == "Manual"){
 			$('#txtCryptoFile').show();
@@ -100,6 +105,7 @@ function settings(){
 		}
 	});
 
+	//Show selection if change in radio buttons for download
 	$('#formDl input').on('change', function() {
 		if( ($('input[name=in]:checked', '#formDl').val()) == "Manual"){
 			$('#setDlLoc').show();
@@ -109,6 +115,7 @@ function settings(){
 		}
 	});
 
+	//Show selection if change in radio buttons for upload
 	$('#formUl input').on('change', function() {
 		if( ($('input[name=in]:checked', '#formUl').val()) == "Manual"){
 			$('#setUlLoc').show();
@@ -119,6 +126,7 @@ function settings(){
 		}
 	});
 
+	//Button to reset config
 	$('#resetConfig').click(function () {
 		cfPath=defPath+splitter+'Crypto'+splitter;
 		cfName='crypto.crp';
@@ -126,15 +134,14 @@ function settings(){
 		ulPath=defPath+splitter+"Send"+splitter;
 		myMail='';
 		$("#myMail").val(myMail);
-
 		saveConf();
 	});
 
+	//Button to store config
 	$('#storeConfBtn').click(function () {
 		//Save config.conf
 		if($("#myMail").val() == ''){
 			alert("Please fill in an email address!");
-			//TODO bug!
 		}else{
 			saveConf();
 			$("#showConfig").modal('hide');
@@ -143,7 +150,7 @@ function settings(){
 		//return;
 	});
 }
-
+//Save config to config.conf
 function saveConf(init=false){
 	myMail = $("#myMail").val();
 	if(init && cfName == 'crypto.crp'){
@@ -166,7 +173,7 @@ function saveConf(init=false){
 		alert("Please move or copy the files you want to send to: \n" + ulPath);
 	}
 }
-
+//Set crypto file
 function setCrypto(){
 	cfPath = $("#cryptoFile")[0].files[0].path;
 	console.log(cfPath);
@@ -188,7 +195,7 @@ function setMail(mail){
 	myMail = mail;
 	console.log("Mail: "+mail);
 }
-
+//Remove a email+key pair
 function removeEntry(){
 	let id=this.id;
 	if( window.confirm("Are you sure you want to remove the key for " + id +"?") ){
@@ -198,8 +205,8 @@ function removeEntry(){
 		window.location.href = "";
 	}
 }
+//Delete cryptofile
 function removeCrypto(){
-	//ADD CONFIRMATION WINDOW
 	if( window.confirm("Are you sure you want to remove your cryptography file?") ){
 		try{
 			fs.unlinkSync(cfPath+cfName);
