@@ -32,6 +32,7 @@ KeyManager.prototype = {
 			//var dec = decodeMethod(data);
 			//var dec = JSON.parse(data);
 			var dec = data.split(";\n");
+			console.log(dec.length);
 			console.log(dec);
 			//Extract mail
 			this.email = dec[0];
@@ -39,6 +40,8 @@ KeyManager.prototype = {
 			this.key=new Object();
 			this.key.privateKey = JSON.parse(dec[1]);
 			this.key.publicKey = JSON.parse(dec[2]);
+			//Store user and public key-pairs
+			this.keys = {};
 			//Extract keys - stored as JWK! //TODO - Issue with key_ops! Figure it out
 			Promise.all([(this.importKey(this.key.privateKey, this.key.privateKey.key_ops)),
 			(this.importKey(this.key.publicKey, this.key.publicKey.key_ops))]).then(function (keys) {
@@ -48,10 +51,9 @@ KeyManager.prototype = {
 				//Error-handling just in case
 				console.error(err);
 			});
-			//Store user and public key-pairs
-			this.keys = {};
 			//Handles any number of keys!
 			for (var i = 3; i < dec.length-1; i++) {
+				console.log(dec[i]);
 				var tmp = dec[i].split(";");
 				this.storeKey(tmp[0], JSON.parse(tmp[1]));
 			}
@@ -68,7 +70,7 @@ KeyManager.prototype = {
 		//Email of this node
 		this.email = myMail;
 		//TODO EXP
-		setCfName(this.email);
+		setMail(this.email);
 		//Dictionary of public keys and e-mails of other nodes
 		//Key = email, value = Public key
 		this.keys = {};
@@ -233,7 +235,7 @@ KeyManager.prototype = {
 					write = write + email +";"+JSON.stringify(km.keys[email])+";\n";
 				}
 				//Call some function that writes to file, sending write as an argument.
-				writeToFile(write, cfPath+cfName+'.crp');
+				writeToFile(write, cfPath+cfName);
 				//console.warn("Here: \n" + write);
 				//TODO - encrypt data before returning!
 		}).catch(function(err){

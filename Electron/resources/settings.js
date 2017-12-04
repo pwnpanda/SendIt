@@ -2,16 +2,17 @@ var path = require('path');
 var fs = require('fs');
 const get = require('../userDest.js');
 
+var myMail;
 var defPath = new get();
 defPath = defPath.get();
 var splitter = path.sep;
 cfPath=defPath+splitter+'Crypto'+splitter;
-cfName='crypto';
+cfName='crypto.crp';
 dlPath=defPath+splitter+"Received"+splitter;
 ulPath=defPath+splitter+"Send"+splitter;
 
 function curSet(){
-	var cfPrnt = cfPath+cfName+".crp";
+	var cfPrnt = cfPath+cfName;
 	var string = "<ul><h4> Cryptography file:</h4>" + cfPrnt +" </ul> <ul><h4> Download path:</h4>" + dlPath + " </ul> <ul><h4> Upload path:</h4>" + ulPath + " </ul>";
 	$('#curSet').html(string);
 }
@@ -24,29 +25,53 @@ function readConfig(){
 		//console.log(buf);
 		cfName = buf.cfName;
 		cfPath = buf.cfPath;
-		cfName = buf.cfName;
 		dlPath = buf.dlPath;
 		ulPath = buf.ulPath;
+		myMail = buf.myMail;
 
-		$("#myMail").val(cfName);
+		$("#myMail").val(myMail);
 
 	}catch(err){
 		console.log("No config-file found!", err);
 		saveConf(true);
 	}
-};	
+}
+
+function keyManagement(){
+	//Key management in settings
+	$('#cryptoOpt').html('');
+	var html;	
+	if( existCrypto() ){
+		var txt = "<h4>Remove keys for:</h4>"
+		$('#cryptoOpt').append(txt);
+		for(email in km.keys){
+			var btn;
+			btn=$('<button/>', {
+				text: email,
+				id: email,
+				click: removeEntry
+			});
+			btn.css("text-color", "red");
+			$('#cryptoOpt').append(btn);
+			$('#cryptoOpt').append("<br>");
+		}
+	} else {
+		$('#cryptoOpt').html('<h4 style="color: red;">No Cryptography information to display!</h4>');
+	}
+}
 
 function settings(){
 	readConfig();
 	curSet();
+	keyManagement();
 
 	$('#formInput input').on('change', function() {
 		if( ($('input[name=in]:checked', '#formInput').val()) == "Manual"){
 			$('#opt').show();
-		} else{
+		} else {
 			$('#opt').hide();
 			cfPath=defPath+splitter+'Crypto'+splitter;
-			cfName='crypto';
+			cfName='crypto.crp';
 			dlPath=defPath+splitter+"Received"+splitter;
 			ulPath=defPath+splitter+"Send"+splitter;
 		}
@@ -81,6 +106,14 @@ function settings(){
 		}
 	});
 
+	$('#resetConfig').click(function () {
+		cfPath=defPath+splitter+'Crypto'+splitter;
+		cfName='crypto.crp';
+		dlPath=defPath+splitter+"Received"+splitter;
+		ulPath=defPath+splitter+"Send"+splitter;
+		$('#curSet').html('');
+		curSet();
+	});
 
 	$('#storeConfBtn').click(function () {
 		//Save config.conf
@@ -94,16 +127,34 @@ function settings(){
 		}
 		//return;
 	});
-};
+
+	//Delete whole file - option with confirmation
+	$('#removeCryptoBtn').click(function (){
+	
+		//ADD CONFIRMATION WINDOW
+		if( window.confirm("Are you sure you want to remove your cryptography file?") ){
+			try{
+				fs.unlinkSync(cfPath+cfName);
+				alert("Cryptography file removed!");
+			}catch(e){
+				console.log(e);
+			}
+		}
+	})
+}
 
 function saveConf(init=false){
-	cfName = $("#myMail").val();
+	myMail = $("#myMail").val();
+	if(init && cfName == 'crypto.crp'){
+		cfName = myMail+'.crp';
+		console.log('Creating cfName for ' + myMail);
+	}
 	var data = {
 			"cfName": cfName,
 			"cfPath": cfPath,
-			"cfName": cfName,
 			"dlPath": dlPath,
-			"ulPath": ulPath
+			"ulPath": ulPath,
+			"myMail": myMail
 	}
 	console.log(data);
 	writeToFile(JSON.stringify(data), defPath+splitter+'config.conf', !init);
@@ -117,8 +168,9 @@ function saveConf(init=false){
 
 function setCrypto(){
 	cfPath = $("#cryptoFile")[0].files[0].path;
+	console.log(cfPath);
 	var info = path.parse(cfPath);
-	cfPath = info.dir;
+	cfPath = info.dir+splitter;
 	cfName = info.base;
 	console.log(cfPath + " " + cfName);
 	readCrypto();
@@ -131,6 +183,16 @@ function setUpload(){
 	ulPath = $("#uploadFolder")[0].files[0].path;
 	console.log(ulPath);
 }
-function setCfName(name){
-	cfName = name;
+function setMail(mail){
+	myMail = mail;
+	console.log("Mail: "+mail);
+}
+
+function removeEntry(){
+	let id=this.id;
+	delete km.keys[id];
+	alert("Removed key: " + id);
+	km.getObjectData();
+	window.location.href = "";
+
 }

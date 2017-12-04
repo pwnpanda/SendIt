@@ -55,6 +55,7 @@
 		    <h3 id="txtMyMail">Your e-mail address:<br>
 	    		<input id="myMail" type="text" name="mailAddr">
 	    	</h3>
+			<button class="btn btn-primary" id="resetConfig" data-dismiss="modal" aria-hidden="true">Reset configuration-file!</button><br>
 			<form id="formInput">
 	    		<h3>File options:</h3>
 		    	<input type="radio" name="in" value="Automatic" checked> Automatic &emsp;
@@ -67,9 +68,13 @@
 			    	<input type="radio" name="in" value="Automatic" checked> Automatic &emsp;
 			    	<input type="radio" name="in" value="Manual"> Manual<br>
 				</form>
+				<!-- Add info of keys here! -->
 		    	<h5 id="txtCryptoFile" value="Manual" hidden>Manually chose cryptofile:<br>
 			    	<input type="File" id="cryptoFile" onchange="setCrypto()" accept=".crp">
 		    	</h5>
+				<div id="cryptoOpt">
+					<button class="btn btn-primary" id="removeCryptoBtn" data-dismiss="modal" aria-hidden="true">Remove crypto-file!</button><br>
+				</div>
 
 		    	<form id="formDl">
 		    		<h3>Download options:</h3>

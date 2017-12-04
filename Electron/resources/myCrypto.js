@@ -10,7 +10,8 @@ if (!window.crypto || !window.crypto.subtle) {
 }
 //Main crypto function
 function existCrypto(){
-	if(fs.existsSync(cfPath+cfName+'.crp')){
+  console.log("Cryptofile " +cfPath+cfName);
+	if(fs.existsSync(cfPath+cfName)){
 		readCrypto();
 		return true;
 	}else{
@@ -24,7 +25,7 @@ function readCrypto(){
 
 	//read cryptoFile
 	try{
-		var buf = fs.readFileSync(cfPath+cfName+'.crp', "utf8");
+		var buf = fs.readFileSync(cfPath+cfName, "utf8");
 		//console.log(buf);
 		km = new KeyManager("existing", buf);
 	}catch(err){
