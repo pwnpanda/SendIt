@@ -191,11 +191,12 @@ function setMail(mail){
 
 function removeEntry(){
 	let id=this.id;
-	delete km.keys[id];
-	alert("Removed key: " + id);
-	km.getObjectData();
-	window.location.href = "";
-
+	if( window.confirm("Are you sure you want to remove the key for " + id +"?") ){
+		delete km.keys[id];
+		alert("Removed key: " + id);
+		km.getObjectData();
+		window.location.href = "";
+	}
 }
 function removeCrypto(){
 	//ADD CONFIRMATION WINDOW
