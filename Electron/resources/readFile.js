@@ -85,7 +85,7 @@ function loadFiles(){
 			output.push('<li><strong>', escape(items[i]), '</strong> ',
 			Math.ceil((stats["size"] / 1024)) + ' kbytes','</li>');
 	    }
-		document.getElementById('list').innerHTML = '<ul>' + output.join('') + '</ul>';
+		document.getElementById('list').innerHTML = '<ul style = "list-style-type:none;">' + output.join('') + '</ul>';
     }catch(e){
     	throw new Error(e);
     }
