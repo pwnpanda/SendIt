@@ -77,19 +77,32 @@ function processAuth(reply){
 function encrypt(data){
   console.log('Data to encrypt/pass on: ', data);
   var key = km.findKey(km.otherEnd);
+  var encryData;
   //if we have the receivers key in the list:
   if(key != null){
-    console.log('Other end has associated key!');
+    console.log('Other end has associated key!', key);
     //Encrypt with other ends public key
-    km.encryptData(key, km.encrypt)
+    km.encrypt = JSON.stringify(pc1.localDescription.type);
+    console.log(km.encrypt);
+    km.encrypt = convertStringToArrayBufferView(JSON.stringify(pc1.localDescription));
+    console.warn(km.encrypt);
+
+    //km.importKey(key, key.key_ops)
+    km.createSymmKey()
+    .then(function(key){
+      return km.encryptData(key, km.encrypt)
+    })
     .then(function(encrypted){
       //returns an ArrayBuffer containing the encrypted data
-      var encryData = new Uint8Array(encrypted);
+      encryData = new Uint8Array(encrypted);
       console.info("Data encrypted: ", encryData);
       return encryData;
     })
     .then(function(encrypted){
+      console.log("oki :)", encrypted);
       showenc(JSON.stringify(encrypted));
+      decrypt(encrypted);
+      return;
     })
     .catch(function(err){
       console.error(err);
@@ -102,11 +115,11 @@ function encrypt(data){
 }
 
 function decrypt(data){
-  var key = km.findKey(km.otherEnd);
+//  var key = km.findKey(km.otherEnd);
   //if we have the receivers key in the list:
   console.log('Data to decrypt/pass on: ', data);
-  if(key != null){
-    console.log('Other end has associated key!');
+  //if(key != null){
+    //console.log('Other end has associated key!');
 
     km.decryptData(data)
     .then(function(decrypted){
@@ -121,10 +134,10 @@ function decrypt(data){
     .catch(function(err){
       console.error(err);
     });
-  }else{
+ /* }else{
     console.log('Other end has NO associated key!');
     return JSON.parse(data);
-  }
+  }*/
 }
 
 function convertStringToArrayBufferView(str){
