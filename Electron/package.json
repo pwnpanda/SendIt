@@ -30,15 +30,15 @@
   "license": "ISC",
   "devDependencies": {
     "clipboardy": "^1.1.4",
-    "electron": "^1.7.9",
     "electron-packager": "^10.1.0",
     "electron-winstaller": "^2.6.3"
   },
   "dependencies": {
     "clipboardy": "^1.1.4",
+    "electron": "^1.8.4",
     "electron-prompt": "^0.4.0"
   },
-   "optionalDependencies": {
+  "optionalDependencies": {
     "electron-installer-debian": "^0.7.1",
     "electron-installer-dmg": "^0.2.1",
     "appdmg": "0.4.5"

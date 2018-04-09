@@ -1,8 +1,4 @@
 function KeyManager(cmd, data) {
-	//Random string generated
-	this.challenge = null;
-	//Hash of generated string
-	this.curHash = null;
 	//Other end of the connection
 	this.otherEnd = null;
 	//Own Email
@@ -223,8 +219,6 @@ KeyManager.prototype = {
 	//getObjectData
 	getObjectData: function (){
 		//Erase session data
-		this.challenge=null;
-		this.hash=null;
 		this.otherEnd=null;
 		var write;
 		//Stores the own email, then own private key, then list of know hosts and public-key-pairs.
