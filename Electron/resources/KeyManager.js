@@ -7,7 +7,6 @@ function KeyManager(cmd, data) {
 	this.key = null;
 	//List of known addresses and keys
 	this.keys = {};
-
 	if(cmd == "existing"){
 		this.loadData(data);
 	}else if (cmd == "new"){
@@ -82,21 +81,40 @@ KeyManager.prototype = {
 				name: "RSA-OAEP",
 				modulusLength: 2048, //can be 1024, 2048, or 4096
 				publicExponent: new Uint8Array([0x01, 0x00, 0x01]),
-				hash: {name: "SHA-256"}, //can be "SHA-1", "SHA-256", "SHA-384", or "SHA-512"
+				hash: {name: "SHA-512"}, //can be "SHA-1", "SHA-256", "SHA-384", or "SHA-512"
 			},
 			true, //whether the key is extractable (i.e. can be used in exportKey)
 			["encrypt", "decrypt"] //must be ["encrypt", "decrypt"] or ["wrapKey", "unwrapKey"]
 		)
 		.then(function(key){
-				//returns a keypair object
-				console.log("KeyPair created!");
-				km.key = key;
-				
-				/*TODO - Remove! SENSITIVE
-				console.info(key.publicKey);
-				console.info(key.privateKey);
-				*/
-				
+			//returns a keypair object
+			console.log("KeyPair created!");
+			km.key = key;
+			
+			/*TODO - Remove! SENSITIVE
+			console.info(key.publicKey);
+			console.info(key.privateKey);
+			*/
+			
+		})
+		.catch(function(err){
+				console.error(err);
+		});
+	},
+
+	createSymmKey: function(){
+		return window.crypto.subtle.generateKey(
+		{
+			name: "AES-GCM",
+			length: 256,	
+		},
+		true,
+		["encrypt", "decrypt"]
+		).then(function(key){
+			//returns a keypair object
+			console.log("Key created!", key);
+			km.symmetric = key;
+			return key;
 		})
 		.catch(function(err){
 				console.error(err);
@@ -120,7 +138,7 @@ KeyManager.prototype = {
 			key,
 			{   //these are the algorithm options
 					name: "RSA-OAEP",
-					hash: {name: "SHA-256"}, //can be "SHA-1", "SHA-256", "SHA-384", or "SHA-512"
+					hash: {name: "SHA-1"}, //can be "SHA-1", "SHA-256", "SHA-384", or "SHA-512"
 			},
 			true, //whether the key is extractable (i.e. can be used in exportKey)
 			use //"encrypt" or "wrapKey" for public key import or
@@ -152,7 +170,7 @@ KeyManager.prototype = {
 		//Taken from: https://github.com/diafygi/webcrypto-examples#sha-256---digest
 		return window.crypto.subtle.digest(
 			{
-					name: "SHA-256",
+					name: "SHA-512",
 			},
 			data //The data you want to hash as an ArrayBuffer
 		)
@@ -190,28 +208,32 @@ KeyManager.prototype = {
 	
 	//Encrypt data by using receiver's public key-object
 	encryptData: function(key, data){
-		console.log("Encrypting: ", data);
+		console.log("Encrypting: ", data, key);
+		km.iv = window.crypto.getRandomValues(new Uint8Array(12));
 		if(key == null){
 			console.error("There is no key associated with this address!!!");
 		}
 		return window.crypto.subtle.encrypt(
 			{
-					name: "RSA-OAEP",
+					name: "AES-GCM",
+					iv: km.iv,
 					//label: Uint8Array([...]) //optional
 			},
 			key, //from generateKey or importKey above
 			data //ArrayBuffer of data you want to encrypt
-		)
+		).catch(function (err){console.log(err);console.log(err.name);console.log(err.message);console.log(err.number);});
 	},
 
 	//Decrypt data by using own private key-object
 	decryptData: function(data){
 		return window.crypto.subtle.decrypt(
 			{
-					name: "RSA-OAEP",
+					name: "AES-GCM",
+					iv: km.iv,
 					//label: Uint8Array([...]) //optional
 			},
-			this.key.privateKey, //from generateKey or importKey above
+			km.symmetric,
+			//this.key.privateKey, //from generateKey or importKey above
 			data //ArrayBuffer of the data
 		);
 	},

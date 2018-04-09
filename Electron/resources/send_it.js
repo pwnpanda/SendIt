@@ -38,6 +38,7 @@ var cfName;
 var km;
 var place;
 var alertdisp;
+var descr;
 function reset (){
   //MY ADDITION-------------------------
   $('#home').addClass("Active");
@@ -183,9 +184,10 @@ pc1.onicecandidate = function (e) {
   	isReady();
     place = '#localOffer';
     alertdisp = "#success-alert";
-    var off = JSON.stringify(pc1.localDescription);
+    descr = JSON.stringify(pc1.localDescription);
+    km.encrypt = descr;
     //ENCRYPT!
-    var offE=encrypt(off);
+    encrypt(descr);
   }
 }
 
@@ -266,10 +268,9 @@ pc2.onicecandidate = function (e) {
     $('#answerSentBtn').prop('disabled', false);
     place = '#localAnswer';
     alertdisp = "#success-alert-2";
-    var ans = JSON.stringify(pc2.localDescription);
+    descr = JSON.stringify(pc2.localDescription);
     //Encrypt
-    var ansE = encrypt(ans);
-    copy.writeSync(ansE);
+    encrypt(descr);
   }
 }
 
