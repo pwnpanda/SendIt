@@ -31,12 +31,13 @@ var sdpConstraints = {
 // MY ADDITION---------------
 var fileReady = false;
 var iceReady = false;
-var mailReady = false;
 var dlPath;
 var ulPath;
 var cfPath;
 var cfName;
 var km;
+var place;
+var alertdisp;
 function reset (){
   //MY ADDITION-------------------------
   $('#home').addClass("Active");
@@ -69,16 +70,6 @@ $( function(){
   readConfig();
 });
 
-//Makes sure the user inputs a receiver before proceeding
-$("#recMail").keyup( function() {
- 	if( $(this).val() != '') {
-		mailReady=true;
- 	}else{
-		mailReady=false;
- 	}
- 	isReady();
-});
-
 //MY ADDITION END----------------------------
 
 /* THIS IS ALICE, THE CALLER/SENDER */
@@ -104,33 +95,11 @@ $('#createBtn').click(function () {
   //Read in email and initiate new KeyManager if neccesary
   settings();
   if (! existCrypto()){
-    myMail;
-    prompt({
-    title: 'E-mail',
-    label: 'Please enter your e-mail address',
-    value: myMail,
-    inputAttrs: { // attrs to be set if using 'input'
-        type: 'mail'
-    },
-    type: 'input'
-    })
-    .then((r)=>{
-      if(r==null){
-        window.location.href = "";
-      }
-      var myMail = r;
-      console.info("Mail address read: " + myMail);
-
-      km = new KeyManager("new", myMail);
-      $('#showLocalOffer').modal('show')
-      createLocalOffer()
-      loadFiles();
-    }).catch(console.error);    
+    createSetup(true);    
   }else{
     //--------------------------
-    $('#showLocalOffer').modal('show');
-    createLocalOffer();
-    loadFiles();
+    //Get other end's email
+    getOtherEnd(true);
   }
 })
 
@@ -143,56 +112,38 @@ $('#joinBtn').click(function () {
  	//Read in email and initiate new KeyManager if neccesary
   settings();
   if (! existCrypto()){
-    myMail;
-    prompt({
-    title: 'E-mail',
-    label: 'Please enter your e-mail address',
-    value: myMail,
-    inputAttrs: { // attrs to be set if using 'input'
-        type: 'mail'
-    },
-    type: 'input'
-    })
-    .then((r)=>{
-      if(r==null){
-        window.location.href = "";
-      }
-      var myMail = r;
-      console.info("Mail address read: " + myMail);
-      km = new KeyManager("new", myMail);
-      $('#getRemoteOffer').modal('show')
-    }).catch(console.error);    
+    createSetup(false);    
   }else{
-  	//--------------------------
-  	$('#getRemoteOffer').modal('show')
+    //get other end's email
+    getOtherEnd(false);
   }
 })
 
 $('#offerSentBtn').click(function () {
-  //Read receiver's E-mail address & Store
-  var otherMail = $("#recMail").val();
-  console.info("Receiver's mail: " + otherMail);
-  km.otherEnd = otherMail;
-  $('#getRemoteAnswer').modal('show')
+  $('#getRemoteAnswer').modal('show');
 })
 
 $('#offerRecdBtn').click(function () {
-  var offer = $('#remoteOffer').val()
-  var offerDesc = new RTCSessionDescription(JSON.parse(offer))
-  console.info('Received remote offer', offerDesc)
-  handleOfferFromPC1(offerDesc)
-  $('#showLocalAnswer').modal('show')
+  var offer = $('#remoteOffer').val();
+  //Decrypt!
+  var decrOffer = decrypt(offer);
+  var offerDesc = new RTCSessionDescription(decrOffer);
+  console.info('Received remote offer', offerDesc);
+  handleOfferFromPC1(offerDesc);
+  $('#showLocalAnswer').modal('show');
 })
 
 $('#answerSentBtn').click(function () {
-  $('#waitForConnection').modal('show')
+  $('#waitForConnection').modal('show');
 })
 
 $('#answerRecdBtn').click(function () {
-  var answer = $('#remoteAnswer').val()
-  var answerDesc = new RTCSessionDescription(JSON.parse(answer))
-  handleAnswerFromPC2(answerDesc)
-  $('#waitForConnection').modal('show')
+  var answer = $('#remoteAnswer').val();
+  //Decrypt
+  var decrAnswer = decrypt(answer);
+  var answerDesc = new RTCSessionDescription(decrAnswer);
+  handleAnswerFromPC2(answerDesc);
+  $('#waitForConnection').modal('show');
 })
 
 function setupDC1 () {
@@ -225,17 +176,16 @@ function createLocalOffer () {
 }
 
 pc1.onicecandidate = function (e) {
+  //todo
   console.info('ICE candidate (pc1)', e)
   if (e.candidate == null) {
   	iceReady = true;
   	isReady();
+    place = '#localOffer';
+    alertdisp = "#success-alert";
     var off = JSON.stringify(pc1.localDescription);
-    copy.writeSync(off);
-  	$('#localOffer').html(off);
-    //https://stackoverflow.com/a/23102317/4400482
-    $("#success-alert").fadeTo(2000, 500).slideUp(500, function(){
-      $("#success-alert").slideUp(500);
-    });
+    //ENCRYPT!
+    var offE=encrypt(off);
   }
 }
 
@@ -313,14 +263,13 @@ function handleOfferFromPC1 (offerDesc) {
 pc2.onicecandidate = function (e) {
   console.log('ICE candidate (pc2)', e)
   if (e.candidate == null) {
-  	$('#answerSentBtn').prop('disabled', false);
-  	var ans = JSON.stringify(pc2.localDescription);
-    copy.writeSync(ans);
-    $('#localAnswer').html(ans);
-    //https://stackoverflow.com/a/23102317/4400482
-    $("#success-alert-2").fadeTo(2000, 500).slideUp(500, function(){
-      $("#success-alert-2").slideUp(500);
-    });
+    $('#answerSentBtn').prop('disabled', false);
+    place = '#localAnswer';
+    alertdisp = "#success-alert-2";
+    var ans = JSON.stringify(pc2.localDescription);
+    //Encrypt
+    var ansE = encrypt(ans);
+    copy.writeSync(ansE);
   }
 }
 
@@ -355,7 +304,7 @@ console.assert  = function(cond, text){
 
 //My own!------------------------------------
 function isReady(){
-  if (/*fileReady &&*/ iceReady && mailReady) {
+  if (/*fileReady &&*/ iceReady) {
     $('#offerSentBtn').prop('disabled', false);
   }else{
     $('#offerSentBtn').prop('disabled', true);
@@ -376,4 +325,70 @@ $('#openInFolder').click(function () {
     }
 });
 
+function createSetup(offer){
+  var label1='Please enter your e-mail address';
+  var label2='Please enter the recipients e-mail address';
+  if(!offer){
+    label2='Please enter the senders e-mail address';
+  }
+  prompt({
+  title: 'E-mail',
+  label: label1,
+  value: myMail,
+  inputAttrs: { // attrs to be set if using 'input'
+      type: 'mail'
+  },
+  type: 'input'
+  })
+  .then((r)=>{
+    if(r==null){
+      window.location.href = "";
+    } else{
+        myMail = r;
+        console.info("Mail address read: " + myMail);
+        km = new KeyManager("new", myMail);
+        getOtherEnd(offer);
+    }
+  }).catch(console.error);
+}
+
+function getOtherEnd(offer){
+  var label1='Please enter the recipients e-mail address';
+  if(!offer){
+    label1='Please enter the senders e-mail address';
+  }
+  prompt({
+    title: 'E-mail',
+    label: label1,
+    value: '',
+    inputAttrs: { // attrs to be set if using 'input'
+        type: 'mail'
+    },
+    type: 'input'
+    })
+  .then((rec)=>{
+    if(rec==null){
+        window.location.href = "";
+    }
+    km.otherEnd=rec;
+    if(offer){
+      $('#showLocalOffer').modal('show');
+      createLocalOffer();
+      loadFiles();
+    }else{
+      $('#getRemoteOffer').modal('show');
+    }
+  }).catch(console.error);
+}
+
+function showenc(data){
+    copy.writeSync(data);
+    
+    $(place).html(data);
+    //https://stackoverflow.com/a/23102317/4400482
+    $(alertdisp).fadeTo(2000, 500).slideUp(500, function(){
+      $(alertdisp).slideUp(500);
+    });
+
+}
 //---------------------------------------------

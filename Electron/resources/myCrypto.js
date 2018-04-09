@@ -15,14 +15,12 @@ function existCrypto(){
 		readCrypto();
 		return true;
 	}else{
+    ensureDirectoryExistence(cfPath+cfName);
 		return false;
 	}
 }
 //Behaviour for reading an old cryptoFile in to a keymanager
 function readCrypto(){
-	//read data
-	//console.log("read");
-
 	//read cryptoFile
 	try{
 		var buf = fs.readFileSync(cfPath+cfName, "utf8");
@@ -38,11 +36,7 @@ function beginAuth (){
   var key = km.findKey(km.otherEnd);
   //if we have the receivers key in the list:
   if(key != null){
-  	console.log("Creating challenge!")
-    //create challenge and tempHash
-    km.generateRandom();
-    //Tell Protocol to send an authentication challenge!
-    createAuthMsg(protocol.AUTH_CHALLENGE);
+  	stageFiles();
   } else {
   //If setup:
   	console.log("starting setup!");
@@ -52,69 +46,7 @@ function beginAuth (){
 }
 //Process the reply from receiver and authenticate/deny connection
 function processAuth(reply){
-  switch(reply.action){
-  	    
-    //Received an authentication challenge
-    case protocol.AUTH_CHALLENGE:
-    	km.otherEnd = reply.sender;
-  		console.assert((km.findKey(km.otherEnd) != null), "Sender is unknown! Can not exchange information!");
-      //Decrypt challenge with private key
-      var data = Object.values((reply.challenge));
-      data = new Uint8Array(data);
-      km.decryptData(data.buffer)
-      .then(function(decrypted){
-				//returns an ArrayBuffer containing the decrypted data
-				var decrData = new Uint8Array(decrypted);
-				console.log("Data decrypted: ", decrData);
-				return decrData;
-			})
-			.then(function(decrypted){
-				//Compare decrypted reply and temp hash
-				//Calculate hash from challenge - stored as curHash in keymanager
-	  		return km.createHash(decrypted)
-			})
-	  	.then(function(hash){
-				//returns the hash as an ArrayBuffer
-				var hashed = new Uint8Array(hash);
-				console.log("Hash created: ", hashed);
-				km.curHash = hashed;
-			})
-			.then(function(){
-		  	//Send AUTH_RESPONSE
-		  	createAuthMsg(protocol.AUTH_RESPONSE);
-			})
-			.catch(function(err){
-				console.error(err);
-			});
-    	break;
-
-    //Received an authentication response
-    case protocol.AUTH_RESPONSE:
-    	//Assert e-mail
-    	console.assert((reply.sender === km.otherEnd), "Receivers e-mail is not correct! Security breach found! Terminating!");
-	   	//Decrypt reply with private key
-      var data = Object.values((reply.challenge));
-      data = new Uint8Array(data);
-      km.decryptData(data.buffer)
-      .then(function(decrypted){
-				//returns an ArrayBuffer containing the decrypted data
-				var decrData = new Uint8Array(decrypted);
-				console.info("Data decrypted: ", decrData);
-				return decrData;
-			}).then(function(decrypted){
-				//Compare decrypted reply and temp hash
-				if (km.compareHash(decrypted)){
-					console.info("Authenticated!");
-					stageFiles();
-				}else{
-					console.error("Authentication denied! Hashes are not identical!");
-				}
-			})
-			.catch(function(err){
-					console.error(err);
-			});
-    	break;
-    
+  switch(reply.action){    
     //Received authentication setup information  
     case protocol.AUTH_SETUP:
     	km.otherEnd = reply.sender;
@@ -140,4 +72,77 @@ function processAuth(reply){
     	console.error("Malformed message type: ", reply.action);
     	break;
   }
+}
+
+function encrypt(data){
+  console.log('Data to encrypt/pass on: ', data);
+  var key = km.findKey(km.otherEnd);
+  //if we have the receivers key in the list:
+  if(key != null){
+    console.log('Other end has associated key!');
+    //Encrypt with other ends public key
+    km.encryptData(key, km.encrypt)
+    .then(function(encrypted){
+      //returns an ArrayBuffer containing the encrypted data
+      var encryData = new Uint8Array(encrypted);
+      console.info("Data encrypted: ", encryData);
+      return encryData;
+    })
+    .then(function(encrypted){
+      showenc(JSON.stringify(encrypted));
+    })
+    .catch(function(err){
+      console.error(err);
+    });
+
+  } else {
+    console.log('Other end has NO associated key!');
+    showenc(data);
+  }
+}
+
+function decrypt(data){
+  var key = km.findKey(km.otherEnd);
+  //if we have the receivers key in the list:
+  console.log('Data to decrypt/pass on: ', data);
+  if(key != null){
+    console.log('Other end has associated key!');
+
+    km.decryptData(data)
+    .then(function(decrypted){
+      //returns an ArrayBuffer containing the decrypted data
+      console.warn("Data decrypted raw: ", new Uint8Array(decrypted));
+      var decryData = new Uint8Array(decrypted);
+      decryData = convertArrayBufferViewtoString(decryData);
+      console.log("Data decrypted: ", decryData);
+      decryData = JSON.parse(decryData);
+      return decryData;
+    })
+    .catch(function(err){
+      console.error(err);
+    });
+  }else{
+    console.log('Other end has NO associated key!');
+    return JSON.parse(data);
+  }
+}
+
+function convertStringToArrayBufferView(str){
+    var bytes = new Uint8Array(str.length);
+    for (var iii = 0; iii < str.length; iii++) 
+    {
+        bytes[iii] = str.charCodeAt(iii);
+    }
+
+    return bytes;
+}   
+
+function convertArrayBufferViewtoString(buffer){
+    var str = "";
+    for (var iii = 0; iii < buffer.byteLength; iii++) 
+    {
+        str += String.fromCharCode(buffer[iii]);
+    }
+
+    return str;
 }

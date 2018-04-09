@@ -1,4 +1,6 @@
 var path = require('path');
+var fs = require('fs');
+
 //Variable to handle the files we're staging
 var files;
 /*
@@ -85,7 +87,7 @@ function loadFiles(){
 			output.push('<li><strong>', escape(items[i]), '</strong> ',
 			Math.ceil((stats["size"] / 1024)) + ' kbytes','</li>');
 	    }
-		document.getElementById('list').innerHTML = '<ul>' + output.join('') + '</ul>';
+		document.getElementById('list').innerHTML = '<ul style="list-style-type: none;">' + output.join('') + '</ul>';
     }catch(e){
     	throw new Error(e);
     }
@@ -178,4 +180,15 @@ function writeToFile(data, dir, show=true){
 	        }
 	    }
     })
+}
+
+//Makes sure directory exists
+//https://stackoverflow.com/questions/13542667/create-directory-when-writing-to-file-in-node-js
+function ensureDirectoryExistence(filePath) {
+  var dirname = path.dirname(filePath);
+  if (fs.existsSync(dirname)) {
+    return true;
+  }
+  ensureDirectoryExistence(dirname);
+  fs.mkdirSync(dirname);
 }

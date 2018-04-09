@@ -4,8 +4,6 @@ var path = require('path');
 
 var protocol = {
 	//MINE------------------------------>
-	AUTH_CHALLENGE: "challenge",
-	AUTH_RESPONSE: "response",
 	AUTH_SETUP: "setup",
 	AUTH_S_REPLY: "setup_reply",
 	//MINE END-------------------------->
@@ -102,93 +100,27 @@ function displayProgress(perc){
 function createAuthMsg(type){
 	var msg;
 	console.log("Creating message of type ", type);
-	switch (type){
-		//Sending authentication challenge
-		case protocol.AUTH_CHALLENGE:
-			//Send the challenge encrypted with receiver's public key
-			var key = km.findKey(km.otherEnd);
-			km.importKey(key, key.key_ops)
-			.then(function(keyObject){
-				return km.encryptData(keyObject, km.challenge);
-			})
-			.then(function(encrypted){
-				//returns an ArrayBuffer containing the encrypted data
-				var encrData = new Uint8Array(encrypted);
-				console.info("Data encrypted: ", encrData);
-				return encrData;
-			})
-			.then(function(encrypted){
-				msg = {
-				challenge: encrypted,
-				sender: km.email,
-				action: type
-				};
-				doSend(msg);
-			})
-			.catch(function(err){
-			console.error(err);
-			});
-			break;
-
-		//Sending authentication response
-		case protocol.AUTH_RESPONSE:
-			//Send the calculated hash encrypted with sender's public key
-			var key = km.findKey(km.otherEnd);
-			km.importKey(key, key.key_ops)
-			.then(function(keyObject){
-				return km.encryptData(keyObject, km.curHash);
-			})
-			.then(function(encrypted){
-				//returns an ArrayBuffer containing the encrypted data
-				var encrData = new Uint8Array(encrypted);
-				console.info("Data encrypted: ", encrData);
-				return encrData;
-			})
-			.then(function(encrypted){
-				msg = {
-				challenge: encrypted,
-				sender: km.email,
-				action: type
-				};
-				doSend(msg);
-			})
-			.catch(function(err){
-			console.error(err);
-			});
-			break;
-
-		//Sending authentication setup information  
-		case protocol.AUTH_SETUP:
-		//Just let it pass through, since it is identical to AUTH_S_REPLY, except the type which is already handled
-		//Sending authentication setup reply
-		case protocol.AUTH_S_REPLY:
-			//Gets the promise for exportKey.
-			km.exportKey(km.key.publicKey)
-			.then(function(keydata){
-				//Once the data has been calculated, itreturns the exported key data
-				console.info("Exported key: ", keydata);
-				return keydata;
-			}).then(function(key){
-				//Then lastly it creates the message and sends it.
-				msg = {
-					key: key,
-					sender: km.email,
-					action: type
-				};
-				doSend(msg);
-			})
-			.catch(function(err){
-				//Error-handling just in case
-				console.error(err);
-			 }
-			);
-			break;
-
-		//Error!
-		default: 
-			console.error("Malformed message type: ", type);
-			break;
-	}
+	//Sending authentication setup/ setup reply
+	//Gets the promise for exportKey.
+	km.exportKey(km.key.publicKey)
+	.then(function(keydata){
+		//Once the data has been calculated, itreturns the exported key data
+		console.info("Exported key: ", keydata);
+		return keydata;
+	}).then(function(key){
+		//Then lastly it creates the message and sends it.
+		msg = {
+			key: key,
+			sender: km.email,
+			action: type
+		};
+		doSend(msg);
+	})
+	.catch(function(err){
+		//Error-handling just in case
+		console.error(err);
+	 }
+	);
 }
 //Everything below taken from
 //https://github.com/tskimmett/rtc-pubnub-fileshare/blob/master/connection.js
@@ -262,8 +194,6 @@ function handleSignal(msg) {
 			break;
 		
 		//Route all authentication-signals to processAuth
-		case protocol.AUTH_CHALLENGE:
-		case protocol.AUTH_RESPONSE:
 		case protocol.AUTH_SETUP:
 		case protocol.AUTH_S_REPLY:
 			console.info("Received authentication signal: ", msg.action);
@@ -326,13 +256,4 @@ function registerFileEvents(fm) {
 	fm.onprogress = displayProgress;
 	fm.ontransfercomplete = transferComplete;
 }
-//Makes sure directory exists
-//https://stackoverflow.com/questions/13542667/create-directory-when-writing-to-file-in-node-js
-function ensureDirectoryExistence(filePath) {
-  var dirname = path.dirname(filePath);
-  if (fs.existsSync(dirname)) {
-    return true;
-  }
-  ensureDirectoryExistence(dirname);
-  fs.mkdirSync(dirname);
-}
+//ensureDirectoryExistence MOVED TO readFile!
