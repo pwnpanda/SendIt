@@ -84,7 +84,8 @@ KeyManager.prototype = {
 				hash: {name: "SHA-512"}, //can be "SHA-1", "SHA-256", "SHA-384", or "SHA-512"
 			},
 			true, //whether the key is extractable (i.e. can be used in exportKey)
-			["encrypt", "decrypt"] //must be ["encrypt", "decrypt"] or ["wrapKey", "unwrapKey"]
+			["wrapKey", "unwrapKey"]
+			//["encrypt", "decrypt"] //must be ["encrypt", "decrypt"] or ["wrapKey", "unwrapKey"]
 		)
 		.then(function(key){
 			//returns a keypair object
@@ -121,6 +122,7 @@ KeyManager.prototype = {
 		});
 	},
 
+
 	//Exports the keydata from a public key object
 	//Taken from: https://github.com/diafygi/webcrypto-examples#rsa-oaep
 	exportKey: function(eKey) {
@@ -138,12 +140,64 @@ KeyManager.prototype = {
 			key,
 			{   //these are the algorithm options
 					name: "RSA-OAEP",
-					hash: {name: "SHA-1"}, //can be "SHA-1", "SHA-256", "SHA-384", or "SHA-512"
+					hash: {name: "SHA-512"}, //can be "SHA-1", "SHA-256", "SHA-384", or "SHA-512"
 			},
 			true, //whether the key is extractable (i.e. can be used in exportKey)
 			use //"encrypt" or "wrapKey" for public key import or
 									//"decrypt" or "unwrapKey" for private key imports
 		);
+	},
+
+	//Encrypt symmetric key with receivers public key
+	wrapKey: function(symkey, pubkey){
+		return window.crypto.subtle.wrapKey(
+		    "raw", //the export format, must be "raw" (only available sometimes)
+		    symkey, //the key you want to wrap, must be able to fit in RSA-OAEP padding
+		    pubkey, //the public key with "wrapKey" usage flag
+		    {   //these are the wrapping key's algorithm options
+		        name: "RSA-OAEP",
+		        hash: {name: "SHA-512"},
+		    }
+		)
+		.then(function(wrapped){
+		    //returns an ArrayBuffer containing the encrypted data
+		    console.log("WrappedKey", wrapped);
+		    km.wrapped = new Uint8Array(wrapped);
+		    return km.wrapped;
+		})
+		.catch(function(err){
+		    console.error(err);
+		});
+	},
+
+	//Decrypt symmetric key with own private key
+	unwrapKey: function(wrapkey, privkey){
+		return window.crypto.subtle.unwrapKey(
+		    "raw", //the import format, must be "raw" (only available sometimes)
+		    wrapkey, //the key you want to unwrap
+		    privkey, //the private key with "unwrapKey" usage flag
+		    {   //these are the wrapping key's algorithm options
+		        name: "RSA-OAEP",
+		        modulusLength: 2048,
+		        publicExponent: new Uint8Array([0x01, 0x00, 0x01]),
+		        hash: {name: "SHA-512"},
+		    },
+		    {   //this what you want the wrapped key to become (same as when wrapping)
+		        name: "AES-GCM",
+		        length: 256
+		    },
+		    true, //whether the key is extractable (i.e. can be used in exportKey)
+		    ["encrypt", "decrypt"] //the usages you want the unwrapped key to have
+		)
+		.then(function(key){
+		    //returns a key object
+		    console.log(key);
+		    km.symmetric=key;
+		    return key;
+		})
+		.catch(function(err){
+		    console.error(err);
+		});
 	},
 
 	//Store a public key as keydata
@@ -165,51 +219,9 @@ KeyManager.prototype = {
 		return null;
 	},
 	
-	//Create hash
-	createHash: function (data) {
-		//Taken from: https://github.com/diafygi/webcrypto-examples#sha-256---digest
-		return window.crypto.subtle.digest(
-			{
-					name: "SHA-512",
-			},
-			data //The data you want to hash as an ArrayBuffer
-		)
-	},
-	
-	//Compare local with remote hash
-	compareHash: function (remoteHash){
-		//https://stackoverflow.com/a/21554107
-		if (remoteHash.byteLength != (this.curHash).byteLength) return false;
-    var dv1 = new Int8Array(remoteHash);
-    var dv2 = new Int8Array(this.curHash);
-    for (var i = 0 ; i != remoteHash.byteLength ; i++) {
-        if (dv1[i] != dv2[i]) return false;
-    }
-    return true;
-	},
-	
-	//Generate random challenge
-	generateRandom: function (){
-		//Generate challenge
-		this.challenge = window.crypto.getRandomValues(new Uint8Array(16));
-		//Generate hash
-		this.createHash(this.challenge)
-		.then(function(hash){
-			//returns the hash as an ArrayBuffer
-			var hashed = new Uint8Array(hash);
-			console.log("Hash created: ", hashed);
-			km.curHash = hashed;
-		})
-		.catch(function(err){
-				console.error(err);
-		});
-		console.info("Hash and challenge generated!");
-	},
-	
-	//Encrypt data by using receiver's public key-object
+	//Encrypt data by using symmetric key
 	encryptData: function(key, data){
 		console.log("Encrypting: ", data, key);
-		km.iv = window.crypto.getRandomValues(new Uint8Array(12));
 		if(key == null){
 			console.error("There is no key associated with this address!!!");
 		}
@@ -224,8 +236,9 @@ KeyManager.prototype = {
 		).catch(function (err){console.log(err);console.log(err.name);console.log(err.message);console.log(err.number);});
 	},
 
-	//Decrypt data by using own private key-object
+	//Decrypt data by using symmetric key
 	decryptData: function(data){
+		console.warn(km.iv, km.symmetric, data);
 		return window.crypto.subtle.decrypt(
 			{
 					name: "AES-GCM",

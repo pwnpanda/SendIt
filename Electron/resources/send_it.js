@@ -39,6 +39,7 @@ var km;
 var place;
 var alertdisp;
 var descr;
+var off;
 function reset (){
   //MY ADDITION-------------------------
   $('#home').addClass("Active");
@@ -127,11 +128,7 @@ $('#offerSentBtn').click(function () {
 $('#offerRecdBtn').click(function () {
   var offer = $('#remoteOffer').val();
   //Decrypt!
-  var decrOffer = decrypt(offer);
-  var offerDesc = new RTCSessionDescription(decrOffer);
-  console.info('Received remote offer', offerDesc);
-  handleOfferFromPC1(offerDesc);
-  $('#showLocalAnswer').modal('show');
+  decrypt(offer);
 })
 
 $('#answerSentBtn').click(function () {
@@ -141,10 +138,7 @@ $('#answerSentBtn').click(function () {
 $('#answerRecdBtn').click(function () {
   var answer = $('#remoteAnswer').val();
   //Decrypt
-  var decrAnswer = decrypt(answer);
-  var answerDesc = new RTCSessionDescription(decrAnswer);
-  handleAnswerFromPC2(answerDesc);
-  $('#waitForConnection').modal('show');
+  decryptReply(answer);
 })
 
 function setupDC1 () {
@@ -187,7 +181,7 @@ pc1.onicecandidate = function (e) {
     descr = JSON.stringify(pc1.localDescription);
     km.encrypt = descr;
     //ENCRYPT!
-    encrypt(descr);
+    encrypt();
   }
 }
 
@@ -270,7 +264,7 @@ pc2.onicecandidate = function (e) {
     alertdisp = "#success-alert-2";
     descr = JSON.stringify(pc2.localDescription);
     //Encrypt
-    encrypt(descr);
+    encryptReply();
   }
 }
 
@@ -390,6 +384,18 @@ function showenc(data){
     $(alertdisp).fadeTo(2000, 500).slideUp(500, function(){
       $(alertdisp).slideUp(500);
     });
+}
 
+function setDescr(data, off){
+  var desc = new RTCSessionDescription(data);
+  if(off){
+    console.info('Received remote offer', desc);
+    handleOfferFromPC1(desc);
+    $('#showLocalAnswer').modal('show');
+  }else{
+    console.info('Received remote answer', desc);
+    handleAnswerFromPC2(desc);
+    $('#waitForConnection').modal('show');
+  }
 }
 //---------------------------------------------
