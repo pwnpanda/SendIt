@@ -74,34 +74,42 @@ function processAuth(reply){
   }
 }
 
-function encrypt(data){
-  console.log('Data to encrypt/pass on: ', data);
-  var key = km.findKey(km.otherEnd);
+function encrypt(){
+  var pubkey = km.findKey(km.otherEnd);
   var encryData;
   //if we have the receivers key in the list:
-  if(key != null){
-    console.log('Other end has associated key!', key);
-    //Encrypt with other ends public key
-    km.encrypt = JSON.stringify(pc1.localDescription.type);
-    console.log(km.encrypt);
+  if(pubkey != null){
+    console.log('Other end has associated key!', pubkey);
     km.encrypt = convertStringToArrayBufferView(JSON.stringify(pc1.localDescription));
     console.warn(km.encrypt);
-
-    //km.importKey(key, key.key_ops)
+    km.iv = window.crypto.getRandomValues(new Uint8Array(12));
+    //Create symmetric key  
     km.createSymmKey()
     .then(function(key){
+      //Encrypt with symmetric key
       return km.encryptData(key, km.encrypt)
     })
+    //returns an ArrayBuffer containing the encrypted data
     .then(function(encrypted){
-      //returns an ArrayBuffer containing the encrypted data
       encryData = new Uint8Array(encrypted);
       console.info("Data encrypted: ", encryData);
-      return encryData;
+      //Import other ends public key
+      return km.importKey(pubkey, pubkey.key_ops)
     })
-    .then(function(encrypted){
-      console.log("oki :)", encrypted);
-      showenc(JSON.stringify(encrypted));
-      decrypt(encrypted);
+    .then(function(key){
+      console.log("Received in next promise: ", key, encryData);
+      pubkey=key;
+      //encrypt (wrap) symmetric key with public key
+      return km.wrapKey(km.symmetric, pubkey);
+    })
+    .then(function(wrapKey){
+      //Create object for sharing: iv, wrapped symmetric key amnd cipher
+      var msg = {iv: km.iv, wrap: wrapKey, ciph: encryData};
+      console.log("Object", msg);
+      msg = JSON.stringify(msg);
+      console.log("String", msg);
+      //Show in window
+      showenc(msg);
       return;
     })
     .catch(function(err){
@@ -110,34 +118,104 @@ function encrypt(data){
 
   } else {
     console.log('Other end has NO associated key!');
-    showenc(data);
+    km.encrypt = JSON.stringify(pc1.localDescription);
+    showenc(km.encrypt);
   }
 }
 
 function decrypt(data){
-//  var key = km.findKey(km.otherEnd);
+  var pubkey = km.findKey(km.otherEnd);
+  var decryData;
   //if we have the receivers key in the list:
   console.log('Data to decrypt/pass on: ', data);
-  //if(key != null){
+  if(pubkey != null){
     //console.log('Other end has associated key!');
-
-    km.decryptData(data)
+    data=JSON.parse(data);
+    console.log("Parsed", data);
+    var temp = Object.values(data.iv);
+    km.iv = new Uint8Array(temp);
+    temp = Object.values(data.wrap);
+    decryData = new Uint8Array(temp);
+    temp = Object.values(data.ciph);
+    console.log(decryData);
+    km.unwrapKey(decryData.buffer, (km.key).privateKey)
+    .then(function(symKey){
+      km.symmetric=symKey;
+      console.log(symKey);
+      return km.decryptData(new Uint8Array(temp));
+    })
     .then(function(decrypted){
       //returns an ArrayBuffer containing the decrypted data
       console.warn("Data decrypted raw: ", new Uint8Array(decrypted));
-      var decryData = new Uint8Array(decrypted);
+      decryData = new Uint8Array(decrypted);
       decryData = convertArrayBufferViewtoString(decryData);
       console.log("Data decrypted: ", decryData);
       decryData = JSON.parse(decryData);
-      return decryData;
+      setDescr(decryData, true);
     })
     .catch(function(err){
       console.error(err);
     });
- /* }else{
+  }else{
     console.log('Other end has NO associated key!');
     return JSON.parse(data);
-  }*/
+  }
+}
+
+function encryptReply(){
+  var pubkey = km.findKey(km.otherEnd);
+  var encryData;
+  km.encrypt = convertStringToArrayBufferView(JSON.stringify(pc2.localDescription));
+  console.log('Data to encrypt/pass on: ', km.encrypt);
+  if(pubkey != null){
+    km.encryptData(km.symmetric, km.encrypt)
+    //returns an ArrayBuffer containing the encrypted data
+    .then(function(encrypted){
+      encryData = new Uint8Array(encrypted);
+      console.info("Data encrypted: ", encryData);
+      return encryData;
+    })
+    .then(function(data){
+      showenc(JSON.stringify(data));
+    })
+    .catch(function(err){
+      console.error(err);
+    });
+  }else{
+    console.log('Other end has NO associated key!');
+    km.encrypt = JSON.stringify(pc2.localDescription);
+    showenc(km.encrypt);
+  }
+
+}
+
+function decryptReply(data){
+  var pubkey = km.findKey(km.otherEnd);
+  var decryData;
+  data = JSON.parse(data);
+  console.log('Data to decrypt/pass on: ', data);
+
+  if (pubkey != null){
+    decryData = Object.values(data);
+    console.log("1",decryData);
+    decryData = new Uint8Array(decryData);
+    console.log("2",decryData);
+    km.decryptData(decryData)
+    .then(function(decrypted){
+      //returns an ArrayBuffer containing the decrypted data
+      console.warn("Data decrypted raw: ", new Uint8Array(decrypted));
+      decryData = new Uint8Array(decrypted);
+      decryData = convertArrayBufferViewtoString(decryData);
+      console.log("Data decrypted: ", decryData);
+      decryData = JSON.parse(decryData);
+      setDescr(decryData, false);
+    })
+    .catch(function(err){
+      console.error(err);
+    });
+  }else{
+      setDescr(data, false);
+  }
 }
 
 function convertStringToArrayBufferView(str){
