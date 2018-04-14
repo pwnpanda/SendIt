@@ -3,6 +3,8 @@ var fs = require('fs');
 const get = require('../userDest.js');
 
 var myMail;
+//TODO fix correct address!
+var server= 'asdf';
 var defPath = new get();
 defPath = defPath.get();
 var splitter = path.sep;
@@ -30,8 +32,10 @@ function readConfig(){
 		dlPath = buf.dlPath;
 		ulPath = buf.ulPath;
 		myMail = buf.myMail;
+		server = buf.server;
 
 		$("#myMail").val(myMail);
+		$("#url").val(server);
 
 	}catch(err){
 		console.log("No config-file found!", err);
@@ -80,6 +84,17 @@ function settings(){
 	readConfig();
 	curSet();
 	keyManagement();
+
+
+	//Show selection if change in radio buttons for manual settings
+	$('#formServer input').on('change', function() {
+		if( ($('input[name=in]:checked', '#formServer').val()) == "Manual"){
+			$('#serverAddr').hide();
+		} else {
+			$('#serverAddr').show();
+			$("#url").val(server);
+		}
+	});
 
 	//Show selection if change in radio buttons for manual settings
 	$('#formInput input').on('change', function() {
@@ -144,11 +159,13 @@ function settings(){
 			alert("Please fill in an email address!");
 		}else{
 			saveConf();
-			$("#showConfig").modal('hide');
-		  	$('#createOrJoin').modal('show');
+			
 		}
 		//return;
 	});
+	$('#saveServBtn').click(saveServ);
+	$('#resetServBtn').click(resetServ);
+
 }
 //Save config to config.conf
 function saveConf(init=false){
@@ -162,13 +179,14 @@ function saveConf(init=false){
 			"cfPath": cfPath,
 			"dlPath": dlPath,
 			"ulPath": ulPath,
-			"myMail": myMail
+			"myMail": myMail,
+			"server": server
 	}
 	console.log(data);
-	writeToFile(JSON.stringify(data), defPath+splitter+'config.conf', !init);
+	writeToFile(JSON.stringify(data), defPath+splitter+'config.conf', init);
 	ensureDirectoryExistence(ulPath+"/.");
 	if(!init){
-		window.location.href = "";
+		settings();
 	}else{
 		alert("Please move or copy the files you want to send to: \n" + ulPath);
 	}
@@ -215,4 +233,15 @@ function removeCrypto(){
 			console.log(e);
 		}
 	}
+}
+
+function saveServ(){
+	server = $("#url").val();
+	$("#url").val(server);
+}
+
+function resetServ(){
+	//todo fix correct address!
+	server = 'asdf';
+	$("#url").val(server);	
 }

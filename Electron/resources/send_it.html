@@ -55,16 +55,39 @@
 		    <h3 id="txtMyMail">Your e-mail address:<br>
 	    		<input id="myMail" type="text" name="mailAddr">
 	    	</h3>
-			<button class="btn btn-primary" id="resetConfig" data-dismiss="modal" aria-hidden="true">Reset configuration-file!</button><br>
+			<button class="btn btn-primary" id="resetConfig"  aria-hidden="true">Reset configuration-file!</button><br>
+			<div id="serveruse">
+				<form id="formServer">
+		    		<h3 style="-webkit-margin-after: 0;">Offer/answer exchange options:</h3>
+		    		<div style="font-size: 1.15em;">Chose if you want to share the offer/answer via a server or by your own method.</div>
+			    	<input type="radio" name="in" value="Server" checked> Server &emsp;
+			    	<input type="radio" name="in" value="Manual"> Manual<br>
+				</form>
+			</div>
+			<div id="serverAddr">
+		      <h4 style="-webkit-margin-after: 0;">Exchange server</h4>
+
+		      <div>
+		        <label for="url">Server URL:</label>
+		        <input id="url">
+		      </div>
+
+		      <div>
+		        <button id="saveServBtn">Save Server</button>
+		        <button id="resetServBtn">Reset Server</button>
+		      </div>
+
+			</div>
+
 			<form id="formInput">
-	    		<h3>File options:</h3>
+	    		<h3>File configuration options:</h3>
 		    	<input type="radio" name="in" value="Automatic" checked> Automatic &emsp;
 		    	<input type="radio" name="in" value="Manual"> Manual<br>
 			</form>
 
 			<div id="opt" hidden>
 		    	<form id="formCrypt">
-		    		<h3>Cryptofile options:</h3>
+		    		<h3>Cryptography file selection:</h3>
 			    	<input type="radio" name="in" value="Automatic" checked> Automatic &emsp;
 			    	<input type="radio" name="in" value="Manual"> Manual<br>
 				</form>
@@ -76,7 +99,7 @@
 				</div>
 
 		    	<form id="formDl">
-		    		<h3>Download options:</h3>
+		    		<h3>Download location option:</h3>
 			    	<input type="radio" name="in" value="Automatic" checked> Automatic &emsp;
 			    	<input type="radio" name="in" value="Manual"> Manual<br>
 				</form>
@@ -85,7 +108,7 @@
 		    	</h5>
 		    	
 		    	<form id="formUl">
-		    		<h3>Upload options:</h3>
+		    		<h3>Upload location option:</h3>
 			    	<input type="radio" name="in" value="Automatic" checked> Automatic &emsp;
 			    	<input type="radio" name="in" value="Manual"> Manual<br>
 				</form>
@@ -97,7 +120,7 @@
 			<h3> Current info: </h3>
 			<div id="curSet" style="border-style: dashed;"></div>
 
-	    	<button class="btn btn-primary" id="storeConfBtn" data-dismiss="modal" aria-hidden="true">Save</button>
+	    	<button class="btn btn-primary" id="storeConfBtn" aria-hidden="true">Save changes</button>
 		</div>
 	</div>
 
