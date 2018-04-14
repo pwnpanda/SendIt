@@ -171,15 +171,14 @@ function readFileInfo(x){
 function writeToFile(data, dir, show=true){
 	console.log(dir);
   	ensureDirectoryExistence(dir);
-  	fs.writeFile(dir, data, function(err) {
-	    if(err) {
-	        console.log(err);
-	    } else {
-	    	if(show){
-	        	alert("The file was saved: \n" + path.parse(dir).base);
-	        }
+  	try{
+  		fs.writeFileSync(dir, data);
+	    if(show){
+	       	alert("The file was saved: \n" + path.parse(dir).base);
 	    }
-    })
+	}catch(err){
+		console.log("Writing file error: ", err);
+    }
 }
 
 //Makes sure directory exists
