@@ -8,7 +8,7 @@
 var electron = require('electron'); // http://electron.atom.io/docs/api
 var path = require('path');         // https://nodejs.org/api/path.html
 var url = require('url');        // https://nodejs.org/api/url.html
-var {app, BrowserWindow, Menu} = electron;
+var {app, BrowserWindow, Menu, ipcMain} = electron;
 
 var window = null
 
@@ -68,3 +68,21 @@ app.on('window-all-closed', function() {
         app.quit();
     }
 })
+
+
+ipcMain.on('server', function (event, arg) {
+  console.log(arg);
+  var filename;
+  if(arg==true){
+      filename = 'send_it_serv.html';
+    }else{
+      filename = 'send_it.html';
+    }
+
+  // Load a URL in the window to the local index.html path
+  window.loadURL(url.format({
+    pathname: path.join(__dirname + '/resources/', filename),    
+    protocol: 'file:',
+    slashes: true
+  }));
+});

@@ -1,10 +1,13 @@
 var path = require('path');
 var fs = require('fs');
 const get = require('../userDest.js');
+// include the ipc module to communicate with main process.
+const ipcRenderer = require('electron').ipcRenderer; 
 
 var myMail;
 //TODO fix correct address!
 var server= 'asdf';
+var serverChange=false;
 var defPath = new get();
 defPath = defPath.get();
 var splitter = path.sep;
@@ -85,15 +88,18 @@ function settings(){
 	curSet();
 	keyManagement();
 
-
 	//Show selection if change in radio buttons for manual settings
 	$('#formServer input').on('change', function() {
+		serverChange=!serverChange;
 		if( ($('input[name=in]:checked', '#formServer').val()) == "Manual"){
 			$('#serverAddr').hide();
+			server='';
+			$("#url").val(server);
 		} else {
 			$('#serverAddr').show();
 			$("#url").val(server);
 		}
+		console.log(serverChange);
 	});
 
 	//Show selection if change in radio buttons for manual settings
@@ -159,7 +165,6 @@ function settings(){
 			alert("Please fill in an email address!");
 		}else{
 			saveConf();
-			
 		}
 		//return;
 	});
@@ -185,10 +190,20 @@ function saveConf(init=false){
 	console.log(data);
 	writeToFile(JSON.stringify(data), defPath+splitter+'config.conf', init);
 	ensureDirectoryExistence(ulPath+"/.");
-	if(!init){
-		settings();
+	if(serverChange){
+		var useServ=true;
+		if(server==''){
+			useServ=false;
+		}
+		//send the info to main process . we can pass any arguments as second param.
+		ipcRenderer.send('server', useServ); // ipcRender.send will pass the information to main process
 	}else{
-		alert("Please move or copy the files you want to send to: \n" + ulPath);
+
+		if(!init){
+			settings();
+		}else{
+			alert("Please move or copy the files you want to send to: \n" + ulPath);
+		}
 	}
 }
 //Set crypto file
@@ -238,10 +253,12 @@ function removeCrypto(){
 function saveServ(){
 	server = $("#url").val();
 	$("#url").val(server);
+	console.log("server: ", server);
 }
 
 function resetServ(){
 	//todo fix correct address!
 	server = 'asdf';
-	$("#url").val(server);	
+	$("#url").val(server);
+	console.log("server: ", server);
 }
