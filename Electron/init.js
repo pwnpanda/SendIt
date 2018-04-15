@@ -9,6 +9,8 @@ var electron = require('electron'); // http://electron.atom.io/docs/api
 var path = require('path');         // https://nodejs.org/api/path.html
 var url = require('url');        // https://nodejs.org/api/url.html
 var {app, BrowserWindow, Menu, ipcMain} = electron;
+var fs = require('fs');
+var path = require('path');
 
 var window = null
 
@@ -30,9 +32,27 @@ app.once('ready', function () {
     icon: path.join(__dirname, 'Icon.png'),
   });
 
+  //Start the correct type by reading previous settings!
+  var dataPath = (electron.app || electron.remote.app).getPath('userData');
+  var splitter = path.sep;
+  var startServ;
+  try{
+    var buf = fs.readFileSync(dataPath + splitter + "config.conf", "utf8");
+    //console.log(buf);
+    buf=JSON.parse(buf);
+    if(buf.server==''){
+      startServ='send_it.html';
+    }else{
+      startServ='send_it_serv.html';
+    }
+    //console.log(startServ);
+  }catch(err){
+    console.log("Config-file error!", err);
+  }
+
   // Load a URL in the window to the local index.html path
   window.loadURL(url.format({
-    pathname: path.join(__dirname + '/resources/', 'send_it.html'),
+    pathname: path.join(__dirname + '/resources/', startServ),
     protocol: 'file:',
     slashes: true
   }));
@@ -69,7 +89,7 @@ app.on('window-all-closed', function() {
     }
 })
 
-
+//If settings change, load the new html
 ipcMain.on('server', function (event, arg) {
   console.log(arg);
   var filename;

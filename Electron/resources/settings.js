@@ -4,7 +4,7 @@ const get = require('../userDest.js');
 // include the ipc module to communicate with main process.
 const ipcRenderer = require('electron').ipcRenderer; 
 
-var myMail;
+var myMail='';
 //TODO fix correct address!
 var server= 'asdf';
 var serverChange=false;

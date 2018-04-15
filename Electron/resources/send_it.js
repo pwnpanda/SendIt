@@ -55,7 +55,6 @@ function reset (){
   $('#showLocalOffer').modal('hide')
   $('#getRemoteAnswer').modal('hide')
   $('#waitForConnection').modal('hide')
-  $('#showLocalOffer').modal('hide')
   $('#getRemoteOffer').modal('hide')
   $('#showLocalAnswer').modal('hide')
 
@@ -139,6 +138,12 @@ $('#answerRecdBtn').click(function () {
   var answer = $('#remoteAnswer').val();
   //Decrypt
   decryptReply(answer);
+})
+
+//Stop transfer!
+//TODO TEST!
+$('#cancel').click(function () {
+  closeDataChannels();
 })
 
 function setupDC1 () {

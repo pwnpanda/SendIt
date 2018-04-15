@@ -7,10 +7,7 @@
 	https://code.google.com/p/webrtc-samples/source/browse/trunk/apprtc/index.html
 	https://webrtc-demos.appspot.com/html/pc1.html
 */
-
-const copy = require('clipboardy');
 const {shell} = require('electron');
-const prompt = require('electron-prompt');
 
 var cfg = {'iceServers': [{'url': 'stun:stun.gmx.net'}]},
   con = { 'optional': [{'DtlsSrtpKeyAgreement': true}] }
@@ -36,42 +33,61 @@ var ulPath;
 var cfPath;
 var cfName;
 var km;
-var place;
-var alertdisp;
+var recMail;
+var meReady=false;
+var recReady=false;
+
 var descr;
 var off;
 function reset (){
   //MY ADDITION-------------------------
   $('#home').addClass("Active");
   $('#createBtn').removeClass("Active");
-  $('#joinBtn').removeClass("Active");
   $('#config').removeClass("Active");
   //-----------------------------------
   $('#connectedScreen').modal('hide')
   $('#endScreen').modal('hide')
-  $("#success-alert").hide();
-  $("#success-alert-2").hide();
   $("#showConfig").modal('hide');
-  $('#showLocalOffer').modal('hide')
-  $('#getRemoteAnswer').modal('hide')
+  $('#showSend').modal('hide')
+  $('#showReceive').modal('hide')
   $('#waitForConnection').modal('hide')
-  $('#showLocalOffer').modal('hide')
-  $('#getRemoteOffer').modal('hide')
-  $('#showLocalAnswer').modal('hide')
-
 
   $('#createOrJoin').modal('show')
   $('#showHome').modal('show')
 
 }
 $( function(){
-  $('#offerSentBtn').prop('disabled', true);
-  $('#answerSentBtn').prop('disabled', true);
-  //-------------------------------
   reset();
   readConfig();
 });
 
+//Makes sure the user inputs a receiver before proceeding
+$("#recMailInput").keyup( function() {
+  if( $(this).val() != '') {
+    recReady=true;
+  }else{
+    recReady=false;
+  }
+  isReady();
+});
+
+//Makes sure the user inputs his email before proceeding
+$("#myMailInput").keyup( function() {
+  if( $(this).val() != '') {
+    meReady=true;
+  }else{
+    meReady=false;
+  }
+  isReady();
+});
+
+function isReady(){
+  if (recReady && meReady) {
+    $('#initSendBtn').prop('disabled', false);
+  }else{
+    $('#initSendBtn').prop('disabled', true);
+  }
+}
 //MY ADDITION END----------------------------
 
 /* THIS IS ALICE, THE CALLER/SENDER */
@@ -94,51 +110,68 @@ $('#createBtn').click(function () {
   $('#showHome').modal('hide');
   $('#home').removeClass("Active");
   $('#createBtn').toggleClass("Active");
+  $('#showSend').modal('show');
   //Read in email and initiate new KeyManager if neccesary
   settings();
-  if (! existCrypto()){
-    createSetup(true);    
-  }else{
-    //--------------------------
-    //Get other end's email
-    getOtherEnd(true);
+  //TODO change! If no data, leave fields blank. If data, insert.
+  $("#myMailInput").val(myMail);
+  if($("#myMailInput").val() != ''){
+    meReady = true;
   }
+  isReady();
+  loadFiles();
 })
 
-$('#joinBtn').click(function () {
-  reset();
-  $('#showHome').modal('hide');
-  $('#home').removeClass("Active");
-  $('#joinBtn').toggleClass("Active");
-  
- 	//Read in email and initiate new KeyManager if neccesary
-  settings();
+/*
+TODO need to add wss!
+Connection-initiation, authentication, message handling, teardown
+
+IMPORTANT!!!
+Handle case when client is already busy. Make connection wait until current process is done.
+
+Handle after wss messages:
+createLocalOffer();
+*/
+
+//Initiate sending files
+$('#initSendBtn').click(function () {
+  //TODO
+  //Read in own email and recipients email
+  //Initiate km if not existing
+  //Read mail.
+  myMail = $("#myMailInput").val();
+  console.info("Mail address read: " + myMail);
   if (! existCrypto()){
-    createSetup(false);    
-  }else{
-    //get other end's email
-    getOtherEnd(false);
+    km = new KeyManager("new", myMail);
   }
+  km.otherEnd=$("#recMailInput").val();
+  //TODO
+  /*
+  If OK, send connection-req to server. Await other end confirmation.
+  */
 })
 
-$('#offerSentBtn').click(function () {
-  $('#getRemoteAnswer').modal('show');
+//Accept a transfer
+$('#accRecvBtn').click(function () {
+  //TODO
+  /*
+  Handle accepting a transfer!
+  Send acceptance-message to server
+  */
 })
 
-$('#offerRecdBtn').click(function () {
-  var offer = $('#remoteOffer').val();
-  //Decrypt!
-  decrypt(offer);
+//Decline a transfer
+$('#declRecvBtn').click(function () {
+  //TODO
+  /*
+  Handle declining an offer!
+  Send declining-message to server
+  */
 })
 
-$('#answerSentBtn').click(function () {
-  $('#waitForConnection').modal('show');
-})
-
-$('#answerRecdBtn').click(function () {
-  var answer = $('#remoteAnswer').val();
-  //Decrypt
-  decryptReply(answer);
+//Stop transfer!
+$('#cancel').click(function () {
+  closeDataChannels();
 })
 
 function setupDC1 () {
@@ -168,16 +201,14 @@ function createLocalOffer () {
   },
   function () { console.warn("Couldn't create offer") },
 	sdpConstraints)
+  //TODO
+  //ENCRYPT!!
 }
 
+//TODO CHANGE HANDLING TO EACH CANDIDATE (TRICKLING)
 pc1.onicecandidate = function (e) {
-  //todo
   console.info('ICE candidate (pc1)', e)
   if (e.candidate == null) {
-  	iceReady = true;
-  	isReady();
-    place = '#localOffer';
-    alertdisp = "#success-alert";
     descr = JSON.stringify(pc1.localDescription);
     km.encrypt = descr;
     //ENCRYPT!
@@ -192,7 +223,7 @@ function handleOnconnection () {
   //   - first onconnection() hides the dialog, then someone clicks
   //     on answerSentBtn which shows it, and it stays shown forever.
   $('#waitForConnection').remove()
-  $('#showLocalAnswer').modal('hide')
+  $('#showReceive').modal('hide')
   $('#connectedScreen').modal('show')
 
 }
@@ -231,13 +262,9 @@ pc2.ondatachannel = function (e) {
   $('#waitForConnection').modal('hide')
   $('#waitForConnection').remove()
   $('#connectedScreen').modal('show')
-  /*//New
-  $("#init").hide();*/
   dc2 = datachannel
   activedc = dc2
   dc2.onopen = function (e) {
-  /*//FIX!!!!!!!
-  $("#init").hide();*/
 	console.info('data channel connect')
   }
   dc2.onmessage = function (e) {
@@ -254,14 +281,14 @@ function handleOfferFromPC1 (offerDesc) {
   },
   function () { console.warn("Couldn't create offer") },
   sdpConstraints)
+  //TODO
+  //ENCRYPT!
 }
 
 pc2.onicecandidate = function (e) {
   console.log('ICE candidate (pc2)', e)
+  //CHANGE HANDLING TO EACH CANDIDATE! (Trickling) TODO
   if (e.candidate == null) {
-    $('#answerSentBtn').prop('disabled', false);
-    place = '#localAnswer';
-    alertdisp = "#success-alert-2";
     descr = JSON.stringify(pc2.localDescription);
     //Encrypt
     encryptReply();
@@ -298,20 +325,6 @@ console.assert  = function(cond, text){
 };
 
 //My own!------------------------------------
-function isReady(){
-  if (/*fileReady &&*/ iceReady) {
-    $('#offerSentBtn').prop('disabled', false);
-  }else{
-    $('#offerSentBtn').prop('disabled', true);
-  }
-}
-/*
-function initiateSnd(){
-  console.log('Initiating!');
-  $("#init").hide();
-  beginAuth();
-}
-*/
 $('#openInFolder').click(function () {
   try{
     shell.showItemInFolder(dlPath + splitter+'*');
@@ -320,82 +333,13 @@ $('#openInFolder').click(function () {
     }
 });
 
-function createSetup(offer){
-  var label1='Please enter your e-mail address';
-  var label2='Please enter the recipients e-mail address';
-  if(!offer){
-    label2='Please enter the senders e-mail address';
-  }
-  prompt({
-  title: 'E-mail',
-  label: label1,
-  value: myMail,
-  inputAttrs: { // attrs to be set if using 'input'
-      type: 'mail'
-  },
-  type: 'input'
-  })
-  .then((r)=>{
-    if(r==null){
-      window.location.href = "";
-    } else{
-        myMail = r;
-        console.info("Mail address read: " + myMail);
-        km = new KeyManager("new", myMail);
-        getOtherEnd(offer);
-    }
-  }).catch(console.error);
-}
-
-function getOtherEnd(offer){
-  var label1='Please enter the recipients e-mail address';
-  if(!offer){
-    label1='Please enter the senders e-mail address';
-  }
-  prompt({
-    title: 'E-mail',
-    label: label1,
-    value: '',
-    inputAttrs: { // attrs to be set if using 'input'
-        type: 'mail'
-    },
-    type: 'input'
-    })
-  .then((rec)=>{
-    if(rec==null){
-        window.location.href = "";
-    }
-    km.otherEnd=rec;
-    if(offer){
-      $('#showLocalOffer').modal('show');
-      createLocalOffer();
-      loadFiles();
-    }else{
-      $('#getRemoteOffer').modal('show');
-    }
-  }).catch(console.error);
-}
-
 function showenc(data){
-    copy.writeSync(data);
-    
-    $(place).html(data);
-    //https://stackoverflow.com/a/23102317/4400482
-    $(alertdisp).fadeTo(2000, 500).slideUp(500, function(){
-      $(alertdisp).slideUp(500);
-    });
+  //send offer/answer to server
 }
 
 function setDescr(data, off){
   var desc = new RTCSessionDescription(data);
-  if(off){
-    console.info('Received remote offer', desc);
-    handleOfferFromPC1(desc);
-    $('#showLocalAnswer').modal('show');
-  }else{
-    console.info('Received remote answer', desc);
-    handleAnswerFromPC2(desc);
-    $('#waitForConnection').modal('show');
-  }
+  console.info('Received remote offer/answer', desc);
+  //Handle offer/answer and relay back
 }
 //---------------------------------------------
