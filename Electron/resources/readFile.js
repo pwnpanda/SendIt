@@ -67,25 +67,35 @@ function loadFiles(){
 	 		var type = "."+name[1];
 	 		name = name[0];
 	 		console.log("File: " + file + " Name: " + name + " Type: " + type);
-	        //Need array of filemanagers, one for each file!
-			fmArray[i] = new FileManager(maxChunkSize);
-			registerFileEvents(fmArray[i]);
-
+	        
+	 		//Check for filesize 0 and ignore if it is 0 bytes
 	        console.log("Start: " + file);
 	        var stats = fs.statSync(file);
 	        console.log(stats["size"]);
-			var mbSize = Math.ceil(stats["size"] / (1024 * 1024));
-			//Todo - handle only one file exception
-	        if (mbSize > MAX_FSIZE) {
-				console.warn("Due to browser memory limitations, files greater than " + MAX_FSIZE + " MiB are unsupported. Your file is " + mbSize.toFixed(2) + " MiB.");
-				var error = document.querySelector("#Error");
-				error.innerHTML = "File " + items[i] + " is to big for the browser! It cannot be sent!";
-				throw new Error("File to big! Stop execution");
-			}
+	        if(stats["size"] <= 0){
+	        	console.warn("Filesize 0 bytes, skipping file: ", file);
+	        	// files is a FileList of File objects. List some properties.
+				output.push('<li style="color:red;">Skipping file: <strong>', escape(items[i]), '</strong> ',
+				'Size 0 bytes!','</li>');
+	        }else{
 
-	        // files is a FileList of File objects. List some properties.
-			output.push('<li><strong>', escape(items[i]), '</strong> ',
-			Math.ceil((stats["size"] / 1024)) + ' kbytes','</li>');
+		        //Need array of filemanagers, one for each file!
+				fmArray[i] = new FileManager(maxChunkSize);
+				registerFileEvents(fmArray[i]);
+
+				var mbSize = Math.ceil(stats["size"] / (1024 * 1024));
+				//Todo - handle only one file exception
+		        if (mbSize > MAX_FSIZE) {
+					console.warn("Due to browser memory limitations, files greater than " + MAX_FSIZE + " MiB are unsupported. Your file is " + mbSize.toFixed(2) + " MiB.");
+					var error = document.querySelector("#Error");
+					error.innerHTML = "File " + items[i] + " is to big for the browser! It cannot be sent!";
+					throw new Error("File to big! Stop execution");
+				}
+
+		        // files is a FileList of File objects. List some properties.
+				output.push('<li><strong>', escape(items[i]), '</strong> ',
+				Math.ceil((stats["size"] / 1024)) + ' kbytes','</li>');
+			}
 	    }
 		document.getElementById('list').innerHTML = '<ul style="list-style-type: none;">' + output.join('') + '</ul>';
     }catch(e){
