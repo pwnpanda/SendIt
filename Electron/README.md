@@ -2,11 +2,10 @@
 ### Secure, Serverless, Electron & NodeJS-based, Direct Information Transfer
 
 ## Research Project - Master thesis
-### Title:
-#### Direct File Transfer System via WebRTC
-##### An Alternative to E-mail Attachments with Improved Security
+## Direct File Transfer System via WebRTC
+### An Alternative to E-mail Attachments with Improved Security
 
-## Electron-based application
+### Electron-based application
 
 #### Usage:
 1. Setup preferences by clicking the '<b>Settings</b>' tab. <b>Remember to write your E-mail address!</b>
