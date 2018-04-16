@@ -4,22 +4,11 @@
 ## Research Project - Master thesis
 ### Theme: Secure, direct file transfer using serverless webRTC
 
-##Contains:
-####Local HTML & JS functionality ('app')
-####Electron application
-####'Signalling' server
+##Server for exchanging Offer and Answer
+###Signalling server + authentication mechanism
 
-#### Documentation:
-[Documentation](https://robiq.github.io/Project/)
+#### Usage:
 
-#### Installers:
-[Top page](https://github.com/Robiq/SendIt_release)
-##### Windows: 
-[Windows installers](https://github.com/Robiq/SendIt_release/tree/master/Windows)
-##### Mac:
-[Mac installers](https://github.com/Robiq/SendIt_release/tree/master/Mac)
-##### Linux:
-[Linux installers](https://github.com/Robiq/SendIt_release/tree/master/Linux)
 
 #### Licence:
 Copyright 2017 Robin Lunde
