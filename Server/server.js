@@ -70,15 +70,23 @@ httpsServer.listen(HTTPS_PORT, '0.0.0.0');
 var wss = new WebSocketServer({server: httpsServer});
 
 wss.on('connection', function(ws) {
-    ws.id=uuid++;
-    send(ws, {prot: wss_prot.TEST, msg:'ping'});
+   	ws.id=uuid++;
+   	console.log("Client %d connected!", ws.id);
+
     //Message received in server!
-    ws.on('message', function(message) {
-        // Broadcast any received message to all clients
-        console.log('received: %s', message);
+    ws.onmessage = function(message) {
+        console.log('received message from: ', ws.id);
         //Handle message!
-        handleMessage(ws, message);
-    });
+        handleMessage(ws, message.data);
+    };
+
+    ws.onclose = function(code, reason){
+    	console.log("Socket closed! Code: %d Reason: %s", code, reason);
+    };
+
+    ws.onerror = function(err){
+    	console.log("Error occurred: ", err);
+    };
 });
 
 //wss.push?
@@ -108,12 +116,14 @@ function send(sock, data){
 }
 
 function handleMessage(sock, msg) {
+	console.log(msg);
 	msg = JSON.parse(msg);
 	switch(msg.prot){
 		case wss_prot.TEST:
 			console.log("Received: ", msg.msg);
-			console.log("PingPong done!");
-			beginExchange(sock);
+			if(msg.msg === 'ping'){
+				send(sock, { prot: wss_prot.TEST, msg: 'pong'});
+			}
 			break;
 		case wss_prot.ACCEPT:
 			console.log("Protocol received: ACCEPT");
