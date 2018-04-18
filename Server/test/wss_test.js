@@ -26,9 +26,21 @@ var wss_prot = {
 };
 
 
-var  serverConnection = new WebSocket('wss://' + window.location.hostname + ':7443');
-serverConnection.onmessage = gotMessageFromServer;
+var  sc = new WebSocket('wss://' + window.location.hostname + ':7443');
+sc.onopen = function () {
+   	send({prot: wss_prot.TEST, msg:'ping'});
+};
 
+sc.onmessage = gotMessageFromServer;
+sc.onclose = function(code, reason){
+    console.log("Socket closed! Code: %d Reason: %s", code, reason);
+	
+};
+
+sc.onerror = function(err){
+    console.log("Socket-error occurred: ", err);
+
+};
 
 function gotMessageFromServer(message){
 	var msg = JSON.parse(message.data);
@@ -36,7 +48,9 @@ function gotMessageFromServer(message){
 	switch(msg.prot){
 		case wss_prot.TEST:
 			console.log("Message received: ", msg.msg);
-			send({ prot: wss_prot.TEST, msg: 'pong'});
+			if(msg.msg === 'pong'){
+				console.log("PingPong done!");
+			}
 			break;
 		case wss_prot.INIT:
 			console.log("Protocol received: INIT");
@@ -54,10 +68,10 @@ function gotMessageFromServer(message){
 
 function send(data){
 	data = JSON.stringify(data);
-	if(serverConnection.readyState === WebSocket.OPEN) {
+	if(sc.readyState === WebSocket.OPEN) {
 		console.log("Sending: ", data);
-        serverConnection.send(data);
+        sc.send(data);
     }else{
-		console.log("Error sending! Socket state: ", serverConnection.readyState);
+		console.log("Error sending! Socket state: ", sc.readyState);
     }
 }
