@@ -22,7 +22,6 @@
   },
   "homepage": "https://github.com/Robiq/Project",
   "dependencies": {
-    "node": "^9.11.0",
     "ws": "^5.1.1"
   }
 }
