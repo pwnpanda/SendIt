@@ -36,7 +36,7 @@ var km;
 var recMail;
 var meReady=false;
 var recReady=false;
-
+var sc; //ServerConnection
 var descr;
 var off;
 function reset (){
@@ -122,17 +122,6 @@ $('#createBtn').click(function () {
   loadFiles();
 })
 
-/*
-TODO need to add wss!
-Connection-initiation, authentication, message handling, teardown
-
-IMPORTANT!!!
-Handle case when client is already busy. Make connection wait until current process is done.
-
-Handle after wss messages:
-createLocalOffer();
-*/
-
 //Initiate sending files
 $('#initSendBtn').click(function () {
   //TODO
@@ -145,6 +134,7 @@ $('#initSendBtn').click(function () {
     km = new KeyManager("new", myMail);
   }
   km.otherEnd=$("#recMailInput").val();
+  wsSend();
   //TODO
   /*
   If OK, send connection-req to server. Await other end confirmation.
@@ -157,6 +147,7 @@ $('#accRecvBtn').click(function () {
   /*
   Handle accepting a transfer!
   Send acceptance-message to server
+  Show connection-waiting screen
   */
 })
 
@@ -166,12 +157,15 @@ $('#declRecvBtn').click(function () {
   /*
   Handle declining an offer!
   Send declining-message to server
+  Show base page
   */
+  reset();
 })
 
 //Stop transfer!
 $('#cancel').click(function () {
   closeDataChannels();
+  reset();
 })
 
 function setupDC1 () {
@@ -340,6 +334,7 @@ function showenc(data){
 function setDescr(data, off){
   var desc = new RTCSessionDescription(data);
   console.info('Received remote offer/answer', desc);
+  //setLocalDescription(desc)?
   //Handle offer/answer and relay back
 }
 //---------------------------------------------
