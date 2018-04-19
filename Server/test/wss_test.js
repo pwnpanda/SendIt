@@ -10,7 +10,7 @@ var wss_prot = {
 	WAIT: "wait", //Waiting for other end - specified in data
 
 //Client-Server messages
-	INIT: "start", //Offer sending - forwarded
+	INIT: "start", //Ask for connection
 	DONE: "done", //Connection finished
 	REQKEY: "request_key", //Request public key - Include own public key!
 
@@ -50,20 +50,54 @@ function gotMessageFromServer(message){
 			console.log("Message received: ", msg.msg);
 			if(msg.msg === 'pong'){
 				console.log("PingPong done!");
+				send({ prot: wss_prot.INIT });
 			}
 			break;
+		case wss_prot.AUTH_S_REPLY:
+			console.log("Protocol received: Authentication setup reply");
+			break;
+		case wss_prot.AUTH_RESULT:
+			console.log("Protocol received: Authentication Result");
+			break;
+		case wss_prot.ERROR:
+			console.log("Protocol received: Error");
+			break;
+		case wss_prot.WAIT:
+			console.log("Protocol received: Wait");
+			break;
 		case wss_prot.INIT:
-			console.log("Protocol received: INIT");
+			console.log("Protocol received: Initialize connection");
 			send({prot: wss_prot.ACCEPT});
 			break;
+		case wss_prot.KEY:
+			console.log("Protocol received: Key");
+			break;
 		case wss_prot.ACCEPT:
-			console.log("Protocol received: ACCEPT");
+			console.log("Protocol received: Accept");
+			break;
+		case wss_prot.REFUSE:
+			console.log("Protocol received: Refuse");
+			send({prot: wss_prot.DONE});
+			break;
+		case wss_prot.ANSWER:
+			console.log("Protocol received: Answer");
+			break;
+		case wss_prot.ICE:
+			console.log("Protocol received: ICE");
+			break;
+		case wss_prot.AUTH_SETUP:
+			console.log("Protocol received: Authentication setup\nERROR! Not supposed to be here!");
+			break;
+		case wss_prot.AUTH_INIT:
+			console.log("Protocol received: Authentication Initiation\nERROR! Not supposed to be here!");
+			break;
+			case wss_prot.REQKEY:
+			console.log("Protocol received: Request Key\nERROR! Not supposed to be here!");
 			break;
 		default:
 			console.log("Unknown message: ", msg);
 			break;
-	}
-	
+	}	
 }
 
 function send(data){
