@@ -125,12 +125,50 @@ function handleMessage(sock, msg) {
 				send(sock, { prot: wss_prot.TEST, msg: 'pong'});
 			}
 			break;
-		case wss_prot.ACCEPT:
-			console.log("Protocol received: ACCEPT");
+		case wss_prot.AUTH_SETUP:
+			console.log("Protocol received: Authentication setup");
+			break;
+		case wss_prot.AUTH_INIT:
+			console.log("Protocol received: Authentication Initiation");
+			break;
+		case wss_prot.ERROR:
+			console.log("Protocol received: Error");
+			break;
+		case wss_prot.WAIT:
+			console.log("Protocol received: Wait");
 			break;
 		case wss_prot.INIT:
-			console.log("Protocol received: INIT");
-			send({prot: wss_prot.ACCEPT});
+			console.log("Protocol received: Initialize connection");
+			//Todo only now
+			send(sock, {prot: wss_prot.ACCEPT});
+			//send(sock, {prot: wss_prot.REFUSE});
+			break;
+		case wss_prot.DONE:
+			console.log("Protocol received: Done");
+			break;
+		case wss_prot.REQKEY:
+			console.log("Protocol received: Request Key");
+			break;
+		case wss_prot.ACCEPT:
+			console.log("Protocol received: Accept");
+			break;
+		case wss_prot.REFUSE:
+			console.log("Protocol received: Refuse");
+			break;
+		case wss_prot.ANSWER:
+			console.log("Protocol received: Answer");
+			break;
+		case wss_prot.ICE:
+			console.log("Protocol received: ICE");
+			break;
+		case wss_prot.AUTH_S_REPLY:
+			console.log("Protocol received: Authentication setup reply\nERROR! Not supposed to be in server!");
+			break;
+		case wss_prot.AUTH_RESULT:
+			console.log("Protocol received: Authentication Result\nERROR! Not supposed to be in server!");
+			break;
+		case wss_prot.KEY:
+			console.log("Protocol received: Key\nERROR! Not supposed to be in server!");
 			break;
 		default:
 			console.log("Unknown message: ", msg);
