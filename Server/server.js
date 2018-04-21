@@ -4,8 +4,10 @@ const fs = require('fs');
 const https = require('https');
 const WebSocket = require('ws');
 const WebSocketServer = WebSocket.Server;
+const q = require('./resources/queue.js');
 var uuid=1;
 var sUUID = 0;
+var conn = {};
 
 var wss_prot = {
 //Authentication	
@@ -34,6 +36,7 @@ var wss_prot = {
 	TEST: "tst" //For testing setup
 };
 
+//console.log("Argv1: " + process.argv[2]);
 
 // Yes, SSL is required
 const serverConfig = {
@@ -46,17 +49,25 @@ var handleRequest = function(request, response) {
     // Render the single client html file for any request the HTTP server receives
     console.log('request received(https): ' + request.url);
     try{
-    	if(request.url === '/') {
-            response.writeHead(200, {'Content-Type': 'text/html'});
-	        response.end(fs.readFileSync('/home/robin/Project/Server/test/wss_test.html'));
-        } else if(request.url === '/wss_test.js') {
-	    	response.writeHead(200, {'Content-Type': 'application/javascript'});
-	        response.end(fs.readFileSync('/home/robin/Project/Server/test/wss_test.js'));
-	    }else{
-	        console.log('Invalid URL requested - no HTML support!');
-	        response.writeHead(404);
-	        response.end();
-	    }
+    	//If testing, serve files
+    	if (process.argv[2] === 'test'){
+	    	if(request.url === '/') {
+	            response.writeHead(200, {'Content-Type': 'text/html'});
+		        response.end(fs.readFileSync('/home/robin/Project/Server/test/wss_test.html'));
+	        } else if(request.url === '/wss_test.js') {
+		    	response.writeHead(200, {'Content-Type': 'application/javascript'});
+		        response.end(fs.readFileSync('/home/robin/Project/Server/test/wss_test.js'));
+		    }else{
+	        	console.log('Invalid URL requested - no HTML support!');
+		        response.writeHead(404);
+		        response.end();
+		    }
+		//If production no files!
+		}else{
+			console.log('Invalid URL requested - no HTML support!');
+		    response.writeHead(404);
+		    response.end();
+		}
     }catch(e){
         console.log("Exception when serving file(https): ", e);
     }
@@ -80,8 +91,8 @@ wss.on('connection', function(ws) {
         handleMessage(ws, message.data);
     };
 
-    ws.onclose = function(code, reason){
-    	console.log("Socket closed! Code: %d Reason: %s", code, reason);
+    ws.onclose = function(){
+    	console.log("Socket closed! Client nr. %d disconnected!", ws.id);
     };
 
     ws.onerror = function(err){
@@ -102,46 +113,45 @@ wss.broadcast = function(data) {
     });
 };
 
-function send(sock, data){
-	data = JSON.stringify(data);
-	if(sock.readyState === WebSocket.OPEN) {
-		console.log("Sending to: ", sock.id)
-		console.log("Sending: ", data);
-        sock.send(data);
-    }else{
-    	console.log("Error sending to; ", sock.id);
-    	console.log("Error sending: ", data);
-		console.log("Socket state: ", sock.readyState);
-    }
-}
 
 function handleMessage(sock, msg) {
 	console.log(msg);
 	msg = JSON.parse(msg);
 	switch(msg.prot){
 		case wss_prot.TEST:
-			console.log("Received: ", msg.msg);
-			if(msg.msg === 'ping'){
-				send(sock, { prot: wss_prot.TEST, msg: 'pong'});
+			console.log("Received: ", msg.data);
+			if(msg.data === 'ping'){
+				send(sock, wss_prot.TEST, 'pong');
 			}
 			break;
 		case wss_prot.AUTH_SETUP:
 			console.log("Protocol received: Authentication setup");
+			sock.email=msg.origin;
+			sock.key=msg.data;
+			auth_S_Reply(sock);
 			break;
 		case wss_prot.AUTH_INIT:
 			console.log("Protocol received: Authentication Initiation");
+			auth_result(sock, msg.data);
 			break;
 		case wss_prot.ERROR:
-			console.log("Protocol received: Error");
+			console.log("Protocol received: Error! Details: ", msg.data);
+			if(msg.destination != null){
+				forward(sock, msg);
+			}
 			break;
 		case wss_prot.WAIT:
 			console.log("Protocol received: Wait");
+			if(msg.destination != null){
+				forward(sock, msg);
+			}
 			break;
 		case wss_prot.INIT:
 			console.log("Protocol received: Initialize connection");
 			//Todo only now
-			send(sock, {prot: wss_prot.ACCEPT});
-			//send(sock, {prot: wss_prot.REFUSE});
+			//send(sock, wss_prot.ACCEPT);
+			//send(sock, wss_prot.REFUSE);
+			forward(sock, msg);
 			break;
 		case wss_prot.DONE:
 			console.log("Protocol received: Done");
@@ -151,15 +161,19 @@ function handleMessage(sock, msg) {
 			break;
 		case wss_prot.ACCEPT:
 			console.log("Protocol received: Accept");
+			forward(sock, msg);
 			break;
 		case wss_prot.REFUSE:
 			console.log("Protocol received: Refuse");
+			forward(sock, msg);
 			break;
 		case wss_prot.ANSWER:
 			console.log("Protocol received: Answer");
+			forward(sock, msg);
 			break;
 		case wss_prot.ICE:
 			console.log("Protocol received: ICE");
+			forward(sock, msg);
 			break;
 		case wss_prot.AUTH_S_REPLY:
 			console.log("Protocol received: Authentication setup reply\nERROR! Not supposed to be in server!");
@@ -178,6 +192,105 @@ function handleMessage(sock, msg) {
 
 
 function beginExchange(sock) {
-	var msg = { prot: wss_prot.INIT };
-	send(sock, msg);
+	send(sock, wss_prot.INIT);
+}
+
+
+function auth_S_Reply(sock){
+	//reply true or false - evaluate!
+	var auth=true;
+   	//Check if key already associated with email
+   	for (var key in conn){
+   		//console.log(conn[key]);
+   		if(conn[key].key === sock.key){
+   			auth=false;
+   			console.log("Key already exists for another email: %s!", conn[key].id);
+   		}
+   	}
+
+   	if(sock.email in conn){
+   		auth = false;
+   		console.log("Authentication error! E-mail already registered!")
+   	}
+   	if(auth){
+   		conn[sock.email]=sock;
+   	}
+
+	send(sock, wss_prot.AUTH_S_REPLY, auth, sock.email);
+}
+
+function auth_result(sock, data){
+	//reply true or false - evaluate!
+	var auth=true;
+	if(sock.email in conn){
+		if(isAuth(data)){
+			console.log("User %s is authenticated!", sock.email);
+		}else{
+			auth=false;
+			console.log("User %s is not authenticated!", sock.email);
+		}
+	}else{
+		console.log("Details not stored for this user (%s) - please do an authentication setup!", sock.email);
+		auth=false;
+	}
+
+	send(sock, wss_prot.AUTH_RESULT, auth, sock.email);
+}
+
+function isAuth(data){
+	console.log(data);
+	//run test! - TODO
+	return true;
+}
+
+function forward(sock, msg) {
+	if (msg.destination in conn){
+		console.log("Forwarding protocol %s to %s!",  msg.prot, msg.destination);
+		sendFw(conn[msg.destination], msg);
+	} else{
+		console.log("Destination %s not connected!", msg.destination);
+		if(msg.prot==wss_prot.INIT){
+			/*todo - add checking functionality for queued messages on connect!
+			//q.add2Q(msg);
+			console.log("Waiting for %s to connect!\n Sending waiting signal to %s", msg.destination, msg.origin);
+			send(sock, wss_prot.WAIT);
+			*/
+			send(sock, wss_prot.REFUSE);
+		}else{
+			console.log("Connection error! %s went offline", sock.id);
+			send(sock, wss_prot.ERROR, 'Other end disconnected from server!');
+		}
+	}
+}
+
+function send(sock, sig, data=null, dst=null){
+	var msg = {
+		prot: sig,
+		origin: 'server@test.com', //todo change back to km.email
+		destination: dst,
+		data: data
+	}
+	msg = JSON.stringify(msg);
+	if(sock.readyState === WebSocket.OPEN) {
+		console.log("Sending to: ", sock.id)
+		console.log("Sending: ", msg);
+        sock.send(msg);
+    }else{
+    	console.log("Error sending to; ", sock.id);
+    	console.log("Error sending: ", msg);
+		console.log("Socket state: ", sock.readyState);
+    }
+}
+
+function sendFw(sock, msg){
+	msg = JSON.stringify(msg);
+	if(sock.readyState === WebSocket.OPEN) {
+		console.log("Sending to: ", sock.id)
+		console.log("Sending: ", msg);
+        sock.send(msg);
+    }else{
+    	console.log("Error sending to; ", sock.id);
+    	console.log("Error sending: ", msg);
+		console.log("Socket state: ", sock.readyState);
+    }
 }
