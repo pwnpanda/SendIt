@@ -37,8 +37,8 @@ sc.onopen = function () {
 };
 
 sc.onmessage = gotMessageFromServer;
-sc.onclose = function(code, reason){
-    console.log("Socket closed! Code: %d Reason: %s", code, reason);
+sc.onclose = function(){
+    console.log("Socket closed by server!");
 	
 };
 
@@ -58,6 +58,7 @@ function gotMessageFromServer(message){
 				authSetup();
 			}
 			break;
+
 		case wss_prot.AUTH_S_REPLY:
 			console.log("Protocol received: Authentication setup reply");
 			if(msg.data){
@@ -68,6 +69,7 @@ function gotMessageFromServer(message){
 				console.log("Authentication setup failed!");
 			}
 			break;
+
 		case wss_prot.AUTH_RESULT:
 			console.log("Protocol received: Authentication Result");
 			if(msg.data){
@@ -77,12 +79,15 @@ function gotMessageFromServer(message){
 				console.log("Authentication failed!");
 			}
 			break;
+
 		case wss_prot.ERROR:
-			console.log("Protocol received: Error");
+			console.log("Protocol received: Error! Details: " msg.data);
 			break;
+
 		case wss_prot.WAIT:
-			console.log("Protocol received: Wait");
+			console.log("Protocol received: Wait!");
 			break;
+
 		case wss_prot.INIT:
 			console.log("Protocol received: Initialize connection. Data: ", msg.data);
 			if(confirm('Receive!')){
@@ -93,31 +98,44 @@ function gotMessageFromServer(message){
 				send(wss_prot.REFUSE, null, msg.origin);
 			}
 			break;
+
 		case wss_prot.KEY:
-			console.log("Protocol received: Key");
+			console.log("Protocol received: Key! Data received: ", msg.data);
 			break;
+
 		case wss_prot.ACCEPT:
-			console.log("Protocol received: Accept");
+			console.log("Protocol received: Accept! Offer: ", msg.offer);
+			//set remote description msg.data! todo
+			//create answer
+			createAnswer(msg);
 			break;
+
 		case wss_prot.REFUSE:
 			console.log("Protocol received: Refuse");
 			send(wss_prot.DONE);
 			break;
+
 		case wss_prot.ANSWER:
-			console.log("Protocol received: Answer");
+			console.log("Protocol received: Answer! Answer: ", msg.data);
+			//set remote description msg.data! todo
 			break;
+
 		case wss_prot.ICE:
-			console.log("Protocol received: ICE");
+			console.log("Protocol received: ICE! ICE: msg.data");
+			//Test!
+			//addIce(msg.data);
 			break;
+
 		case wss_prot.AUTH_SETUP:
 			console.log("Protocol received: Authentication setup\nERROR! Not supposed to be here!");
 			break;
 		case wss_prot.AUTH_INIT:
 			console.log("Protocol received: Authentication Initiation\nERROR! Not supposed to be here!");
 			break;
-			case wss_prot.REQKEY:
+		case wss_prot.REQKEY:
 			console.log("Protocol received: Request Key\nERROR! Not supposed to be here!");
 			break;
+
 		default:
 			console.log("Unknown message: ", msg);
 			break;
