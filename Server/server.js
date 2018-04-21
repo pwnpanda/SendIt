@@ -100,19 +100,6 @@ wss.on('connection', function(ws) {
     };
 });
 
-//wss.push?
-//wss.send(message);
-
-//Server shutdown gracefully usage?
-wss.broadcast = function(data) {
-    //Message broadcasted to clients!
-    this.clients.forEach(function(client) {
-        if(client.readyState === WebSocket.OPEN) {
-            client.send(data);
-        }
-    });
-};
-
 
 function handleMessage(sock, msg) {
 	console.log(msg);
@@ -294,3 +281,17 @@ function sendFw(sock, msg){
 		console.log("Socket state: ", sock.readyState);
     }
 }
+
+process.on('SIGTERM', closeAll, 'SIGTERM');
+process.on('SIGINT', closeAll, 'SIGINT');
+//process.on('exit', closeAll, 'exit');
+process.on(`uncaughtException`, closeAll, `uncaughtException`);
+
+
+function closeAll (sig) {
+	console.log('\nShutting down gracefully after %s :)!', sig)
+	wss.clients.forEach(function(c) {
+		c.close();
+	 });
+	process.exit(sig);
+};
