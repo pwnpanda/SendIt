@@ -99,7 +99,7 @@ function settings(){
 			$('#serverAddr').show();
 			$("#url").val(server);
 		}
-		console.log(serverChange);
+		//console.log(serverChange);
 	});
 
 	//Show selection if change in radio buttons for manual settings

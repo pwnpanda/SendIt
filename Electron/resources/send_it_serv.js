@@ -59,6 +59,7 @@ function reset (){
 $( function(){
   reset();
   readConfig();
+  wscon();
 });
 
 //Makes sure the user inputs a receiver before proceeding

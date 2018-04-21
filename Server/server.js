@@ -111,57 +111,74 @@ function handleMessage(sock, msg) {
 				send(sock, wss_prot.TEST, 'pong');
 			}
 			break;
+
 		case wss_prot.AUTH_SETUP:
 			console.log("Protocol received: Authentication setup");
 			sock.email=msg.origin;
 			sock.key=msg.data;
 			auth_S_Reply(sock);
 			break;
+
 		case wss_prot.AUTH_INIT:
 			console.log("Protocol received: Authentication Initiation");
 			auth_result(sock, msg.data);
 			break;
+
 		case wss_prot.ERROR:
 			console.log("Protocol received: Error! Details: ", msg.data);
 			if(msg.destination != null){
 				forward(sock, msg);
 			}
 			break;
+
 		case wss_prot.WAIT:
 			console.log("Protocol received: Wait");
 			if(msg.destination != null){
 				forward(sock, msg);
 			}
 			break;
+
 		case wss_prot.INIT:
 			console.log("Protocol received: Initialize connection");
-			//Todo only now
-			//send(sock, wss_prot.ACCEPT);
-			//send(sock, wss_prot.REFUSE);
 			forward(sock, msg);
 			break;
+		
 		case wss_prot.DONE:
 			console.log("Protocol received: Done");
 			break;
+		
 		case wss_prot.REQKEY:
-			console.log("Protocol received: Request Key");
+			console.log("Protocol received: Request Key! Looking for key for: ", msg.data);
+			if(msg.data in conn){
+				console.log("Found key for ", msg.data);
+				var x = msg.data;
+				send(sock, wss_prot.KEY, {x: (conn[msg.data]).key });
+			}else{
+				console.log("No key found for ", msg.data);
+				send(sock, wss_prot.KEY);
+			}
 			break;
+		
 		case wss_prot.ACCEPT:
 			console.log("Protocol received: Accept");
 			forward(sock, msg);
 			break;
+		
 		case wss_prot.REFUSE:
 			console.log("Protocol received: Refuse");
 			forward(sock, msg);
 			break;
+		
 		case wss_prot.ANSWER:
 			console.log("Protocol received: Answer");
 			forward(sock, msg);
 			break;
+		
 		case wss_prot.ICE:
 			console.log("Protocol received: ICE");
 			forward(sock, msg);
 			break;
+		
 		case wss_prot.AUTH_S_REPLY:
 			console.log("Protocol received: Authentication setup reply\nERROR! Not supposed to be in server!");
 			break;
@@ -171,6 +188,7 @@ function handleMessage(sock, msg) {
 		case wss_prot.KEY:
 			console.log("Protocol received: Key\nERROR! Not supposed to be in server!");
 			break;
+		
 		default:
 			console.log("Unknown message: ", msg);
 			break;
@@ -253,7 +271,7 @@ function forward(sock, msg) {
 function send(sock, sig, data=null, dst=null){
 	var msg = {
 		prot: sig,
-		origin: 'server@test.com', //todo change back to km.email
+		origin: 'server',
 		destination: dst,
 		data: data
 	}

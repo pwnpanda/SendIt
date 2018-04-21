@@ -73,7 +73,7 @@ var template = [{
   // Show window when page is ready
   window.once('ready-to-show', function () {
     window.maximize();
-    /*
+    /* todo uncomment
     if (process.platform === 'darwin') { 
       Menu.setApplicationMenu(Menu.buildFromTemplate(template));
     }else{
@@ -87,7 +87,16 @@ app.on('window-all-closed', function() {
     if (process.platform != 'darwin') {
         app.quit();
     }
-})
+});
+
+// SSL/TSL: this is the self signed certificate support
+//TODO remove in productioN!!!
+app.on('certificate-error', (event, webContents, url, error, certificate, callback) => {
+  // On certificate error we disable default behaviour (stop loading the page)
+  // and we then say "it is all fine - true" to the callback
+  event.preventDefault();
+  callback(true);
+});
 
 //If settings change, load the new html
 ipcMain.on('server', function (event, arg) {
