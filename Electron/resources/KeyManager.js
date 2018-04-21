@@ -27,8 +27,8 @@ KeyManager.prototype = {
 			//var dec = decodeMethod(data);
 			//var dec = JSON.parse(data);
 			var dec = data.split(";\n");
-			console.log(dec.length);
-			console.log(dec);
+			//console.log(dec.length);
+			//console.log(dec);
 			//Extract mail
 			this.email = dec[0];
 			//Extract own key - stored as object
@@ -56,7 +56,7 @@ KeyManager.prototype = {
 		} else{
 			console.error("No data to read! Data: ", data);
 		}
-		console.info("This keymanager: ", this);
+		//console.info("This keymanager: ", this);
 	},
 
 	//Create new KeyManager

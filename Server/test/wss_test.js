@@ -81,7 +81,7 @@ function gotMessageFromServer(message){
 			break;
 
 		case wss_prot.ERROR:
-			console.log("Protocol received: Error! Details: " msg.data);
+			console.log("Protocol received: Error! Details: ", msg.data);
 			break;
 
 		case wss_prot.WAIT:
@@ -100,7 +100,12 @@ function gotMessageFromServer(message){
 			break;
 
 		case wss_prot.KEY:
-			console.log("Protocol received: Key! Data received: ", msg.data);
+			if(msg.data){
+				console.log("Received key: ", msg.data);
+				//TODO add key! msg.data = {email: key}
+			}else{
+				console.log("No information stored for requested address!");
+			}
 			break;
 
 		case wss_prot.ACCEPT:
@@ -145,7 +150,7 @@ function gotMessageFromServer(message){
 function send(sig, data=null, dst=null){
 	var msg = {
 		prot: sig,
-		origin: email,
+		origin: km.email,
 		destination: dst,
 		data: data
 	}
@@ -195,10 +200,3 @@ function messageSend(){
     //sc.send(JSON.stringify({'log': log, 'uuid': uuid}));
     sc.close();
 }
-//Flow
-	// Start by authenticating.
-	//Then get authentication reply
-	//Then init
-	//Then reply
-	//Then split!
-//	send(wss_prot.INIT);
