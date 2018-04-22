@@ -154,16 +154,13 @@
 	</div>
 
 	<!-- Initiate receiving --> 
-	<div class="modal" id="showRecieve" data-keyboard="false" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" hidden>
+	<div class="modal" id="showReceive" data-keyboard="false" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" hidden>
 	  <div class="modal-header" data-keyboard="false" data-backdrop="static">
-	    <h3 id="myModalLabel">Receiving details:</h3>
+	    <h2 id="myModalLabel" style="text-decoration: underline;">Receiving details:</h2>
 	  </div>
 	  <div class="modal-body" data-keyboard="false" data-backdrop="static">
-	  <!-- TODO
-	  	Display own e-mail, recipients assigned e-mail, own e-mail and file info! -->
-	  </div>
-	  <div>
-		<output id="list"></output>
+	  	<div id="emailDet"></div>
+		<output id="listRec"></output>
 		<div style='color:red' id='error'></div>
 	  </div>
 	  <div class="modal-footer" data-keyboard="false" data-backdrop="static">
@@ -177,7 +174,8 @@
 	<div class="modal" id="waitForConnection" data-keyboard="false" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" hidden>
 	  <div class="modal-header" data-keyboard="false" data-backdrop="static">
 	    <!-- UPDATE INFORMATION HERE! TODO -->
-	    <h3 id="myModalLabel">Waiting for connection</h3>
+	    <h2 id="myModalLabel">Waiting for connection</h2>
+	    <h4 id="myStat">Creating offer...</h4>
 	  </div>
 	  <div class="modal-body" data-keyboard="false" data-backdrop="static">
 	    This dialog will disappear when a connection is made.

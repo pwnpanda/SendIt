@@ -16,7 +16,8 @@ var cfg = {'iceServers': [{'url': 'stun:stun.gmx.net'}]},
 
 // Since the same JS file contains code for both sides of the connection,
 // activedc tracks which of the two possible datachannel variables we're using.
-var activedc
+var activedc;
+var p;
 //Declares necessary information about the connection
 var sdpConstraints = {
   optional: [],
@@ -165,6 +166,10 @@ $('#initSendBtn').click(function () {
   km.otherEnd=$("#recMailInput").val();
   stageFiles();
   wsInit();
+  reset();
+  $('#showHome').modal('hide');
+  $('#myStat').html('Waiting for Sender to answer...');
+  $('#waitForConnection').modal('show');
   //TODO
   /*
   If OK, send connection-req to server. Await other end confirmation.
@@ -180,6 +185,11 @@ $('#accRecvBtn').click(function () {
   Send acceptance-message to server
   Show connection-waiting screen
   */
+  reset();
+  $('#showHome').modal('hide');
+  $('#waitForConnection').modal('show');
+  //Start webRTC
+  createLocalOffer();
 })
 
 //Decline a transfer
@@ -190,6 +200,7 @@ $('#declRecvBtn').click(function () {
   Send declining-message to server
   Show base page
   */
+  send(wss_prot.REFUSE, null, km.otherEnd);
   reset();
 })
 
@@ -221,23 +232,33 @@ function setupDC1 () {
 function createLocalOffer () {
   setupDC1()
   pc1.createOffer(function (desc) {
-	pc1.setLocalDescription(desc, function () {}, function () {})
-	console.info('created local offer', desc)
+	  pc1.setLocalDescription(desc, function () {}, function () {})
+	  console.info('created local offer', desc);
+     //Update info!
+    $('#myStat').html('Waiting for Sender...');
+    var pubkey = km.findKey(km.otherEnd);
+    //Encrypt!
+    var d=encrypt(pubkey, desc);
+    //Send Accept connection message
+    send(wss_prot.ACCEPT, d, km.otherEnd);
+
   },
   function () { console.warn("Couldn't create offer") },
 	sdpConstraints)
-  //TODO
-  //ENCRYPT!!
+  p=pc1;
 }
 
 //TODO CHANGE HANDLING TO EACH CANDIDATE (TRICKLING)
 pc1.onicecandidate = function (e) {
   console.info('ICE candidate (pc1)', e)
-  if (e.candidate == null) {
-    descr = JSON.stringify(pc1.localDescription);
-    km.encrypt = descr;
+  if(e.candidate){
+    var pubkey = km.findKey(km.otherEnd);
     //ENCRYPT!
-    encrypt();
+    var d = encrypt(pubkey, e.candidate);
+    //Send ICE trickling
+    send(wss_prot.ICE, d, km.otherEnd);
+  }else{
+    console.log('Finished gathering ICE candidates!');
   }
 }
 
@@ -290,33 +311,42 @@ pc2.ondatachannel = function (e) {
   dc2 = datachannel
   activedc = dc2
   dc2.onopen = function (e) {
-	console.info('data channel connect')
+	 console.info('data channel connect')
   }
   dc2.onmessage = function (e) {
-	console.log('Got message (pc2)');
-	onReceiveMessageCallback(e);
+	 console.log('Got message (pc2)');
+	 onReceiveMessageCallback(e);
   }
 }
 
 function handleOfferFromPC1 (offerDesc) {
   pc2.setRemoteDescription(offerDesc)
   pc2.createAnswer(function (answerDesc) {
-	console.info('Created local answer: ', answerDesc)
-	pc2.setLocalDescription(answerDesc)
+	  console.info('Created local answer: ', answerDesc)
+	  pc2.setLocalDescription(answerDesc)
+    //Update info!
+    $('#myStat').html('Waiting for receiver to connect...');
+    var pubkey = km.findKey(km.otherEnd);
+    //Encrypt!
+    var d=encrypt(pubkey, answerDesc);
+    //Send Accept connection message
+    send(wss_prot.ANSWER, JSON.parse(d), km.otherEnd);
   },
   function () { console.warn("Couldn't create offer") },
   sdpConstraints)
-  //TODO
-  //ENCRYPT!
+  p=pc2;
 }
 
 pc2.onicecandidate = function (e) {
   console.log('ICE candidate (pc2)', e)
-  //CHANGE HANDLING TO EACH CANDIDATE! (Trickling) TODO
-  if (e.candidate == null) {
-    descr = JSON.stringify(pc2.localDescription);
-    //Encrypt
-    encryptReply();
+  if(e.candidate){
+    var pubkey = km.findKey(km.otherEnd);
+    //ENCRYPT!
+    var d = encrypt(pubkey, e.candidate);
+    //Send ICE trickling
+    send(wss_prot.ICE, JSON.parse(d), km.otherEnd);
+  }else{
+    console.log('Finished gathering ICE candidates!');
   }
 }
 
@@ -326,6 +356,9 @@ pc2.onicegatheringstatechange = onicegatheringstatechange
 
 pc2.onconnection = handleOnconnection
 
+function addIce(ice){
+  p.addIceCandidate(new RTCIceCandidate(ice));
+}
 //Source: https://gist.github.com/jeromeetienne/2651899
 /**
  * A console.assert which actually stop the exectution.
@@ -360,12 +393,10 @@ $('#openInFolder').click(function () {
 
 function showenc(data){
   //send offer/answer to server
+  return;
 }
 
 function setDescr(data, off){
-  var desc = new RTCSessionDescription(data);
-  console.info('Received remote offer/answer', desc);
-  //setLocalDescription(desc)?
-  //Handle offer/answer and relay back
+  return;
 }
 //---------------------------------------------

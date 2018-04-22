@@ -166,10 +166,9 @@ function decrypt(pubkey, data){
   }
 }
 
-function encryptReply(){
-  var pubkey = km.findKey(km.otherEnd);
+function encryptReply(pubkey, data){
   var encryData;
-  km.encrypt = convertStringToArrayBufferView(JSON.stringify(pc2.localDescription));
+  km.encrypt = convertStringToArrayBufferView(JSON.stringify(data));
   console.log('Data to encrypt/pass on: ', km.encrypt);
   if(pubkey != null){
     km.encryptData(km.symmetric, km.encrypt)
@@ -181,6 +180,7 @@ function encryptReply(){
     })
     .then(function(data){
       showenc(JSON.stringify(data));
+      return JSON.stringify(data);
     })
     .catch(function(err){
       console.error(err);

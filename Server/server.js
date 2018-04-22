@@ -83,6 +83,13 @@ var wss = new WebSocketServer({server: httpsServer});
 wss.on('connection', function(ws) {
    	ws.id=uuid++;
    	console.log("Client %d connected!", ws.id);
+   	var d= { files:
+		{
+			0: { fname: 'testFile', ftype: 'exe', fsize: '2000'},
+			1: { fname: 'testPic', ftype: 'jpg', fsize: '1000' }
+		}
+	}
+   	send(ws, wss_prot.INIT, d, 'Test!');
 
     //Message received in server!
     ws.onmessage = function(message) {

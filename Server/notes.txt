@@ -92,3 +92,6 @@ openssl x509 -req -in server-csr.pem -signkey server-key.pem -out server-cert.pe
 
 
 How to deal with message queues?
+
+
+--Test Offer/Answer exchange and ICE trickling!
