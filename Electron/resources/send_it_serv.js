@@ -8,6 +8,8 @@
 	https://webrtc-demos.appspot.com/html/pc1.html
 */
 const {shell} = require('electron');
+const prompt = require('electron-prompt');
+
 
 var cfg = {'iceServers': [{'url': 'stun:stun.gmx.net'}]},
   con = { 'optional': [{'DtlsSrtpKeyAgreement': true}] }
@@ -59,7 +61,7 @@ function reset (){
 $( function(){
   reset();
   readConfig();
-  wscon();
+  getMail();
 });
 
 //Makes sure the user inputs a receiver before proceeding
@@ -89,6 +91,39 @@ function isReady(){
     $('#initSendBtn').prop('disabled', true);
   }
 }
+
+function getMail(){
+   //Get email address and create KM
+  prompt({
+    title: 'E-mail',
+    label: 'Please register your email address',
+    value: myMail,
+    inputAttrs: { // attrs to be set if using 'input'
+        type: 'mail'
+    },
+    type: 'input'
+  })
+  .then((r)=>{
+    if(r==null){
+      window.location.href = "";
+    } else{
+      console.info("Mail address read: " + r);
+      myMail=r;
+      cfName=myMail+'.crp';
+      $("#myMailInput").val(myMail);
+      if($("#myMailInput").val() != ''){
+        meReady = true;
+      }
+      //Read mail.
+      if (! existCrypto()){
+        km = new KeyManager("new", myMail);
+      }
+      
+      //Connect to server
+      wscon();
+    }
+  });
+}
 //MY ADDITION END----------------------------
 
 /* THIS IS ALICE, THE CALLER/SENDER */
@@ -107,20 +142,19 @@ $('#config').click(function () {
 });
 
 $('#createBtn').click(function () {
-  reset();
-  $('#showHome').modal('hide');
-  $('#home').removeClass("Active");
-  $('#createBtn').toggleClass("Active");
-  $('#showSend').modal('show');
-  //Read in email and initiate new KeyManager if neccesary
-  settings();
-  //TODO change! If no data, leave fields blank. If data, insert.
-  $("#myMailInput").val(myMail);
-  if($("#myMailInput").val() != ''){
-    meReady = true;
+  if(sc.readyState === WebSocket.OPEN) {
+    reset();
+    $('#showHome').modal('hide');
+    $('#home').removeClass("Active");
+    $('#createBtn').toggleClass("Active");
+    $('#showSend').modal('show');
+    //Read in email and initiate new KeyManager if neccesary
+    isReady();
+    loadFiles();
+  //Socket closed = reload and try again!
+  }else{
+    window.location.href = "";
   }
-  isReady();
-  loadFiles();
 })
 
 //Initiate sending files
@@ -128,18 +162,14 @@ $('#initSendBtn').click(function () {
   //TODO
   //Read in own email and recipients email
   //Initiate km if not existing
-  //Read mail.
-  myMail = $("#myMailInput").val();
-  console.info("Mail address read: " + myMail);
-  if (! existCrypto()){
-    km = new KeyManager("new", myMail);
-  }
   km.otherEnd=$("#recMailInput").val();
-  wsSend();
+  stageFiles();
+  wsInit();
   //TODO
   /*
   If OK, send connection-req to server. Await other end confirmation.
   */
+  
 })
 
 //Accept a transfer

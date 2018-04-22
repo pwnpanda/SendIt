@@ -31,6 +31,12 @@ KeyManager.prototype = {
 			//console.log(dec);
 			//Extract mail
 			this.email = dec[0];
+			//If the e-mail doesn't match, create a new keymanager for that email
+			//Todo: needs to restart and look for a file for this email!
+			if(this.email != myMail){
+				console.log("Read email: " + this.email + " Given email: "+ myMail);
+				return;
+			}
 			//Extract own key - stored as object
 			this.key=new Object();
 			this.key.privateKey = JSON.parse(dec[1]);
@@ -51,8 +57,8 @@ KeyManager.prototype = {
 				console.log(dec[i]);
 				var tmp = dec[i].split(";");
 				this.storeKey(tmp[0], JSON.parse(tmp[1]));
-			}
-		//Else
+			}		
+		//If no file found!
 		} else{
 			console.error("No data to read! Data: ", data);
 		}
@@ -70,13 +76,28 @@ KeyManager.prototype = {
 		//Key = email, value = Public key
 		this.keys = {};
 		//Public&Private key of this node
-		this.createKeyPair();
+		this.key=this.createKeyPair();
+		/*
+		.then(function(key){
+			//returns a keypair object
+			console.log("KeyPair created!");
+			km.key = key;
+			
+			*//*TODO - Remove! SENSITIVE
+			console.info(key.publicKey);
+			console.info(key.privateKey);
+			*//*
+			
+		})
+		.catch(function(err){
+			console.error(err);
+		});*/
 	},
 
 	//Create key pair as keyPair object
 	createKeyPair: function () {
 		//Taken from: https://github.com/diafygi/webcrypto-examples#rsa-oaep
-		window.crypto.subtle.generateKey(
+		return window.crypto.subtle.generateKey(
 			{
 				name: "RSA-OAEP",
 				modulusLength: 2048, //can be 1024, 2048, or 4096
@@ -87,19 +108,8 @@ KeyManager.prototype = {
 			["wrapKey", "unwrapKey"]
 			//["encrypt", "decrypt"] //must be ["encrypt", "decrypt"] or ["wrapKey", "unwrapKey"]
 		)
-		.then(function(key){
-			//returns a keypair object
-			console.log("KeyPair created!");
-			km.key = key;
-			
-			/*TODO - Remove! SENSITIVE
-			console.info(key.publicKey);
-			console.info(key.privateKey);
-			*/
-			
-		})
 		.catch(function(err){
-				console.error(err);
+			console.error(err);
 		});
 	},
 
@@ -118,7 +128,7 @@ KeyManager.prototype = {
 			return key;
 		})
 		.catch(function(err){
-				console.error(err);
+			console.error(err);
 		});
 	},
 
@@ -252,7 +262,7 @@ KeyManager.prototype = {
 	},
 	
 	//getObjectData
-	getObjectData: function (){
+	getObjectData: function (arg=true){
 		//Erase session data
 		this.otherEnd=null;
 		var write;
@@ -264,7 +274,7 @@ KeyManager.prototype = {
 					write = write + email +";"+JSON.stringify(km.keys[email])+";\n";
 				}
 				//Call some function that writes to file, sending write as an argument.
-				writeToFile(write, cfPath+cfName);
+				writeToFile(write, cfPath+cfName, arg);
 				//console.warn("Here: \n" + write);
 				//TODO - encrypt data before returning!
 		}).catch(function(err){

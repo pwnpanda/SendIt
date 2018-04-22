@@ -46,14 +46,15 @@ function wscon(){
 	};
 
 	sc.onmessage = gotMessageFromServer;
-	sc.onclose = function(){
-	    console.log("Socket closed by server!");
+	sc.onclose = function(ev){
+	    console.log("Socket closed by server!", ev);
 		
 	};
 
 	sc.onerror = function(err){
+		var str="Socket-error occurred! Not connected to server!";
 	    console.log("Socket-error occurred: ", err);
-
+	    $('#sockerror').html(str);
 	};
 }
 
@@ -77,6 +78,8 @@ function gotMessageFromServer(message){
 				authInit();
 			}else{
 				console.log("Authentication setup failed!");
+				sc.close();
+	    		$('#sockerror').html('Server authentication failed!');
 			}
 			break;
 
@@ -84,9 +87,11 @@ function gotMessageFromServer(message){
 			console.log("Protocol received: Authentication Result");
 			if(msg.data){
 				console.log("Authentication successful!");
-				init();
+				//init();
 			}else{
 				console.log("Authentication failed!");
+				sc.close();
+	    		$('#sockerror').html('Server authentication failed!');
 			}
 			break;
 
@@ -160,7 +165,7 @@ function gotMessageFromServer(message){
 function send(sig, data=null, dst=null){
 	var msg = {
 		prot: sig,
-		origin: km.email,
+		origin: myMail,
 		destination: dst,
 		data: data
 	}
@@ -174,34 +179,50 @@ function send(sig, data=null, dst=null){
 }
 
 function authSetup(){
-	//key = km.key.publicKey
-	send(wss_prot.AUTH_SETUP, km.key);
+	//Wait for keys
+	Promise.resolve(km.key)
+	.then(function(key){
+		console.log("Keypair created!", key)
+		km.key=key;
+		//Export the key
+		return km.exportKey(key.publicKey);
+	})
+	.then(function(key){
+		console.log("Public key ready for export", key);
+		send(wss_prot.AUTH_SETUP, key);
+		km.getObjectData(false);
+	})
+	.catch(function(err){
+		console.error(err);
+	});
 }
 
 function authInit(){
 	//Create authentication proof! TODO
-	//var msg = encrypt(privkey, email);
-	let msg = {
-		iv: 'iv',
-		key: 'key',
-		ciph: 'cipher'
-	}
+	//console.log(km);
+	//var msg = encrypt(km.key.privateKey, km.email);
+	var msg='OK!';
 	send(wss_prot.AUTH_INIT, msg);
 }
 
-function init(){
+function wsInit(){
 	//Need meta-data of file!
-	let data = { files:
-		{
-			1: { fname: 'testFile', fileType: 'exe', fSize: '2000 kb'},
-			2: { fname: 'testPic', fileType: 'jpg', fSize: '1000 kb' }
+	var data;
+	//console.warn(fmArray);
+	for (var i = 0; i < nrOfFiles; i++) {
+		var file= { 
+			fname: fmArray[i].fileName,
+		 	ftype: fmArray[i].fileType,
+		 	fsize: fmArray[i].size
+		};
+		if(data !== 'undefined'){
+			data = new Object();
+			data.files=new Object();
 		}
+		(data.files)[i]=file;
 	}
-	if(confirm('Sending!')){
-		send(wss_prot.INIT, data, '2');
-	}else{
-		console.log('Declined sending data!');
-	}
+	console.log(data);
+	send(wss_prot.INIT, data, km.otherEnd);
 }
 
 window.addEventListener('unload', messageSend, false);

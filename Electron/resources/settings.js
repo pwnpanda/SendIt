@@ -6,7 +6,7 @@ const ipcRenderer = require('electron').ipcRenderer;
 
 var myMail='';
 //TODO fix correct address!
-var server= 'asdf';
+var server= '';
 var serverChange=false;
 var defPath = new get();
 defPath = defPath.get();

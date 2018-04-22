@@ -19,10 +19,11 @@ function FileManager(chunkSize) {
 };
 
 FileManager.prototype = {
-	stageLocalFile: function (fName, fType, buffer) {
+	stageLocalFile: function (fName, fType, buffer, size) {
 		this.fileName = fName;
 		this.fileType = fType;
 		this.buffer = buffer;
+		this.size=size;
 		var nChunks = Math.ceil(buffer.byteLength / this.chunkSize);
 		this.fileChunks = new Array(nChunks);
 		var start;
