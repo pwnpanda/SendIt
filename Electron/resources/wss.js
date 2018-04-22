@@ -105,13 +105,32 @@ function gotMessageFromServer(message){
 
 		case wss_prot.INIT:
 			console.log("Protocol received: Initialize connection. Data: ", msg.data);
-			if(confirm('Receive!')){
+			reset();
+    		$('#showHome').modal('hide');
+    		//TODO beautify!
+    		var st = 'Current email: '+km.email+'<br><br>Receivers email: '+msg.destination+'<br><i>Indicated by sender</i><br><br>Senders email: '+msg.origin;
+    		km.otherEnd=msg.origin;
+  			$('#emailDet').html(st);
+  			var inf = msg.data;
+  			inf = inf.files;
+			var output = [];
+			output.push('<h3>Files:</h3>');
+			// List information about files to be received!
+			for(key in inf){
+  				//console.log(inf);
+				//console.log(key);
+				output.push('<li>Name: <strong>', inf[key].fname, '</strong> ', 'Type: <strong>'+inf[key].ftype +'</strong> Size: <strong>' + inf[key].fsize + ' kbytes</strong>','</li>');
+			}
+			document.getElementById('listRec').innerHTML = '<ul style="list-style-type: none;">' + output.join('') + '</ul>';
+  			$('#showReceive').modal('show');
+			
+			/*if(confirm('Receive!')){
 				var offer = "offer";
 				send(wss_prot.ACCEPT, offer, msg.origin);
 			}else{
 				console.log('Declined receiving data from %s!', msg.origin);
 				send(wss_prot.REFUSE, null, msg.origin);
-			}
+			}*/
 			break;
 
 		case wss_prot.KEY:
@@ -124,20 +143,25 @@ function gotMessageFromServer(message){
 			break;
 
 		case wss_prot.ACCEPT:
-			console.log("Protocol received: Accept! Offer: ", msg.offer);
-			//set remote description msg.data! todo
+			console.log("Protocol received: Accept! Offer: ", msg.data);
 			//create answer
-			createAnswer(msg);
+			var d=decrypt(message.data);
+			handleOfferFromPC1(d);
 			break;
 
 		case wss_prot.REFUSE:
 			console.log("Protocol received: Refuse");
+			alert('Sender refused connection!');
 			send(wss_prot.DONE);
+			reset();
 			break;
 
 		case wss_prot.ANSWER:
 			console.log("Protocol received: Answer! Answer: ", msg.data);
 			//set remote description msg.data! todo
+			var d = decryptReply(message.data);
+		    $('#myStat').html('Waiting for connection to be established...');
+			handleAnswerFromPC2(d);
 			break;
 
 		case wss_prot.ICE:
