@@ -127,7 +127,8 @@ $('#offerSentBtn').click(function () {
 $('#offerRecdBtn').click(function () {
   var offer = $('#remoteOffer').val();
   //Decrypt!
-  decrypt(offer);
+  var pubkey = km.findKey(km.otherEnd);
+  decrypt(pubkey, offer);
 })
 
 $('#answerSentBtn').click(function () {
@@ -183,10 +184,11 @@ pc1.onicecandidate = function (e) {
   	isReady();
     place = '#localOffer';
     alertdisp = "#success-alert";
-    descr = JSON.stringify(pc1.localDescription);
-    km.encrypt = descr;
+    //descr = JSON.stringify(pc1.localDescription);
+    //km.encrypt = descr;
     //ENCRYPT!
-    encrypt();
+    var pubkey = km.findKey(km.otherEnd);
+    encrypt(pubkey, pc1.localDescription);
   }
 }
 

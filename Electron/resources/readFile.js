@@ -77,6 +77,8 @@ function loadFiles(){
 	        	// files is a FileList of File objects. List some properties.
 				output.push('<li style="color:red;">Skipping file: <strong>', escape(items[i]), '</strong> ',
 				'Size 0 bytes!','</li>');
+				nrOfFiles--;
+				fmArray.pop();
 	        }else{
 
 		        //Need array of filemanagers, one for each file!
@@ -104,7 +106,7 @@ function loadFiles(){
 }
 
 function stageFiles(){
-	for (var i=0; i<files.length; i++) {
+	for (var i=0; i<nrOfFiles; i++) {
 	    var file = ulPath + path.sep + files[i];
 	 	var name = files[i].split('.');
 	 	var type = "."+name[1];
@@ -112,14 +114,16 @@ function stageFiles(){
 	 	console.log("File: " + file + " Name: " + name + " Type: " + type);
 	    
 	    console.log("Read file in!");
+	    
+	    var stats = fs.statSync(file);
+	    var kbsize = Math.ceil(stats["size"] / ( 1024));
 	   	try{
 		    var buf = fs.readFileSync(file);
-		    fmArray[i].stageLocalFile(name, type, buf);
+		    fmArray[i].stageLocalFile(name, type, buf, kbsize);
 		}catch(e){
 			console.log('Error', e.stack);
 		}   	
     };
-	offerShare();
 }
 /* Old way of staging files - used in manual addition - Add again later!
 //https://github.com/webrtc/samples/blob/gh-pages/src/content/datachannel/filetransfer/js/main.js - INFO

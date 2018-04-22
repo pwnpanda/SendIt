@@ -37,6 +37,7 @@ function beginAuth (){
   //if we have the receivers key in the list:
   if(key != null){
   	stageFiles();
+    offerShare();
   } else {
   //If setup:
   	console.log("starting setup!");
@@ -65,6 +66,7 @@ function processAuth(reply){
     	//Authentication setup complete - start transfer!
     	console.log("Authentication setup complete! Starting transfer!");
     	stageFiles();
+      offerShare();
     	break;
     
     //Error!
@@ -74,13 +76,14 @@ function processAuth(reply){
   }
 }
 
-function encrypt(){
-  var pubkey = km.findKey(km.otherEnd);
+function encrypt(pubkey, data){
+  console.log("Key in: ", pubkey);
+  console.log("Data in : ",data)
   var encryData;
   //if we have the receivers key in the list:
   if(pubkey != null){
     console.log('Other end has associated key!', pubkey);
-    km.encrypt = convertStringToArrayBufferView(JSON.stringify(pc1.localDescription));
+    km.encrypt = convertStringToArrayBufferView(JSON.stringify(data));
     console.warn(km.encrypt);
     km.iv = window.crypto.getRandomValues(new Uint8Array(12));
     //Create symmetric key  
@@ -110,7 +113,7 @@ function encrypt(){
       console.log("String", msg);
       //Show in window
       showenc(msg);
-      return;
+      return msg;
     })
     .catch(function(err){
       console.error(err);
@@ -118,13 +121,13 @@ function encrypt(){
 
   } else {
     console.log('Other end has NO associated key!');
-    km.encrypt = JSON.stringify(pc1.localDescription);
+    km.encrypt = JSON.stringify(data);
     showenc(km.encrypt);
+    return km.encrypt;
   }
 }
 
-function decrypt(data){
-  var pubkey = km.findKey(km.otherEnd);
+function decrypt(pubkey, data){
   var decryData;
   //if we have the receivers key in the list:
   console.log('Data to decrypt/pass on: ', data);
@@ -152,6 +155,7 @@ function decrypt(data){
       console.log("Data decrypted: ", decryData);
       decryData = JSON.parse(decryData);
       setDescr(decryData, true);
+      return decryData;
     })
     .catch(function(err){
       console.error(err);

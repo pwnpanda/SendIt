@@ -42,6 +42,8 @@
 	</div>
 </head>
 <body>
+	<h2 style='color:darkred' id='sockerror'></h2>
+
 	<!-- Initial choice --> 
 	<div class="modal" id="createOrJoin" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
 		<div class="bg" id="showHome" data-keyboard="false" data-backdrop="static">
@@ -133,7 +135,7 @@
 	  <!-- TODO
 	  	Read in own e-mail, recipients e-mail and file info! -->
 	  	<h3 id="myMailIn">Your e-mail address:<br>
-	    		<input id="myMailInput" type="text" name="mailAddr">
+	    		<input id="myMailInput" type="text" name="mailAddr" readonly="true" style="background-color: lightgrey;">
 	    </h3>
 	    <h3 id="recMailIn">Recipients e-mail address:<br>
 	    		<input id="recMailInput" type="text" name="mailAddr">
