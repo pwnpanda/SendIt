@@ -168,7 +168,7 @@ $('#initSendBtn').click(function () {
   wsInit();
   reset();
   $('#showHome').modal('hide');
-  $('#myStat').html('Waiting for Sender to answer...');
+  $('#myStat').html('Waiting for Receiver to answer...');
   $('#waitForConnection').modal('show');
   //TODO
   /*
@@ -293,8 +293,10 @@ pc1.oniceconnectionstatechange = oniceconnectionstatechange
 pc1.onicegatheringstatechange = onicegatheringstatechange
 
 function handleAnswerFromPC2 (answerDesc) {
-  console.info('Received remote answer: ', answerDesc)
-  pc1.setRemoteDescription(answerDesc)
+  var ans = new RTCSessionDescription(answerDesc);
+  console.log(ans);
+  console.info('Received remote answer: ', ans)
+  pc1.setRemoteDescription(ans)
 }
 
 /* THIS IS BOB, THE ANSWERER/RECEIVER */
@@ -320,7 +322,8 @@ pc2.ondatachannel = function (e) {
 }
 
 function handleOfferFromPC1 (offerDesc) {
-  pc2.setRemoteDescription(offerDesc)
+  var off = new RTCSessionDescription(JSON.parse(offerDesc));
+  pc2.setRemoteDescription(off)
   pc2.createAnswer(function (answerDesc) {
 	  console.info('Created local answer: ', answerDesc)
 	  pc2.setLocalDescription(answerDesc)
@@ -357,7 +360,7 @@ pc2.onicegatheringstatechange = onicegatheringstatechange
 pc2.onconnection = handleOnconnection
 
 function addIce(ice){
-  p.addIceCandidate(new RTCIceCandidate(ice));
+  p.addIceCandidate(new RTCIceCandidate(JSON.parse(ice)));
 }
 //Source: https://gist.github.com/jeromeetienne/2651899
 /**
