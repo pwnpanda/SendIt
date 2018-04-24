@@ -145,7 +145,10 @@ function gotMessageFromServer(message){
 		case wss_prot.ACCEPT:
 			console.log("Protocol received: Accept! Offer: ", msg.data);
 			//create answer
-			var d=decrypt(message.data);
+			//console.log(message.data);
+    		var pubkey = km.findKey(km.otherEnd);
+    		console.log("Object?", msg.data)
+			var d=decrypt(pubkey, JSON.stringify(msg.data));
 			handleOfferFromPC1(d);
 			break;
 
@@ -159,15 +162,15 @@ function gotMessageFromServer(message){
 		case wss_prot.ANSWER:
 			console.log("Protocol received: Answer! Answer: ", msg.data);
 			//set remote description msg.data! todo
-			var d = decryptReply(message.data);
+			var d = decryptReply(JSON.stringify(msg.data));
 		    $('#myStat').html('Waiting for connection to be established...');
 			handleAnswerFromPC2(d);
 			break;
 
 		case wss_prot.ICE:
-			console.log("Protocol received: ICE! ICE: msg.data");
+			console.log("Protocol received: ICE! ICE: ", msg.data);
 			//Test!
-			//addIce(msg.data);
+			addIce(msg.data);
 			break;
 
 		case wss_prot.AUTH_SETUP:

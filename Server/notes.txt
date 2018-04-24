@@ -95,3 +95,4 @@ How to deal with message queues?
 
 
 --Test Offer/Answer exchange and ICE trickling!
+Switching offer/answer means wrong side tries sending files! SWITCH!

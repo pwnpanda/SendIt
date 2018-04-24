@@ -89,7 +89,7 @@ wss.on('connection', function(ws) {
 			1: { fname: 'testPic', ftype: 'jpg', fsize: '1000' }
 		}
 	}
-   	send(ws, wss_prot.INIT, d, 'Test!');
+   	//send(ws, wss_prot.INIT, d, 'Test!');
 
     //Message received in server!
     ws.onmessage = function(message) {

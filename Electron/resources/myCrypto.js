@@ -162,7 +162,9 @@ function decrypt(pubkey, data){
     });
   }else{
     console.log('Other end has NO associated key!');
-    return JSON.parse(data);
+    decryData=JSON.parse(data);
+    console.log(decryData);
+    return decryData;
   }
 }
 
@@ -213,12 +215,14 @@ function decryptReply(data){
       console.log("Data decrypted: ", decryData);
       decryData = JSON.parse(decryData);
       setDescr(decryData, false);
+      return decryData;
     })
     .catch(function(err){
       console.error(err);
     });
   }else{
       setDescr(data, false);
+      return data;
   }
 }
 
