@@ -145,6 +145,8 @@ $('#answerRecdBtn').click(function () {
 //TODO TEST!
 $('#cancel').click(function () {
   closeDataChannels();
+  reset();
+
 })
 
 function setupDC1 () {
@@ -377,6 +379,7 @@ function getOtherEnd(offer){
       $('#showLocalOffer').modal('show');
       createLocalOffer();
       loadFiles();
+      stageFiles();
     }else{
       $('#getRemoteOffer').modal('show');
     }
@@ -404,5 +407,9 @@ function setDescr(data, off){
     handleAnswerFromPC2(desc);
     $('#waitForConnection').modal('show');
   }
+}
+
+function initTransfer(){
+      offerShare();
 }
 //---------------------------------------------

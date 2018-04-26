@@ -160,7 +160,6 @@ $('#createBtn').click(function () {
 
 //Initiate sending files
 $('#initSendBtn').click(function () {
-  //TODO
   //Read in own email and recipients email
   //Initiate km if not existing
   km.otherEnd=$("#recMailInput").val();
@@ -170,7 +169,6 @@ $('#initSendBtn').click(function () {
   $('#showHome').modal('hide');
   $('#myStat').html('Waiting for Receiver to answer...');
   $('#waitForConnection').modal('show');
-  //TODO
   /*
   If OK, send connection-req to server. Await other end confirmation.
   */
@@ -179,7 +177,6 @@ $('#initSendBtn').click(function () {
 
 //Accept a transfer
 $('#accRecvBtn').click(function () {
-  //TODO
   /*
   Handle accepting a transfer!
   Send acceptance-message to server
@@ -194,7 +191,6 @@ $('#accRecvBtn').click(function () {
 
 //Decline a transfer
 $('#declRecvBtn').click(function () {
-  //TODO
   /*
   Handle declining an offer!
   Send declining-message to server
@@ -205,6 +201,7 @@ $('#declRecvBtn').click(function () {
 })
 
 //Stop transfer!
+//TODO test
 $('#cancel').click(function () {
   closeDataChannels();
   reset();
@@ -248,7 +245,7 @@ function createLocalOffer () {
   p=pc1;
 }
 
-//TODO CHANGE HANDLING TO EACH CANDIDATE (TRICKLING)
+//CHANGE HANDLING TO EACH CANDIDATE (TRICKLING)
 pc1.onicecandidate = function (e) {
   console.info('ICE candidate (pc1)', e)
   if(e.candidate){
@@ -401,5 +398,10 @@ function showenc(data){
 
 function setDescr(data, off){
   return;
+}
+function initTransfer(){
+      //Request offerShare from other end!
+      //Automatic or request based?
+      
 }
 //---------------------------------------------
