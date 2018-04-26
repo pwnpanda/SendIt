@@ -9,7 +9,7 @@ var protocol = {
 	//MINE END-------------------------->
 	OFFER: "offer",
 	ANSWER: "answer",
-	REQUST_META: 'req_meta',
+	REQUEST_META: 'req_meta',
 	REQUEST: "req-chunk",
 	DATA: "data",
 	DONE: "done",
@@ -172,7 +172,7 @@ function handleSignal(msg) {
 		case protocol.ANSWER:
 			console.log("THE OTHER PERSON IS READY");
 			break;
-		case protocol.REQUST_META:
+		case protocol.REQUEST_META:
 			console.log("Requesting file data!");
 			offerShare();
 			break;
