@@ -9,6 +9,7 @@ var protocol = {
 	//MINE END-------------------------->
 	OFFER: "offer",
 	ANSWER: "answer",
+	REQUST_META: 'req_meta',
 	REQUEST: "req-chunk",
 	DATA: "data",
 	DONE: "done",
@@ -171,7 +172,10 @@ function handleSignal(msg) {
 		case protocol.ANSWER:
 			console.log("THE OTHER PERSON IS READY");
 			break;
-
+		case protocol.REQUST_META:
+			console.log("Requesting file data!");
+			offerShare();
+			break;
 		//Received offer
 		case protocol.OFFER:
 			// Sender is ready to send file data. Set up receiving structure
