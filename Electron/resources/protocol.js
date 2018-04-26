@@ -23,6 +23,7 @@ var protocol = {
 var maxChunkSize = 1200;
 
 //According to https://github.com/tskimmett/rtc-pubnub-fileshare/blob/master/connection.js
+//Changed according to NodeJS! TODO test 1gb
 var MAX_FSIZE = 160;    // MiB -- browser will crash when trying to bring more than that into memory.
 
 var nChunksSent = 0;
@@ -54,7 +55,7 @@ function onReceiveMessageCallback(event) {
 		if(curFileNum == nrOfFiles){
 			closeDataChannels();
 			document.querySelector('#transferDetailsEnd').innerHTML = 'Filename: ' + fmArray[curFileNum-1].fileName + '. Filetype: '+fmArray[curFileNum-1].fileType + '. Filenumber ' + curFileNum + '/' + nrOfFiles + '. Percent: 100/100';
-			//TODO - Add line for each file completed!
+			//Add line for each file completed!
 			var doc = document.querySelector('#download');
 			doc.innerHTML = "Files sent: <br>";
 			for (var i = 0; i < nrOfFiles; i++) {
