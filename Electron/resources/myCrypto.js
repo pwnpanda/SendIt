@@ -38,9 +38,10 @@ function beginAuth (){
   if(key != null){
     //!!!!!!!!!!!!!!!!!!!!!!!!!
     //TODO Wrong side in server-solution
-    initTransfer();
-  	//stageFiles();
+    //stageFiles();
     //offerShare();
+    //Replaced! Needs testing!
+    initTransfer();
   } else {
   //If setup:
   	console.log("starting setup!");
@@ -70,9 +71,11 @@ function processAuth(reply){
     	console.log("Authentication setup complete! Starting transfer!");
       //!!!!!!!!!!!!!!!!!!!!!!!!!
       //TODO Wrong side in server-solution
-      initTransfer();
-    	//stageFiles();
+      //stageFiles();
       //offerShare();
+      //offerShare();
+      //Replaced! Needs testing!
+      initTransfer();
     	break;
     
     //Error!

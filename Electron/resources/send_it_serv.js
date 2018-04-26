@@ -400,12 +400,12 @@ function setDescr(data, off){
   return;
 }
 function initTransfer(){
-      //Request offerShare from other end!
-      //Automatic or request based?
-      console.log("Request file meta-data!");
-      var msg = {
-        action: protocol.REQUEST_META
-      };
-      doSend(msg);
+  //Request offerShare from other end!
+  //Automatic or request based?
+  console.log("Request file meta-data!");
+  var msg = {
+    action: protocol.REQUEST_META
+  };
+  doSend(msg);
 }
 //---------------------------------------------
