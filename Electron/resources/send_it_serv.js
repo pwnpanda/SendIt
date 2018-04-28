@@ -109,7 +109,7 @@ function getMail(){
       window.location.href = "";
     } else{
       console.info("Mail address read: " + r);
-      myMail=r;
+      myMail=sanatize(r);
       cfName=myMail+'.crp';
       $("#myMailInput").val(myMail);
       if($("#myMailInput").val() != ''){
@@ -162,7 +162,8 @@ $('#createBtn').click(function () {
 $('#initSendBtn').click(function () {
   //Read in own email and recipients email
   //Initiate km if not existing
-  km.otherEnd=$("#recMailInput").val();
+  km.otherEnd=sanatize($("#recMailInput").val());
+
   stageFiles();
   wsInit();
   reset();
@@ -407,5 +408,12 @@ function initTransfer(){
     action: protocol.REQUEST_META
   };
   doSend(msg);
+}
+
+function sanatize(str){
+  var div = document.createElement('div');
+  div.appendChild(document.createTextNode(str));  
+  console.log("Escaped: ", div.innerHTML);
+  return div.innerHTML;
 }
 //---------------------------------------------

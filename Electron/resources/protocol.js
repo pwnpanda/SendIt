@@ -54,7 +54,7 @@ function onReceiveMessageCallback(event) {
 		console.log("File recieved by partner!");
 		curFileNum++;
 		if(curFileNum == nrOfFiles){
-			closeDataChannels();
+			closeDataChannels({action: protocol.DONE});
 			document.querySelector('#transferDetailsEnd').innerHTML = 'Filename: ' + fmArray[curFileNum-1].fileName + '. Filetype: '+fmArray[curFileNum-1].fileType + '. Filenumber ' + curFileNum + '/' + nrOfFiles + '. Percent: 100/100';
 			//Add line for each file completed!
 			var doc = document.querySelector('#download');
@@ -77,7 +77,10 @@ function onReceiveMessageCallback(event) {
 
 //https://github.com/webrtc/samples/blob/gh-pages/src/content/datachannel/filetransfer/js/main.js - INFO
 //Close channels and cleanup
-function closeDataChannels() {
+function closeDataChannels(e) {
+	if(activedc.readyState === 'open' && e!=null){
+		doSend(e);
+	}
 	$('#connectedScreen').modal('hide');
 	$('#endScreen').modal('show');
 
@@ -195,7 +198,7 @@ function handleSignal(msg) {
 		case protocol.ERR_REJECT:
 		case protocol.CANCEL:
 			alert("Unable to communicate! Stopping transfer! Error: ", msg.action);
-			closeDataChannels();
+			closeDataChannels(null);
 			break;
 		
 		//Route all authentication-signals to processAuth
@@ -251,8 +254,7 @@ function transferComplete(){
 		}
 
   		$('#openInFolder').show();
-  		$('#NOTE').show();
-		closeDataChannels();
+		closeDataChannels({action: protocol.DONE});
 	}
 }
 //Registers the different events

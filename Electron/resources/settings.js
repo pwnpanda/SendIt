@@ -15,6 +15,7 @@ cfPath=defPath+splitter+'Crypto'+splitter;
 cfName='crypto.crp';
 dlPath=defPath+splitter+"Received"+splitter;
 ulPath=defPath+splitter+"Send"+splitter;
+var selCrypto=0;
 
 //Print current settings
 function curSet(){
@@ -123,6 +124,7 @@ function settings(){
 			$('#txtCryptoFile').hide();	
 			cfPath=defPath+splitter+'Crypto'+splitter;
 			cfName='crypto.crp';
+			selCrypto=0;
 		}
 	});
 
@@ -165,6 +167,7 @@ function settings(){
 			alert("Please fill in an email address!");
 		}else{
 			saveConf();
+			keyManagement();
 		}
 		//return;
 	});
@@ -174,10 +177,12 @@ function settings(){
 }
 //Save config to config.conf
 function saveConf(init=false){
-	myMail = $("#myMail").val();
+	myMail = sanatize( $("#myMail").val() );
 	if(!init && cfName == 'crypto.crp' || cfName == '.crp'){
 		cfName = myMail+'.crp';
 		console.log('Creating cfName for ' + myMail);
+	}else if(cfName != myMail+'.crp' && selCrypto==0){
+		cfName = myMail+'.crp';
 	}
 	var data = {
 			"cfName": cfName,
@@ -214,6 +219,7 @@ function setCrypto(){
 	cfPath = info.dir+splitter;
 	cfName = info.base;
 	console.log(cfPath + " " + cfName);
+	selCrypto=1;
 	readCrypto();
 }
 function setDownload(){
@@ -251,7 +257,7 @@ function removeCrypto(){
 }
 
 function saveServ(){
-	server = $("#url").val();
+	server = sanatize( $("#url").val() );
 	$("#url").val(server);
 	console.log("server: ", server);
 }
