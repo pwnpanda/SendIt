@@ -22,10 +22,10 @@ var wss_prot = {
 	REFUSE: "refuse", //Refuse offer
 	ANSWER: "answer", //Contains answer
 	ICE: "ice", //Contains ICE-candidates
-	TEST: "tst" //For testing setup
+	LOOKUP: "lookup" //For looking up email presence
 };
 
-var email = prompt("Please enter your name", "John Wick");
+var email = prompt("Please enter your email", "send@test.com");
 var pubkey = prompt("Please enter your key", "123");
 
 //let pubkey = '{"alg":"RSA-OAEP-512","e":"AQAB","ext":true,"key_ops":["wrapKey"],"kty":"RSA","n":"rtlxyjEqswXQ1POnDu1Q0ZuF1HuDH1hcH9aJV2MoNPTggZUin_IecFnprfbtBPFFFNgVXq3LnUb5iiVXbzRFJPy7f9t0VX7heIqKe5FEHCbaoy_rSKE7ItlTI8hFsMNGvT-ZaB5smVeMLOnRnBivW-rMXymKOBkPcUIt9PI5ETBnfyWceyF2S8kPt6RQF-kkX5N8cAM6DoOYRF0bbKkZM5HyJwOyQin_Eva_ScyEzxLaldhltQNcpaDV58qpCM2HdfODKMHu_j6A45ZrGyddOa7a1nrvrms89hgNsCtSMJzG7U8HFvUjiSYskP0z-LisN5h01HYj77JcGNl1THYCRQ"}';
@@ -33,7 +33,7 @@ var pubkey = prompt("Please enter your key", "123");
 
 var  sc = new WebSocket('wss://' + window.location.hostname + ':7443');
 sc.onopen = function () {
-   	send(wss_prot.TEST, 'ping');
+   	send(wss_prot.LOOKUP);
 };
 
 sc.onmessage = gotMessageFromServer;
@@ -51,10 +51,13 @@ function gotMessageFromServer(message){
 	var msg = JSON.parse(message.data);
 	//console.log("Received: ", msg);
 	switch(msg.prot){
-		case wss_prot.TEST:
+		case wss_prot.LOOKUP:
 			console.log("Message received: ", msg.data);
-			if(msg.data === 'pong'){
-				console.log("PingPong done!");
+			if(msg.data){
+				console.log("Email found in server!");
+				authInit();
+			}else{
+				console.log("Email not found in server!");
 				authSetup();
 			}
 			break;
@@ -150,7 +153,7 @@ function gotMessageFromServer(message){
 function send(sig, data=null, dst=null){
 	var msg = {
 		prot: sig,
-		origin: km.email,
+		origin: email,
 		destination: dst,
 		data: data
 	}
@@ -183,8 +186,8 @@ function init(){
 	//Need meta-data of file!
 	let data = { files:
 		{
-			1: { fname: 'testFile', fileType: 'exe', fSize: '2000 kb'},
-			2: { fname: 'testPic', fileType: 'jpg', fSize: '1000 kb' }
+			0: { fname: 'testFile', fileType: 'exe', fSize: '2000 kb'},
+			1: { fname: 'testPic', fileType: 'jpg', fSize: '1000 kb' }
 		}
 	}
 	if(confirm('Sending!')){

@@ -202,9 +202,8 @@ $('#declRecvBtn').click(function () {
 })
 
 //Stop transfer!
-//TODO test
 $('#cancel').click(function () {
-  closeDataChannels();
+  closeDataChannels({action: protocol.CANCEL});
   reset();
 })
 

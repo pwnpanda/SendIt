@@ -181,7 +181,6 @@ function createLocalOffer () {
 }
 
 pc1.onicecandidate = function (e) {
-  //todo
   console.info('ICE candidate (pc1)', e)
   if (e.candidate == null) {
   	iceReady = true;

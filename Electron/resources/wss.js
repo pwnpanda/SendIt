@@ -52,7 +52,7 @@ var wss_prot = {
 	REFUSE: "refuse", //Refuse offer
 	ANSWER: "answer", //Contains answer
 	ICE: "ice", //Contains ICE-candidates
-	TEST: "tst" //For testing setup
+	LOOKUP: "tst" //For looking up email presence
 };
 
 function wscon(){
@@ -60,7 +60,7 @@ function wscon(){
 
 
 	sc.onopen = function () {
-	   	send(wss_prot.TEST, 'ping');
+	   	send(wss_prot.TEST, myMail);
 	};
 
 	sc.onmessage = gotMessageFromServer;
@@ -179,7 +179,7 @@ function gotMessageFromServer(message){
 
 		case wss_prot.ANSWER:
 			console.log("Protocol received: Answer! Answer: ", msg.data);
-			//set remote description msg.data! todo
+			//set remote description msg.data!
 			var d = decryptReply(JSON.stringify(msg.data));
 		    $('#myStat').html('Waiting for connection to be established...');
 			handleAnswerFromPC2(d);

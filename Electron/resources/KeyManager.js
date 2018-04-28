@@ -43,7 +43,7 @@ KeyManager.prototype = {
 			this.key.publicKey = JSON.parse(dec[2]);
 			//Store user and public key-pairs
 			this.keys = {};
-			//Extract keys - stored as JWK! //TODO - Issue with key_ops! Figure it out
+			//Extract keys - stored as JWK!
 			Promise.all([(this.importKey(this.key.privateKey, this.key.privateKey.key_ops)),
 			(this.importKey(this.key.publicKey, this.key.publicKey.key_ops))]).then(function (keys) {
 				km.key.privateKey = keys[0];

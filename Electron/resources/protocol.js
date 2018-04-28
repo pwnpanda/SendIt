@@ -232,7 +232,6 @@ function transferComplete(){
 	document.querySelector('#transferDetailsEnd').innerHTML = 'Filename: ' + fmArray[curFileNum].fileName + '. Filetype: ' + fmArray[curFileNum].fileType +  '. Filenumber: ' + (curFileNum+1) + '/' + nrOfFiles + '. Percent: 100/100';
 	var storePath = path.join(dlPath, fmArray[curFileNum].fileName+(fmArray[curFileNum].fileType));
   	ensureDirectoryExistence(storePath);
-  	//TODO - DOES NOT WORK!!!
   	var data = fmArray[curFileNum].downloadFile();
   	fs.writeFile(storePath, data, function(err) {
 	    if(err) {
