@@ -1,13 +1,31 @@
 /*
-TODO need to add wss!
+TODO
 
-Connection-initiation, authentication, message handling, teardown
+Lacking:
+	- Server setup / authentication:
+		*Which functionality?
+		*Setup is always OK, unless already registered.
+			-Add email confirmation later?
+		*Encrypt same message with private key & servers public key
+			-If same when decrypted:
+				APPROVe
+			 Else:
+			 	Deny
+	- Queue handling:
+		*How to check for queued messages?
+		*How to prioritize?
+		*Send notification of place in queue!
+	- Implement reqkey and get confirmation from other node!
+		*How to get confirmation from owner?
+		*Out of band? Mail?
+
+	Sender 	-	server 	 -	Receiver
+						<-	Reqkey
+				Key 	->
 
 IMPORTANT!!!
-Handle case when client is already busy. Make connection wait until current process is done.
-
-Handle after wss messages:
-createLocalOffer();
+Handle case when client is already busy.
+Make connection wait until current process is done.
 */
 
 var wss_prot = {
