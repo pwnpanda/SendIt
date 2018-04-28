@@ -56,7 +56,9 @@ function processAuth(reply){
     case protocol.AUTH_SETUP:
     	km.otherEnd = reply.sender;
     	//Store e-mail and public key
-    	km.storeKey(reply.sender, reply.key);
+      km.storeKey(reply.sender, reply.key);
+
+
     	//Reply with own e-mail and public key in AUTH_S_REPLY
     	createAuthMsg(protocol.AUTH_S_REPLY);
     	break;
@@ -64,7 +66,9 @@ function processAuth(reply){
     //Received authentication setup reply
     case protocol.AUTH_S_REPLY:
     	//Assert e-mail
-    	console.assert((reply.sender === km.otherEnd), "Receivers e-mail is not correct! Security breach found! Terminating!");
+
+      console.assert((reply.sender === km.otherEnd), "Receivers e-mail is not correct! Security breach found! Terminating!", {action: protocol.ERR_REJECT});
+
     	//Store e-mail and public key
     	km.storeKey(reply.sender, reply.key);
     	//Authentication setup complete - start transfer!
@@ -72,7 +76,6 @@ function processAuth(reply){
       //!!!!!!!!!!!!!!!!!!!!!!!!!
       //TODO Wrong side in server-solution
       //stageFiles();
-      //offerShare();
       //offerShare();
       //Replaced! Needs testing!
       initTransfer();
@@ -173,6 +176,7 @@ function decrypt(pubkey, data){
     console.log('Other end has NO associated key!');
     decryData=JSON.parse(data);
     console.log(decryData);
+    setDescr(decryData, true);
     return decryData;
   }
 }
@@ -223,7 +227,7 @@ function decryptReply(data){
       decryData = convertArrayBufferViewtoString(decryData);
       console.log("Data decrypted: ", decryData);
       decryData = JSON.parse(decryData);
-      setDescr(decryData, false);
+      setDescr(JSON.parse(decryData), false);
       return decryData;
     })
     .catch(function(err){

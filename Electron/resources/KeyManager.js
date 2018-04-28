@@ -213,7 +213,7 @@ KeyManager.prototype = {
 	//Store a public key as keydata
 	storeKey: function(email, key){
 		if(email in this.keys){
-			console.assert(false, "Error! Email is already associated with a key! This is a security breach!");
+			console.assert(false, "Error! Email is already associated with a key! This is a security breach!", {action: protocol.ERR_REJECT});
 		}
 		//Add key=email and value=Public key in dictionary
 		//Public key stored in JWK-format

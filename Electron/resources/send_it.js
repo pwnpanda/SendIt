@@ -125,7 +125,10 @@ $('#offerSentBtn').click(function () {
 })
 
 $('#offerRecdBtn').click(function () {
-  var offer = $('#remoteOffer').val();
+  //Here!
+  var offer = sanatize( $('#remoteOffer').val() );
+  console.log("Offer before fixing: ", offer);
+  sanatize(offer);
   //Decrypt!
   var pubkey = km.findKey(km.otherEnd);
   decrypt(pubkey, offer);
@@ -136,15 +139,14 @@ $('#answerSentBtn').click(function () {
 })
 
 $('#answerRecdBtn').click(function () {
-  var answer = $('#remoteAnswer').val();
+  var answer = sanatize( $('#remoteAnswer').val() );
   //Decrypt
   decryptReply(answer);
 })
 
 //Stop transfer!
-//TODO TEST!
 $('#cancel').click(function () {
-  closeDataChannels();
+  closeDataChannels({ action: protocol.CANCEL });
   reset();
 
 })
@@ -272,8 +274,11 @@ pc2.onicecandidate = function (e) {
     place = '#localAnswer';
     alertdisp = "#success-alert-2";
     descr = JSON.stringify(pc2.localDescription);
+    //KEY!
+    var pubkey = km.findKey(km.otherEnd);
+
     //Encrypt
-    encryptReply();
+    encryptReply(pubkey, descr);
   }
 }
 
@@ -297,11 +302,12 @@ pc2.onconnection = handleOnconnection
  * To trigger js debugger on failed assert, do 
  * console.assert.useDebugger = true;
 */
-console.assert  = function(cond, text){
+console.assert  = function(cond, text, msg=null){
   if( cond )  return;
   if( console.assert.useDebugger )  debugger;
   //My addition
-  closeDataChannels();
+  $("#error").html(text || "Assertion failed!");
+  closeDataChannels(msg);
   //--------------
   throw new Error(text || "Assertion failed!");
 };
@@ -348,7 +354,7 @@ function createSetup(offer){
     if(r==null){
       window.location.href = "";
     } else{
-        myMail = r;
+        myMail = sanatize(r);
         console.info("Mail address read: " + myMail);
         km = new KeyManager("new", myMail);
         getOtherEnd(offer);
@@ -374,7 +380,7 @@ function getOtherEnd(offer){
     if(rec==null){
         window.location.href = "";
     }
-    km.otherEnd=rec;
+    km.otherEnd=sanatize(rec);
     if(offer){
       $('#showLocalOffer').modal('show');
       createLocalOffer();
@@ -411,5 +417,12 @@ function setDescr(data, off){
 
 function initTransfer(){
       offerShare();
+}
+
+function sanatize(str){
+  var div = document.createElement('div');
+  div.appendChild(document.createTextNode(str));  
+  console.log("Escaped: ", div.innerHTML);
+  return div.innerHTML;
 }
 //---------------------------------------------
