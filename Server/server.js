@@ -6,6 +6,7 @@ const WebSocket = require('ws');
 const WebSocketServer = WebSocket.Server;
 const q = require('./resources/queue.js');
 var uuid=1;
+var sockuuid=1;
 var sUUID = 0;
 var conn = {};
 
@@ -33,7 +34,7 @@ var wss_prot = {
 	REFUSE: "refuse", //Refuse offer
 	ANSWER: "answer", //Contains answer
 	ICE: "ice", //Contains ICE-candidates
-	TEST: "tst" //For testing setup
+	LOOKUP: "lookup" //For looking up email presence
 };
 
 //console.log("Argv1: " + process.argv[2]);
@@ -81,7 +82,7 @@ httpsServer.listen(HTTPS_PORT, '0.0.0.0');
 var wss = new WebSocketServer({server: httpsServer});
 
 wss.on('connection', function(ws) {
-   	ws.id=uuid++;
+   	ws.id=sockuuid++;
    	console.log("Client %d connected!", ws.id);
    	var d= { files:
 		{
@@ -112,23 +113,25 @@ function handleMessage(sock, msg) {
 	console.log(msg);
 	msg = JSON.parse(msg);
 	switch(msg.prot){
-		case wss_prot.TEST:
-			console.log("Received: ", msg.data);
-			if(msg.data === 'ping'){
-				send(sock, wss_prot.TEST, 'pong');
+		case wss_prot.LOOKUP:
+			console.log("Received mail: ", msg.origin);
+			if(msg.origin in conn){
+				console.log("Found mail ", msg.origin);
+				send(sock, wss_prot.LOOKUP, true);
+			}else{
+				console.log("Did not find mail ", msg.origin);
+				send(sock, wss_prot.LOOKUP, false);
 			}
 			break;
 
 		case wss_prot.AUTH_SETUP:
 			console.log("Protocol received: Authentication setup");
-			sock.email=msg.origin;
-			sock.key=msg.data;
-			auth_S_Reply(sock);
+			auth_S_Reply(sock, msg);
 			break;
 
 		case wss_prot.AUTH_INIT:
 			console.log("Protocol received: Authentication Initiation");
-			auth_result(sock, msg.data);
+			auth_result(sock, msg);
 			break;
 
 		case wss_prot.ERROR:
@@ -208,45 +211,54 @@ function beginExchange(sock) {
 }
 
 
-function auth_S_Reply(sock){
+function auth_S_Reply(sock, msg){
+	console.log("Org: ", msg.origin)
 	//reply true or false - evaluate!
 	var auth=true;
    	//Check if key already associated with email
-   	for (var key in conn){
+   	for (var ent in conn){
    		//console.log(conn[key]);
-   		if(conn[key].key === sock.key){
+   		if(conn[ent].key === msg.data){
    			auth=false;
    			console.log("Key already exists for another email: %s!", conn[key].id);
    		}
    	}
 
-   	if(sock.email in conn){
+   	if(msg.origin in conn){
    		auth = false;
    		console.log("Authentication error! E-mail already registered!")
    	}
    	if(auth){
-   		conn[sock.email]=sock;
+   		conn[msg.origin]= new Object();
+   		conn[msg.origin].key = msg.data;
+   		conn[msg.origin].sock = sock;
+   		conn[msg.origin].id = uuid++;
+
+   		console.log(conn);
    	}
 
-	send(sock, wss_prot.AUTH_S_REPLY, auth, sock.email);
+	send(sock, wss_prot.AUTH_S_REPLY, auth, msg.origin);
 }
 
 function auth_result(sock, data){
+	console.log("Conn: ", conn)
 	//reply true or false - evaluate!
 	var auth=true;
-	if(sock.email in conn){
-		if(isAuth(data)){
-			console.log("User %s is authenticated!", sock.email);
+	if(data.origin in conn){
+		if(isAuth(data.data)){
+			console.log("User %s is authenticated!", data.origin);
+			conn[data.origin].sock=sock
 		}else{
 			auth=false;
-			console.log("User %s is not authenticated!", sock.email);
+			console.log("User %s is not authenticated!", data.origin);
 		}
 	}else{
-		console.log("Details not stored for this user (%s) - please do an authentication setup!", sock.email);
+		console.log("Details not stored for this user (%s) - please do an authentication setup!", data.origin);
 		auth=false;
 	}
+	console.log("Conn: ", conn)
 
-	send(sock, wss_prot.AUTH_RESULT, auth, sock.email);
+	send(sock, wss_prot.AUTH_RESULT, auth, data.origin);
 }
 
 function isAuth(data){
