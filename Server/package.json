@@ -22,6 +22,7 @@
   },
   "homepage": "https://github.com/Robiq/Project",
   "dependencies": {
+    "@trust/webcrypto": "^0.9.0",
     "ws": "^5.1.1"
   }
 }

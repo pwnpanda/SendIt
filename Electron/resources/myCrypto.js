@@ -216,9 +216,9 @@ function decryptReply(data){
 
   if (pubkey != null){
     decryData = Object.values(data);
-    console.log("1",decryData);
+    //console.log("1",decryData);
     decryData = new Uint8Array(decryData);
-    console.log("2",decryData);
+    //console.log("2",decryData);
     km.decryptData(decryData)
     .then(function(decrypted){
       //returns an ArrayBuffer containing the decrypted data
