@@ -1,22 +1,11 @@
 Todo:
-	- Create functionality for negotiation in client
-		Communicate over wss with server! NEEDS TLS!!!
 	- Create server
-
-Done:
-	- settings setup complete
 
 ----------------------------------------------------
 
 New functionality change:
 	*CHANGE TO TWO STEPS!!!
 		-1 Connect and 'register' as present (establish WSS) - Authenticate with keys if previously registered email!
-		-2 Send request for connection (offer to email over WSS)
-		(-3 Forwarded request via server to receiver. Accept connection/refuse)
-	*Signalling and trickling ICE over WSS
-	*No displaying offer/answer
-		(showEnc/setDescr changes!)
-
 
 New flow:
 	Sender:
@@ -54,45 +43,18 @@ New flow:
 			2. Waiting window (1. waiting server - 2. waiting receiver - 3. waiting channel)
 			3 Transfer window
 			4- Complete
-
-
-Plan:
-* Create server with wss functionality
-* Test 1 protocol at the time
-* Once first protocol is up, expand!
-
----------------------------------------------------------------------
-
-P1:
-
-Connect ->
-Authenticate <->
-Initiate ->
-<-	Accept/Refuse
-		answer ->
-		ice <->
-		done ->
-
-P2:
-connect ->
-Authenticate <->
- <- Initiate
- 		Accept/Refuse ->
- 	<-	answer
- 		ice <->
- 		done ->
-
-----------------------------------
+-------------------------------------------------------------------
 Create keys:
 -------------
 
-openssl genrsa -out server-key.pem 1024
+openssl genrsa -out server-key.pem 2048
 openssl req -new -key server-key.pem -out server-csr.pem
 openssl x509 -req -in server-csr.pem -signkey server-key.pem -out server-cert.pem
 
 
 How to deal with message queues?
-
-
---Test Offer/Answer exchange and ICE trickling!
-Switching offer/answer means wrong side tries sending files! SWITCH!
+How to authenticate?
+	Encrypt email with priv key!
+		*If matching! Authenticate
+		*If not, DENY!
+How to create reqkey with confirmation from other end?

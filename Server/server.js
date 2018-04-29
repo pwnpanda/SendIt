@@ -5,6 +5,7 @@ const https = require('https');
 const WebSocket = require('ws');
 const WebSocketServer = WebSocket.Server;
 const q = require('./resources/queue.js');
+const crypto = require('@trust/webcrypto');
 var uuid=1;
 var sockuuid=1;
 var sUUID = 0;
@@ -242,29 +243,36 @@ function auth_S_Reply(sock, msg){
 
 function auth_result(sock, data){
 	console.log("Conn: ", conn)
-	//reply true or false - evaluate!
-	var auth=true;
 	if(data.origin in conn){
-		if(isAuth(data.data)){
+		var key = conn[data.origin].key;
+		if(isAuth(key, data)){
 			console.log("User %s is authenticated!", data.origin);
 			conn[data.origin].sock=sock
+			send(sock, wss_prot.AUTH_RESULT, true, data.origin);
 		}else{
-			auth=false;
 			console.log("User %s is not authenticated!", data.origin);
+			send(sock, wss_prot.AUTH_RESULT, false, data.origin);
+			sock.close();
+			conn[data.origin].sock=null;
 		}
+
 	}else{
 		console.log("Details not stored for this user (%s) - please do an authentication setup!", data.origin);
-		auth=false;
+		send(sock, wss_prot.AUTH_RESULT, false, data.origin);
+		sock.close();
 	}
-	console.log("Conn: ", conn)
-
-	send(sock, wss_prot.AUTH_RESULT, auth, data.origin);
 }
 
 function isAuth(data){
 	console.log(data);
 	//run test! - TODO
-	return true;
+	//decrypt data.data
+	var decrypted = decrypt(data.data);
+	console.log("Email: " + data.origin + " Decrypted: " + decrypted);
+	if(data.origin === decrypted){
+		return true;
+	}
+	return false;
 }
 
 function forward(sock, msg) {
@@ -319,6 +327,47 @@ function sendFw(sock, msg){
     }
 }
 
+
+function decrypt(pubkey, data){
+//TODO revision for testing!
+//importkey
+//decrypt
+//return string/empty string!
+crypto.getRandomValues(array);
+
+	var decryData;
+	console.log('Data to decrypt/pass on: ', data.data);
+	//console.log('Other end has associated key!');
+	data=JSON.parse(data.data);
+	console.log("Parsed", data);
+	var temp = Object.values(data.iv);
+	iv = new Uint8Array(temp);
+	temp = Object.values(data.wrap);
+	decryData = new Uint8Array(temp);
+	temp = Object.values(data.ciph);
+	console.log(decryData);
+	km.unwrapKey(decryData.buffer, (km.key).privateKey)
+	.then(function(symKey){
+		km.symmetric=symKey;
+		console.log(symKey);
+		return km.decryptData(new Uint8Array(temp));
+	})
+	.then(function(decrypted){
+		//returns an ArrayBuffer containing the decrypted data
+		console.warn("Data decrypted raw: ", new Uint8Array(decrypted));
+		decryData = new Uint8Array(decrypted);
+		decryData = convertArrayBufferViewtoString(decryData);
+		console.log("Data decrypted: ", decryData);
+		decryData = JSON.parse(decryData);
+		return decryData;
+	})
+	.catch(function(err){
+		console.error(err);
+		return false;
+	});
+}
+
+//Exit handling!-------------------------------------------------------------------
 process.on('SIGTERM', closeAll, 'SIGTERM');
 process.on('SIGINT', closeAll, 'SIGINT');
 //process.on('exit', closeAll, 'exit');

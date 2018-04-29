@@ -27,6 +27,9 @@ var wss_prot = {
 
 var email = prompt("Please enter your email", "send@test.com");
 var pubkey = prompt("Please enter your key", "123");
+var keypair;
+var symmetric;
+
 
 //let pubkey = '{"alg":"RSA-OAEP-512","e":"AQAB","ext":true,"key_ops":["wrapKey"],"kty":"RSA","n":"rtlxyjEqswXQ1POnDu1Q0ZuF1HuDH1hcH9aJV2MoNPTggZUin_IecFnprfbtBPFFFNgVXq3LnUb5iiVXbzRFJPy7f9t0VX7heIqKe5FEHCbaoy_rSKE7ItlTI8hFsMNGvT-ZaB5smVeMLOnRnBivW-rMXymKOBkPcUIt9PI5ETBnfyWceyF2S8kPt6RQF-kkX5N8cAM6DoOYRF0bbKkZM5HyJwOyQin_Eva_ScyEzxLaldhltQNcpaDV58qpCM2HdfODKMHu_j6A45ZrGyddOa7a1nrvrms89hgNsCtSMJzG7U8HFvUjiSYskP0z-LisN5h01HYj77JcGNl1THYCRQ"}';
 //let privkey = '{"alg":"RSA-OAEP-512","d":"hwJHpsQIIGuhMI1itVfxS6g20jb8rDtiBwN00REzfpCGuggZ0D732fDTSwybP3G80bd36L9xtWOUU2M5_Bf0O_caIEOntExgdN8kxv0IBmTJ9a-OkWpNaz87vylpBnACMybkoUy8tjqvdg6lV06IOQU4AVLl8yMGlYFwUu6luerLfFIthm51Q709m3tWHq1cFLlw4IxJkg4fBh69nCBZ25ThJo1XKI7buxMhBHG_0btaFKyapF06B0_8efz8e8IXfXy8gcokbkoxWNU6w_HwifpXILXePkXillKXmWRv3u2OrzGxYuiiJrDWQO7TcQyZBhOr9Ohi-0J5g1vP68DUkQ","dp":"MQTYwF3oInz0zUcov8cafLNn0gJlZST7WLTTtjV8Jzs6zRMIXSOqG3BOzYoPW9WZdcavFhPscnUXLOqBxG5KlPtxb_nIz1f3Z4utF_wFoUTOoY_SW_hyAoeUFxxsn4TpId3M0XkAFHEg3_SDYnqQSAp_7X9TNDWquMpLvbF2rg0","dq":"N1wx9u7aVT5iP2FgbZ4flhAIwuEMvkfsig-rqTJScN8KuLiiVt1d4UjqyAz1UXICKBekny4u7bFSktzJcgDvzKyn9ZvsSIfHJhUTaePSngaM__SoH8J3yu8rg1sQL7FN0Lr9gRMccB95CXO-3wYu3znTAnCEGOvx2z22l7HILas","e":"AQAB","ext":true,"key_ops":["unwrapKey"],"kty":"RSA","n":"rtlxyjEqswXQ1POnDu1Q0ZuF1HuDH1hcH9aJV2MoNPTggZUin_IecFnprfbtBPFFFNgVXq3LnUb5iiVXbzRFJPy7f9t0VX7heIqKe5FEHCbaoy_rSKE7ItlTI8hFsMNGvT-ZaB5smVeMLOnRnBivW-rMXymKOBkPcUIt9PI5ETBnfyWceyF2S8kPt6RQF-kkX5N8cAM6DoOYRF0bbKkZM5HyJwOyQin_Eva_ScyEzxLaldhltQNcpaDV58qpCM2HdfODKMHu_j6A45ZrGyddOa7a1nrvrms89hgNsCtSMJzG7U8HFvUjiSYskP0z-LisN5h01HYj77JcGNl1THYCRQ","p":"1qgkfVNhZ7Y6rPgzTFJrJSazkBmUXV4w4ct1kPjSaL4_S5prFT7VHlFkTb3rgYErD5GDfEVsP-6mGAt46tMQcWjUTYIvkonZMk74OnOGBq24m7OSUP2sXv8fAcDpHKkmVFiD55rDKdxObgvB2xXocGVmh6rlNHXN0gm5mAUATLM","q":"0IaPRGK3eoefF-7t9g_R64rsE6AA7ot-9mUqdg-PwO4tDJmYUkYEipVXx7tWaxMqcyyban5NXJh-mPtAh8CU-6qNqlYaDK8V9xZBDD6-64VzpAkfoBsvFs4sB85_QN1BFAlzEz1VV3hq5HQBgxkVwKdp3hBPeVe_e-zmQeR74Sc","qi":"o8kqZPEyMw5GU2PtwAFAfxBtMT7M3UjrxZMRq-W8GZfkEZraVl3ljj_jc4wdgb6BsPcCCYR5bJosefK8a8snw5lx_4cGV-gqbbFvQGZU0pNrWm06_pVrnbI5elhtuqoZoRRVqmtM-qGa8tEI72fHf-fxy1F_xcnAl183HloReTo"}';
@@ -174,11 +177,7 @@ function authSetup(){
 function authInit(){
 	//Create authentication proof! TODO
 	//var msg = encrypt(privkey, email);
-	let msg = {
-		iv: 'iv',
-		key: 'key',
-		ciph: 'cipher'
-	}
+	var msg=encrypt(mail);
 	send(wss_prot.AUTH_INIT, msg);
 }
 
@@ -202,4 +201,62 @@ window.addEventListener('unload', messageSend, false);
 function messageSend(){
     //sc.send(JSON.stringify({'log': log, 'uuid': uuid}));
     sc.close();
+}
+
+//Review!! TODO!
+function encrypt(data){
+	console.log("Data in : ",data)
+	var encryData;
+	encryData = convertStringToArrayBufferView(JSON.stringify(data));
+	console.warn(encryData);
+	var iv = window.crypto.getRandomValues(new Uint8Array(12));
+	//Create symmetric key  
+	//TODO!
+	/*
+	1. Create rsa key pair
+	2. 
+	*/
+	window.crypto.subtle.generateKey(
+			{
+				name: "RSA-OAEP",
+				modulusLength: 2048, //can be 1024, 2048, or 4096
+				publicExponent: new Uint8Array([0x01, 0x00, 0x01]),
+				hash: {name: "SHA-512"}, //can be "SHA-1", "SHA-256", "SHA-384", or "SHA-512"
+			},
+			true, //whether the key is extractable (i.e. can be used in exportKey)
+			["wrapKey", "unwrapKey"]
+			//["encrypt", "decrypt"] //must be ["encrypt", "decrypt"] or ["wrapKey", "unwrapKey"]
+	)
+	.then(function(keys){
+		keypair=keys;
+		return window.crypto.subtle.generateKey(
+			{
+				name: "AES-GCM",
+				length: 256,	
+			},
+			true,
+			["encrypt", "decrypt"]
+		)
+	})
+	.then(function(key){
+		//Encrypt with symmetric key
+		symmetric=key;
+		return window.crypto.subtle.encrypt(key, encryData)
+	})
+	//returns an ArrayBuffer containing the encrypted data
+	.then(function(encrypted){
+		encryData = new Uint8Array(encrypted);
+		console.info("Data encrypted: ", encryData);
+		//encrypt (wrap) symmetric key with own private key
+		return window.crypto.subtle.wrapKey(symmetric, keypair.privkey);
+	})
+	.then(function(wrapKey){
+	  //Create object for sharing: iv, wrapped symmetric key amnd cipher
+	  var msg = {iv: iv, wrap: wrapKey, ciph: encryData};
+	  console.log("Object", msg);
+	  return msg;
+	})
+	.catch(function(err){
+	  console.error(err);
+	});
 }
