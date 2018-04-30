@@ -52,7 +52,7 @@ var wss_prot = {
 	REFUSE: "refuse", //Refuse offer
 	ANSWER: "answer", //Contains answer
 	ICE: "ice", //Contains ICE-candidates
-	LOOKUP: "tst" //For looking up email presence
+	LOOKUP: "lookup" //For looking up email presence
 };
 
 function wscon(){
