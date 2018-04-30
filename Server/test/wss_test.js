@@ -26,9 +26,10 @@ var wss_prot = {
 };
 
 var email = prompt("Please enter your email", "send@test.com");
-var pubkey = prompt("Please enter your key", "123");
+var pubkey;
 var keypair;
 var symmetric;
+var servkey;
 
 
 //let pubkey = '{"alg":"RSA-OAEP-512","e":"AQAB","ext":true,"key_ops":["wrapKey"],"kty":"RSA","n":"rtlxyjEqswXQ1POnDu1Q0ZuF1HuDH1hcH9aJV2MoNPTggZUin_IecFnprfbtBPFFFNgVXq3LnUb5iiVXbzRFJPy7f9t0VX7heIqKe5FEHCbaoy_rSKE7ItlTI8hFsMNGvT-ZaB5smVeMLOnRnBivW-rMXymKOBkPcUIt9PI5ETBnfyWceyF2S8kPt6RQF-kkX5N8cAM6DoOYRF0bbKkZM5HyJwOyQin_Eva_ScyEzxLaldhltQNcpaDV58qpCM2HdfODKMHu_j6A45ZrGyddOa7a1nrvrms89hgNsCtSMJzG7U8HFvUjiSYskP0z-LisN5h01HYj77JcGNl1THYCRQ"}';
@@ -36,7 +37,32 @@ var symmetric;
 
 var  sc = new WebSocket('wss://' + window.location.hostname + ':7443');
 sc.onopen = function () {
-   	send(wss_prot.LOOKUP);
+	window.crypto.subtle.generateKey(
+		{
+			name: "RSA-OAEP",
+			modulusLength: 2048, //can be 1024, 2048, or 4096
+			publicExponent: new Uint8Array([0x01, 0x00, 0x01]),
+			hash: {name: "SHA-512"}, //can be "SHA-1", "SHA-256", "SHA-384", or "SHA-512"
+		},
+		true, //whether the key is extractable (i.e. can be used in exportKey)
+		["encrypt", "decrypt", "wrapKey", "unwrapKey"]
+		//["encrypt", "decrypt"] //must be ["encrypt", "decrypt"] or ["wrapKey", "unwrapKey"]
+	)
+	.then(function(keys){
+		keypair=keys;
+		return window.crypto.subtle.exportKey(
+			"jwk",
+			keys.publicKey
+		)
+	})
+	.then(function(expkey){
+		pubkey=expkey;
+   		send(wss_prot.LOOKUP);
+	})
+	.catch(function(e){
+		console.error("Key generation/export error: ", e);
+	});
+	
 };
 
 sc.onmessage = gotMessageFromServer;
@@ -56,13 +82,30 @@ function gotMessageFromServer(message){
 	switch(msg.prot){
 		case wss_prot.LOOKUP:
 			console.log("Message received: ", msg.data);
-			if(msg.data){
-				console.log("Email found in server!");
-				authInit();
-			}else{
-				console.log("Email not found in server!");
-				authSetup();
-			}
+			servkey=(msg.data).key;
+			window.crypto.subtle.importKey(
+				"jwk", //can be "jwk" (public or private), "spki" (public only), or "pkcs8" (private only)
+				servkey,
+				{   //these are the algorithm options
+						name: "RSA-OAEP",
+						hash: {name: "SHA-256"}, //can be "SHA-1", "SHA-256", "SHA-384", or "SHA-512"
+				},
+				true, //whther the key is extractable (i.e. can be used in exportKey)
+				["encrypt", "wrapKey"]
+			)
+			.then(function(key){
+				servkey=key;
+				if((msg.data).res){
+					console.log("Email found in server!");
+					authInit();
+				}else{
+					console.log("Email not found in server!");
+					authSetup();
+				}
+			})
+			.catch(function(e){
+				console.error("Reading in error: ", e);
+			})
 			break;
 
 		case wss_prot.AUTH_S_REPLY:
@@ -177,7 +220,7 @@ function authSetup(){
 function authInit(){
 	//Create authentication proof! TODO
 	//var msg = encrypt(privkey, email);
-	var msg=encrypt(mail);
+	var msg=encrypt(email);
 	send(wss_prot.AUTH_INIT, msg);
 }
 
@@ -204,51 +247,48 @@ function messageSend(){
 }
 
 //Review!! TODO!
+//TESTING!
 function encrypt(data){
 	console.log("Data in : ",data)
 	var encryData;
 	encryData = convertStringToArrayBufferView(JSON.stringify(data));
 	console.warn(encryData);
 	var iv = window.crypto.getRandomValues(new Uint8Array(12));
-	//Create symmetric key  
-	//TODO!
-	/*
-	1. Create rsa key pair
-	2. 
-	*/
+	//Create symmetric key  	
 	window.crypto.subtle.generateKey(
-			{
-				name: "RSA-OAEP",
-				modulusLength: 2048, //can be 1024, 2048, or 4096
-				publicExponent: new Uint8Array([0x01, 0x00, 0x01]),
-				hash: {name: "SHA-512"}, //can be "SHA-1", "SHA-256", "SHA-384", or "SHA-512"
-			},
-			true, //whether the key is extractable (i.e. can be used in exportKey)
-			["wrapKey", "unwrapKey"]
-			//["encrypt", "decrypt"] //must be ["encrypt", "decrypt"] or ["wrapKey", "unwrapKey"]
-	)
-	.then(function(keys){
-		keypair=keys;
-		return window.crypto.subtle.generateKey(
 			{
 				name: "AES-GCM",
 				length: 256,	
 			},
 			true,
 			["encrypt", "decrypt"]
-		)
-	})
+	)
 	.then(function(key){
 		//Encrypt with symmetric key
 		symmetric=key;
-		return window.crypto.subtle.encrypt(key, encryData)
+		return window.crypto.subtle.encrypt(
+			{
+				name: "AES-GCM",
+				iv: iv,
+			},
+			key, //from generateKey or importKey above
+			encryData)
 	})
 	//returns an ArrayBuffer containing the encrypted data
 	.then(function(encrypted){
 		encryData = new Uint8Array(encrypted);
 		console.info("Data encrypted: ", encryData);
 		//encrypt (wrap) symmetric key with own private key
-		return window.crypto.subtle.wrapKey(symmetric, keypair.privkey);
+		console.log(keypair.privateKey)
+		return window.crypto.subtle.wrapKey(
+			"raw", //the export format, must be "raw" (only available sometimes)
+		    symmetric, //the key you want to wrap, must be able to fit in RSA-OAEP padding
+		    keypair.privateKey, //the public key with "wrapKey" usage flag
+		    {   //these are the wrapping key's algorithm options
+		        name: "RSA-OAEP",
+		        hash: {name: "SHA-512"},
+		    }
+		)
 	})
 	.then(function(wrapKey){
 	  //Create object for sharing: iv, wrapped symmetric key amnd cipher
@@ -260,3 +300,13 @@ function encrypt(data){
 	  console.error(err);
 	});
 }
+
+function convertStringToArrayBufferView(str){
+    var bytes = new Uint8Array(str.length);
+    for (var iii = 0; iii < str.length; iii++) 
+    {
+        bytes[iii] = str.charCodeAt(iii);
+    }
+
+    return bytes;
+}   

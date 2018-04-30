@@ -46,6 +46,30 @@ const serverConfig = {
     cert: fs.readFileSync('server-cert.pem'),
 };
 
+var key = new Object();
+key.publicKey = fs.readFileSync('publickey.jwk');
+key.privateKey = fs.readFileSync('privatekey.jwk');
+
+//TODO! Fucked up library does not allow for import of private key
+crypto.subtle.importKey(
+	"jwk", //can be "jwk" (public or private), "spki" (public only), or "pkcs8" (private only)
+	key.privateKey,
+	{   //these are the algorithm options
+			name: "RSA-OAEP",
+			hash: {name: "SHA-256"}, //can be "SHA-1", "SHA-256", "SHA-384", or "SHA-512"
+	},
+	true, //whther the key is extractable (i.e. can be used in exportKey)
+	["wrapKey", "unwrapKey"]
+)
+.then(function(key){
+	console.log("Privkey imported!");
+	key.privateKey=key;
+})
+.catch(function(e){
+	console.log("Error reading in key ", e);
+});
+//SHA256!!!
+
 // Create a server for the client html page
 var handleRequest = function(request, response) {
     // Render the single client html file for any request the HTTP server receives
@@ -116,12 +140,13 @@ function handleMessage(sock, msg) {
 	switch(msg.prot){
 		case wss_prot.LOOKUP:
 			console.log("Received mail: ", msg.origin);
+			console.log(key.publicKey);
 			if(msg.origin in conn){
 				console.log("Found mail ", msg.origin);
-				send(sock, wss_prot.LOOKUP, true);
+				send(sock, wss_prot.LOOKUP, {res: true, key: key.publicKey});
 			}else{
 				console.log("Did not find mail ", msg.origin);
-				send(sock, wss_prot.LOOKUP, false);
+				send(sock, wss_prot.LOOKUP, {res: false, key: key.publicKey});
 			}
 			break;
 
@@ -266,8 +291,8 @@ function auth_result(sock, data){
 function isAuth(data){
 	console.log(data);
 	//run test! - TODO
-	//decrypt data.data
-	var decrypted = decrypt(data.data);
+	//decrypt data
+	var decrypted = decrypt(data);
 	console.log("Email: " + data.origin + " Decrypted: " + decrypted);
 	if(data.origin === decrypted){
 		return true;
@@ -331,26 +356,69 @@ function sendFw(sock, msg){
 function decrypt(pubkey, data){
 //TODO revision for testing!
 //importkey
+//Decrypt symmkey
+//import symmkey
 //decrypt
+//compare
 //return string/empty string!
-crypto.getRandomValues(array);
-
+	var thiscon = conn[data.origin];
+	var data = data.data;
 	var decryData;
 	console.log('Data to decrypt/pass on: ', data.data);
 	//console.log('Other end has associated key!');
-	data=JSON.parse(data.data);
-	console.log("Parsed", data);
+	//data=JSON.parse(data.data);
+	//console.log("Parsed", data);
 	var temp = Object.values(data.iv);
-	iv = new Uint8Array(temp);
-	temp = Object.values(data.wrap);
-	decryData = new Uint8Array(temp);
-	temp = Object.values(data.ciph);
+	temp = new Uint8Array(temp);
+	thiscon.iv=temp;
+	temp = new Uint8Array( Object.values(data.wrap) );
+	decryData = Object.values(data.ciph);
 	console.log(decryData);
-	km.unwrapKey(decryData.buffer, (km.key).privateKey)
+	
+	crypto.subtle.importkey(
+		"jwk", //can be "jwk" (public or private), "spki" (public only), or "pkcs8" (private only)
+		thiscon.key,
+		{   //these are the algorithm options
+				name: "RSA-OAEP",
+				hash: {name: "SHA-512"}, //can be "SHA-1", "SHA-256", "SHA-384", or "SHA-512"
+		},
+		true, //whether the key is extractable (i.e. can be used in exportKey)
+		thiscon.key.key_ops
+	)
+	.then(function(key){
+		thiscon.usekey=key;
+
+		return crypto.subtle.unwrapKey(
+			"raw", //the import format, must be "raw" (only available sometimes)
+		    temp.buffer, //the key you want to unwrap
+		    thiscon.usekey, //the private key with "unwrapKey" usage flag
+		    {   //these are the wrapping key's algorithm options
+		        name: "RSA-OAEP",
+		        modulusLength: 2048,
+		        publicExponent: new Uint8Array([0x01, 0x00, 0x01]),
+		        hash: {name: "SHA-512"},
+		    },
+		    {   //this what you want the wrapped key to become (same as when wrapping)
+		        name: "AES-GCM",
+		        length: 256
+		    },
+		    true, //whether the key is extractable (i.e. can be used in exportKey)
+		    ["encrypt", "decrypt"]
+		)
+	})
 	.then(function(symKey){
-		km.symmetric=symKey;
+		thiscon.symmetric=symKey;
 		console.log(symKey);
-		return km.decryptData(new Uint8Array(temp));
+		return crypto.subtle.decrypt(
+			{
+					name: "AES-GCM",
+					iv: km.iv,
+					//label: Uint8Array([...]) //optional
+			},
+			thiscon.symmetric,
+			//this.key.privateKey, //from generateKey or importKey above
+			new Uint8Array(decryData)//ArrayBuffer of the data
+		);
 	})
 	.then(function(decrypted){
 		//returns an ArrayBuffer containing the decrypted data
@@ -363,8 +431,19 @@ crypto.getRandomValues(array);
 	})
 	.catch(function(err){
 		console.error(err);
-		return false;
+		return '';
 	});
+}
+
+
+function convertArrayBufferViewtoString(buffer){
+    var str = "";
+    for (var iii = 0; iii < buffer.byteLength; iii++) 
+    {
+        str += String.fromCharCode(buffer[iii]);
+    }
+
+    return str;
 }
 
 //Exit handling!-------------------------------------------------------------------
