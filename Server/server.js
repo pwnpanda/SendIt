@@ -194,10 +194,12 @@ function handleMessage(sock, msg) {
 	switch(msg.prot){
 		case wss_prot.LOOKUP:
 			console.log("Received mail: ", msg.origin);
-			console.log(key.publicKey);
+			//console.log(key.publicKey);
 			if(msg.origin in conn){
 				console.log("Found mail ", msg.origin);
-				send(sock, wss_prot.LOOKUP, {res: true, key: key.expkey});
+				//create session key and encrypt!
+				//Create function since it will be reused!
+				send(sock, wss_prot.LOOKUP, {res: true, symkey: key.symkey});
 			}else{
 				console.log("Did not find mail ", msg.origin);
 				send(sock, wss_prot.LOOKUP, {res: false, key: key.expkey});
@@ -286,12 +288,7 @@ function handleMessage(sock, msg) {
 	}
 }
 
-
-function beginExchange(sock) {
-	send(sock, wss_prot.INIT);
-}
-
-
+//Return setup result
 function auth_S_Reply(sock, msg){
 	console.log("Org: ", msg.origin)
 	//reply true or false - evaluate!
@@ -314,13 +311,17 @@ function auth_S_Reply(sock, msg){
    		conn[msg.origin].key = msg.data;
    		conn[msg.origin].sock = sock;
    		conn[msg.origin].id = uuid++;
+   		//TODO fix!
+   		conn[msg.origin].symkey = symkey();
 
    		console.log(conn);
    	}
 
+   	//Share symkey!
 	send(sock, wss_prot.AUTH_S_REPLY, auth, msg.origin);
 }
 
+//Return authentication result
 async function auth_result(sock, data){
 	console.log("Conn: ", conn);
 	console.log("Data: ", data.origin)
@@ -355,59 +356,6 @@ async function isAuth(data){
 	}
 	return false;
 }
-
-function forward(sock, msg) {
-	if (msg.destination in conn){
-		console.log("Forwarding protocol %s to %s!",  msg.prot, msg.destination);
-		sendFw(conn[msg.destination], msg);
-	} else{
-		console.log("Destination %s not connected!", msg.destination);
-		if(msg.prot==wss_prot.INIT){
-			/*todo - add checking functionality for queued messages on connect!
-			//q.add2Q(msg);
-			console.log("Waiting for %s to connect!\n Sending waiting signal to %s", msg.destination, msg.origin);
-			send(sock, wss_prot.WAIT);
-			*/
-			send(sock, wss_prot.REFUSE);
-		}else{
-			console.log("Connection error! %s went offline", sock.id);
-			send(sock, wss_prot.ERROR, 'Other end disconnected from server!');
-		}
-	}
-}
-
-function send(sock, sig, data=null, dst=null){
-	var msg = {
-		prot: sig,
-		origin: 'server',
-		destination: dst,
-		data: data
-	}
-	msg = JSON.stringify(msg);
-	if(sock.readyState === WebSocket.OPEN) {
-		console.log("Sending to: ", sock.id)
-		console.log("Sending: ", msg);
-        sock.send(msg);
-    }else{
-    	console.log("Error sending to; ", sock.id);
-    	console.log("Error sending: ", msg);
-		console.log("Socket state: ", sock.readyState);
-    }
-}
-
-function sendFw(sock, msg){
-	msg = JSON.stringify(msg);
-	if(sock.readyState === WebSocket.OPEN) {
-		console.log("Sending to: ", sock.id)
-		console.log("Sending: ", msg);
-        sock.send(msg);
-    }else{
-    	console.log("Error sending to; ", sock.id);
-    	console.log("Error sending: ", msg);
-		console.log("Socket state: ", sock.readyState);
-    }
-}
-
 
 async function decrypt(data){
 //TODO revision for testing!
@@ -477,7 +425,6 @@ async function decrypt(data){
 	});
 }
 
-
 function convertArrayBufferViewtoString(buffer){
     var str = "";
     for (var iii = 0; iii < buffer.byteLength; iii++) 
@@ -486,6 +433,58 @@ function convertArrayBufferViewtoString(buffer){
     }
 
     return str;
+}
+
+function forward(sock, msg) {
+	if (msg.destination in conn){
+		console.log("Forwarding protocol %s to %s!",  msg.prot, msg.destination);
+		sendFw(conn[msg.destination], msg);
+	} else{
+		console.log("Destination %s not connected!", msg.destination);
+		if(msg.prot==wss_prot.INIT){
+			/*todo - add checking functionality for queued messages on connect!
+			//q.add2Q(msg);
+			console.log("Waiting for %s to connect!\n Sending waiting signal to %s", msg.destination, msg.origin);
+			send(sock, wss_prot.WAIT);
+			*/
+			send(sock, wss_prot.REFUSE);
+		}else{
+			console.log("Connection error! %s went offline", sock.id);
+			send(sock, wss_prot.ERROR, 'Other end disconnected from server!');
+		}
+	}
+}
+
+function send(sock, sig, data=null, dst=null){
+	var msg = {
+		prot: sig,
+		origin: 'server',
+		destination: dst,
+		data: data
+	}
+	msg = JSON.stringify(msg);
+	if(sock.readyState === WebSocket.OPEN) {
+		console.log("Sending to: ", sock.id)
+		console.log("Sending: ", msg);
+        sock.send(msg);
+    }else{
+    	console.log("Error sending to; ", sock.id);
+    	console.log("Error sending: ", msg);
+		console.log("Socket state: ", sock.readyState);
+    }
+}
+
+function sendFw(sock, msg){
+	msg = JSON.stringify(msg);
+	if(sock.readyState === WebSocket.OPEN) {
+		console.log("Sending to: ", sock.id)
+		console.log("Sending: ", msg);
+        sock.send(msg);
+    }else{
+    	console.log("Error sending to; ", sock.id);
+    	console.log("Error sending: ", msg);
+		console.log("Socket state: ", sock.readyState);
+    }
 }
 
 //Exit handling!-------------------------------------------------------------------
