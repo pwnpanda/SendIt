@@ -53,10 +53,11 @@ openssl x509 -req -in server-csr.pem -signkey server-key.pem -out server-cert.pe
 
 
 How to deal with message queues?
-How to authenticate?
-	Encrypt email with priv key!
-		*If matching! Authenticate
-		*If not, DENY!
 How to create reqkey with confirmation from other end?
 
-Change rsa-oaep file to set correct hash-value, since framework is bugged!
+How to authenticate?
+	Setup symmetric keys (shared wrapped in corresponding key):
+		-If encrypted email returns correctly, authenticate
+		-If not, deny
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
