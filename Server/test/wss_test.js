@@ -42,7 +42,7 @@ sc.onopen = function () {
 			name: "RSA-OAEP",
 			modulusLength: 2048, //can be 1024, 2048, or 4096
 			publicExponent: new Uint8Array([0x01, 0x00, 0x01]),
-			hash: {name: "SHA-512"}, //can be "SHA-1", "SHA-256", "SHA-384", or "SHA-512"
+			hash: {name: "SHA-1"}, //can be "SHA-1", "SHA-256", "SHA-384", or "SHA-512"
 		},
 		true, //whether the key is extractable (i.e. can be used in exportKey)
 		["encrypt", "decrypt", "wrapKey", "unwrapKey"]
@@ -83,12 +83,13 @@ function gotMessageFromServer(message){
 		case wss_prot.LOOKUP:
 			console.log("Message received: ", msg.data);
 			servkey=(msg.data).key;
+			console.log(servkey);
 			window.crypto.subtle.importKey(
 				"jwk", //can be "jwk" (public or private), "spki" (public only), or "pkcs8" (private only)
 				servkey,
 				{   //these are the algorithm options
 						name: "RSA-OAEP",
-						hash: {name: "SHA-256"}, //can be "SHA-1", "SHA-256", "SHA-384", or "SHA-512"
+						hash: {name: "SHA-1"}, //can be "SHA-1", "SHA-256", "SHA-384", or "SHA-512"
 				},
 				true, //whther the key is extractable (i.e. can be used in exportKey)
 				["encrypt", "wrapKey"]
@@ -221,7 +222,6 @@ function authInit(){
 	//Create authentication proof! TODO
 	//var msg = encrypt(privkey, email);
 	var msg=encrypt(email);
-	send(wss_prot.AUTH_INIT, msg);
 }
 
 function init(){
@@ -278,23 +278,24 @@ function encrypt(data){
 	.then(function(encrypted){
 		encryData = new Uint8Array(encrypted);
 		console.info("Data encrypted: ", encryData);
-		//encrypt (wrap) symmetric key with own private key
-		console.log(keypair.privateKey)
+		//encrypt (wrap) symmetric key with server public key
 		return window.crypto.subtle.wrapKey(
 			"raw", //the export format, must be "raw" (only available sometimes)
 		    symmetric, //the key you want to wrap, must be able to fit in RSA-OAEP padding
-		    keypair.privateKey, //the public key with "wrapKey" usage flag
+		    servkey, //the public key with "wrapKey" usage flag
 		    {   //these are the wrapping key's algorithm options
 		        name: "RSA-OAEP",
-		        hash: {name: "SHA-512"},
+		        hash: {name: "SHA-1"},
 		    }
 		)
 	})
 	.then(function(wrapKey){
 	  //Create object for sharing: iv, wrapped symmetric key amnd cipher
-	  var msg = {iv: iv, wrap: wrapKey, ciph: encryData};
+	  //wrapKey is null?!? TODO
+	  var wrapped = new Uint8Array(wrapKey);
+	  var msg = {iv: iv, wrap: wrapped, ciph: encryData};
 	  console.log("Object", msg);
-	  return msg;
+	  send(wss_prot.AUTH_INIT, msg);
 	})
 	.catch(function(err){
 	  console.error(err);

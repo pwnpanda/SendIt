@@ -58,3 +58,5 @@ How to authenticate?
 		*If matching! Authenticate
 		*If not, DENY!
 How to create reqkey with confirmation from other end?
+
+Change rsa-oaep file to set correct hash-value, since framework is bugged!
