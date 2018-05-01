@@ -10,6 +10,7 @@ var uuid=1;
 var sockuuid=1;
 var sUUID = 0;
 var conn = {};
+var key = new Object();
 
 var wss_prot = {
 //Authentication	
@@ -45,30 +46,7 @@ const serverConfig = {
     key: fs.readFileSync('server-key.pem'),
     cert: fs.readFileSync('server-cert.pem'),
 };
-
-var key = new Object();
-key.publicKey = fs.readFileSync('publickey.jwk');
-key.privateKey = fs.readFileSync('privatekey.jwk');
-
-//TODO! Fucked up library does not allow for import of private key
-crypto.subtle.importKey(
-	"jwk", //can be "jwk" (public or private), "spki" (public only), or "pkcs8" (private only)
-	key.privateKey,
-	{   //these are the algorithm options
-			name: "RSA-OAEP",
-			hash: {name: "SHA-256"}, //can be "SHA-1", "SHA-256", "SHA-384", or "SHA-512"
-	},
-	true, //whther the key is extractable (i.e. can be used in exportKey)
-	["wrapKey", "unwrapKey"]
-)
-.then(function(key){
-	console.log("Privkey imported!");
-	key.privateKey=key;
-})
-.catch(function(e){
-	console.log("Error reading in key ", e);
-});
-//SHA256!!!
+start();
 
 // Create a server for the client html page
 var handleRequest = function(request, response) {
@@ -99,9 +77,85 @@ var handleRequest = function(request, response) {
     }
 };
 
+function start(){
+	
+	try{
+		var buf = fs.readFileSync("./keys.crp", "utf8");
+		var dec = buf.split(";\n");
+
+		//console.log(buf);
+		key.privateKey = JSON.parse(dec[0]);
+		key.publicKey = JSON.parse(dec[1]);
+		key.expkey = key.publicKey;
+
+		Promise.all([
+			(
+				crypto.subtle.importKey(
+					"jwk", //can be "jwk" (public or private), "spki" (public only), or "pkcs8" (private only)
+					key.privateKey,
+					{   //these are the algorithm options
+						name: "RSA-OAEP",
+						hash: {name: "SHA-1"}, //can be "SHA-1", "SHA-256", "SHA-384", or "SHA-512"
+					},
+					true, //whther the key is extractable (i.e. can be used in exportKey)
+					["decrypt", "unwrapKey"]//["wrapKey", "unwrapKey"]
+				)
+			),
+			(
+				crypto.subtle.importKey(
+					"jwk", //can be "jwk" (public or private), "spki" (public only), or "pkcs8" (private only)
+					key.publicKey,
+					{   //these are the algorithm options
+						name: "RSA-OAEP",
+						hash: {name: "SHA-1"}, //can be "SHA-1", "SHA-256", "SHA-384", or "SHA-512"
+					},
+					true, //whther the key is extractable (i.e. can be used in exportKey)
+					["encrypt", "wrapKey"]//["wrapKey", "unwrapKey"]
+				)
+			)
+		])
+		.then(function (keys) {
+			console.log("Keys imported!");
+			key.privateKey = keys[0];
+			key.publicKey = keys[1];
+		});
+	}catch(err){
+		console.log("Error reading cryptofile: ", err);
+		//create keys
+		crypto.subtle.generateKey(
+			{
+				name: "RSA-OAEP",
+				modulusLength: 2048, //can be 1024, 2048, or 4096
+				publicExponent: new Uint8Array([0x01, 0x00, 0x01]),
+				hash: {name: "SHA-1"}, //can be "SHA-1", "SHA-256", "SHA-384", or "SHA-512"
+			},
+			true, //whether the key is extractable (i.e. can be used in exportKey)
+			["encrypt", "decrypt", "wrapKey", "unwrapKey"]
+			//["encrypt", "decrypt"] //must be ["encrypt", "decrypt"] or ["wrapKey", "unwrapKey"]
+		)
+		.then(function(keys){
+			console.log("Keys created!");
+			key=keys;
+			return crypto.subtle.exportKey(
+				"jwk", //can be "jwk" (public or private), "spki" (public only), or "pkcs8" (private only)
+				key.publicKey //can be a publicKey or privateKey, as long as extractable was true
+			)
+		})
+		.then(function(expkey){
+			key.expkey=expkey;
+		})
+		.catch(function(err){
+			console.error(err);
+		});
+	}
+	
+	//console.log("Keys", key);
+	
+}
+// ----------------------------------------------------------------------------------------
+
 var httpsServer = https.createServer(serverConfig, handleRequest);
 httpsServer.listen(HTTPS_PORT, '0.0.0.0');
-// ----------------------------------------------------------------------------------------
 
 // Create a server for handling websocket calls
 var wss = new WebSocketServer({server: httpsServer});
@@ -143,10 +197,10 @@ function handleMessage(sock, msg) {
 			console.log(key.publicKey);
 			if(msg.origin in conn){
 				console.log("Found mail ", msg.origin);
-				send(sock, wss_prot.LOOKUP, {res: true, key: key.publicKey});
+				send(sock, wss_prot.LOOKUP, {res: true, key: key.expkey});
 			}else{
 				console.log("Did not find mail ", msg.origin);
-				send(sock, wss_prot.LOOKUP, {res: false, key: key.publicKey});
+				send(sock, wss_prot.LOOKUP, {res: false, key: key.expkey});
 			}
 			break;
 
@@ -157,6 +211,7 @@ function handleMessage(sock, msg) {
 
 		case wss_prot.AUTH_INIT:
 			console.log("Protocol received: Authentication Initiation");
+			console.log(msg);
 			auth_result(sock, msg);
 			break;
 
@@ -266,11 +321,12 @@ function auth_S_Reply(sock, msg){
 	send(sock, wss_prot.AUTH_S_REPLY, auth, msg.origin);
 }
 
-function auth_result(sock, data){
-	console.log("Conn: ", conn)
+async function auth_result(sock, data){
+	console.log("Conn: ", conn);
+	console.log("Data: ", data.origin)
+	//data=JSON.parse(data);
 	if(data.origin in conn){
-		var key = conn[data.origin].key;
-		if(isAuth(key, data)){
+		if(await isAuth(data)){
 			console.log("User %s is authenticated!", data.origin);
 			conn[data.origin].sock=sock
 			send(sock, wss_prot.AUTH_RESULT, true, data.origin);
@@ -288,11 +344,11 @@ function auth_result(sock, data){
 	}
 }
 
-function isAuth(data){
-	console.log(data);
+async function isAuth(data){
+	//console.log("isAuth data: ", data);
 	//run test! - TODO
 	//decrypt data
-	var decrypted = decrypt(data);
+	var decrypted = await decrypt(data);
 	console.log("Email: " + data.origin + " Decrypted: " + decrypted);
 	if(data.origin === decrypted){
 		return true;
@@ -353,7 +409,7 @@ function sendFw(sock, msg){
 }
 
 
-function decrypt(pubkey, data){
+async function decrypt(data){
 //TODO revision for testing!
 //importkey
 //Decrypt symmkey
@@ -362,9 +418,9 @@ function decrypt(pubkey, data){
 //compare
 //return string/empty string!
 	var thiscon = conn[data.origin];
-	var data = data.data;
 	var decryData;
-	console.log('Data to decrypt/pass on: ', data.data);
+	//console.log('Data to decrypt/pass on: ', data.data);
+	data=data.data;
 	//console.log('Other end has associated key!');
 	//data=JSON.parse(data.data);
 	//console.log("Parsed", data);
@@ -372,47 +428,34 @@ function decrypt(pubkey, data){
 	temp = new Uint8Array(temp);
 	thiscon.iv=temp;
 	temp = new Uint8Array( Object.values(data.wrap) );
+	//console.log("Temp buffer", temp.buffer);
 	decryData = Object.values(data.ciph);
-	console.log(decryData);
+	//console.log(decryData);
 	
-	crypto.subtle.importkey(
-		"jwk", //can be "jwk" (public or private), "spki" (public only), or "pkcs8" (private only)
-		thiscon.key,
-		{   //these are the algorithm options
-				name: "RSA-OAEP",
-				hash: {name: "SHA-512"}, //can be "SHA-1", "SHA-256", "SHA-384", or "SHA-512"
+	return await crypto.subtle.unwrapKey(
+		"raw", //the import format, must be "raw" (only available sometimes)
+		temp.buffer, //the key you want to unwrap
+		key.privateKey, //the private key with "unwrapKey" usage flag
+		{   //these are the wrapping key's algorithm options
+		    name: "RSA-OAEP",
+		    modulusLength: 2048,
+		    publicExponent: new Uint8Array([0x01, 0x00, 0x01]),
+		    hash: {name: "SHA-1"},
+		},
+		{   //this what you want the wrapped key to become (same as when wrapping)
+		    name: "AES-GCM",
+		    length: 256
 		},
 		true, //whether the key is extractable (i.e. can be used in exportKey)
-		thiscon.key.key_ops
+		["encrypt", "decrypt"]
 	)
-	.then(function(key){
-		thiscon.usekey=key;
-
-		return crypto.subtle.unwrapKey(
-			"raw", //the import format, must be "raw" (only available sometimes)
-		    temp.buffer, //the key you want to unwrap
-		    thiscon.usekey, //the private key with "unwrapKey" usage flag
-		    {   //these are the wrapping key's algorithm options
-		        name: "RSA-OAEP",
-		        modulusLength: 2048,
-		        publicExponent: new Uint8Array([0x01, 0x00, 0x01]),
-		        hash: {name: "SHA-512"},
-		    },
-		    {   //this what you want the wrapped key to become (same as when wrapping)
-		        name: "AES-GCM",
-		        length: 256
-		    },
-		    true, //whether the key is extractable (i.e. can be used in exportKey)
-		    ["encrypt", "decrypt"]
-		)
-	})
 	.then(function(symKey){
 		thiscon.symmetric=symKey;
 		console.log(symKey);
 		return crypto.subtle.decrypt(
 			{
 					name: "AES-GCM",
-					iv: km.iv,
+					iv: thiscon.iv,
 					//label: Uint8Array([...]) //optional
 			},
 			thiscon.symmetric,
@@ -426,8 +469,7 @@ function decrypt(pubkey, data){
 		decryData = new Uint8Array(decrypted);
 		decryData = convertArrayBufferViewtoString(decryData);
 		console.log("Data decrypted: ", decryData);
-		decryData = JSON.parse(decryData);
-		return decryData;
+		return JSON.parse(decryData);
 	})
 	.catch(function(err){
 		console.error(err);
@@ -453,10 +495,48 @@ process.on('SIGINT', closeAll, 'SIGINT');
 process.on(`uncaughtException`, closeAll, `uncaughtException`);
 
 
-function closeAll (sig) {
+async function closeAll (sig) {
 	console.log('\nShutting down gracefully after %s :)!', sig)
 	wss.clients.forEach(function(c) {
 		c.close();
 	 });
+	await writeFile();
 	process.exit(sig);
 };
+
+async function writeFile(){
+	var write;
+	//Stores the own email, then own private key, then list of know hosts and public-key-pairs.
+	await Promise.all(
+		[(
+			crypto.subtle.exportKey(
+				"jwk", //can be "jwk" (public or private), "spki" (public only), or "pkcs8" (private only)
+				key.privateKey //can be a publicKey or privateKey, as long as extractable was true
+			)
+		),
+			crypto.subtle.exportKey(
+				"jwk", //can be "jwk" (public or private), "spki" (public only), or "pkcs8" (private only)
+				key.publicKey //can be a publicKey or privateKey, as long as extractable was true
+			)
+		])
+	.then(function (keys) {
+		write =JSON.stringify(keys[0]) + ";\n" + JSON.stringify(keys[1]) + ";\n";
+		
+		/*
+		TODO store connections!
+		for(email in km.keys){
+			write = write + email +";"+JSON.stringify(km.keys[email])+";\n";
+		}
+		*/
+		//Call some function that writes to file, sending write as an argument.
+	
+		try{
+	 		fs.writeFileSync("./keys.crp", write);
+		}catch(err){
+			console.error(err);
+		}
+	}).catch(function(err){
+		//Error-handling just in case
+		console.error(err);
+	});
+}
