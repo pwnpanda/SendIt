@@ -244,13 +244,27 @@ async function authInit(msg){
 	.then(function(symKey){
 		symmetric=symKey;
 		console.log(symKey);
+		return window.crypto.subtle.encrypt(
+			{
+				name: "AES-GCM",
+				iv: iv,
+			},
+			symKey, //from generateKey or importKey above
+			email
+			)
+	})
+	//returns an ArrayBuffer containing the encrypted data
+	.then(function(encrypted){
+		encryData = new Uint8Array(encrypted);
+		console.info("Data encrypted: ", encryData);
+		var msg = {enc: encryData}
+		console.log("Object", msg);
+	  	send(wss_prot.AUTH_INIT, msg);
+	// HERE IS LAST CHANGE!
 	})
 	.catch(function(err){
 		console.error(err);
-		return '';
 	});
-	//var msg = encrypt(privkey, email);
-	//var msg=encrypt(email);
 }
 
 function init(){
