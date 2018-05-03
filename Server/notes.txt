@@ -61,3 +61,22 @@ How to authenticate?
 		-If not, deny
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
+
+Test:
+	Found:
+		Share pubkey & symkey (wrapped)
+
+	Not found:
+		Share pubkey
+
+Auth setup:
+	OK:
+		Store pubkey, reply symkey (wrapped)
+	Not OK:
+		Reply false
+
+Auth reply:
+	OK:
+		If symkey decrypts to correct email
+	Not OK:
+		if error or different

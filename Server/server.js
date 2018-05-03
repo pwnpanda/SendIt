@@ -199,7 +199,9 @@ function handleMessage(sock, msg) {
 				console.log("Found mail ", msg.origin);
 				//create session key and encrypt!
 				//Create function since it will be reused!
-				send(sock, wss_prot.LOOKUP, {res: true, symkey: key.symkey});
+				var thiscon = conn[msg.origin];
+				createSymmkey(sock, wss_prot.LOOKUP, thiscon, key.expkey);
+				//send(sock, wss_prot.LOOKUP, {res: true, symkey: key.symkey});
 			}else{
 				console.log("Did not find mail ", msg.origin);
 				send(sock, wss_prot.LOOKUP, {res: false, key: key.expkey});
@@ -311,14 +313,15 @@ function auth_S_Reply(sock, msg){
    		conn[msg.origin].key = msg.data;
    		conn[msg.origin].sock = sock;
    		conn[msg.origin].id = uuid++;
+   		var thiscon = conn[msg.origin];
    		//TODO fix!
-   		conn[msg.origin].symkey = symkey();
-
    		console.log(conn);
-   	}
+   		createSymmkey(sock, wss_prot.AUTH_S_REPLY, thiscon);
 
-   	//Share symkey!
-	send(sock, wss_prot.AUTH_S_REPLY, auth, msg.origin);
+   	}else{
+	   	//Share symkey! TODO
+		send(sock, wss_prot.AUTH_S_REPLY, {res: auth}, msg.origin);
+	}
 }
 
 //Return authentication result
@@ -485,6 +488,67 @@ function sendFw(sock, msg){
     	console.log("Error sending: ", msg);
 		console.log("Socket state: ", sock.readyState);
     }
+}
+
+function createSymmkey(sock, prot, thiscon, expkey=null){
+	thiscon.iv = crypto.getRandomValues(new Uint8Array(12));
+
+	//Import clients public key!!!
+
+	//Create symmetric key 
+	crypto.subtle.generateKey(
+			{
+				name: "AES-GCM",
+				length: 256,	
+			},
+			true,
+			["encrypt", "decrypt"]
+	)
+	.then(function(key){
+		//Encrypt with symmetric key
+		thiscon.symmetric=key;
+		return crypto.subtle.importKey(
+			"jwk", //can be "jwk" (public or private), "spki" (public only), or "pkcs8" (private only)
+			thiscon.key,
+			{   //these are the algorithm options
+					name: "RSA-OAEP",
+					hash: {name: "SHA-1"}, //can be "SHA-1", "SHA-256", "SHA-384", or "SHA-512"
+			},
+			true, //whther the key is extractable (i.e. can be used in exportKey)
+			["encrypt", "wrapKey"])
+	})
+	.then(function(key){
+		
+		console.log(thiscon.symmetric)
+		//console.log(thiscon.key)
+		//encrypt (wrap) symmetric key with server public key
+		return crypto.subtle.wrapKey(
+			"raw", //the export format, must be "raw" (only available sometimes)
+		    thiscon.symmetric, //the key you want to wrap, must be able to fit in RSA-OAEP padding
+		    key, //the public key with "wrapKey" usage flag
+		    {   //these are the wrapping key's algorithm options
+		        name: "RSA-OAEP",
+		        hash: {name: "SHA-1"},
+		    }
+		)
+	})
+	.then(function(wrapKey){
+	  //Create object for sharing: iv, wrapped symmetric key amnd cipher
+	  //wrapKey is null?!? TODO
+	  var wrapped = new Uint8Array(wrapKey);
+	  var msg;
+	  if(expkey){
+	  	msg = {res: true, iv: thiscon.iv, wrap: wrapped, key: expkey};
+	  }else{
+	  	msg = {res: true, iv: thiscon.iv, wrap: wrapped};
+
+	  }
+	  console.log("Object", msg);
+	  send(sock, prot, msg);
+	})
+	.catch(function(err){
+	  console.error(err);
+	});
 }
 
 //Exit handling!-------------------------------------------------------------------
