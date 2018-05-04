@@ -51,15 +51,19 @@ openssl genrsa -out server-key.pem 2048
 openssl req -new -key server-key.pem -out server-csr.pem
 openssl x509 -req -in server-csr.pem -signkey server-key.pem -out server-cert.pem
 
+How to create reqkey with confirmation from other end?
 
+-----------------------------------------------------------
 How to deal with message queues?
 	Check queue on connection. Start handling if present!
-How to create reqkey with confirmation from other end?
+	
 
 How to authenticate?
 	Setup symmetric keys (shared wrapped in corresponding key):
 		-If encrypted email returns correctly, authenticate
 		-If not, deny
+
+Currently storing server's public key for no reason.
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 Server:
