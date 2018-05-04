@@ -167,7 +167,7 @@ function setupDC1 () {
 	  console.log('Got message (pc1)');
 	  onReceiveMessageCallback(e);
 	}
-  } catch (e) { console.warn('No data channel (pc1)', e); }
+  } catch (e) { console.error('No data channel (pc1)', e); }
 }
 
 function createLocalOffer () {
@@ -176,7 +176,7 @@ function createLocalOffer () {
 	pc1.setLocalDescription(desc, function () {}, function () {})
 	console.info('created local offer', desc)
   },
-  function () { console.warn("Couldn't create offer") },
+  function () { console.error("Couldn't create offer") },
 	sdpConstraints)
 }
 
@@ -262,7 +262,7 @@ function handleOfferFromPC1 (offerDesc) {
 	console.info('Created local answer: ', answerDesc)
 	pc2.setLocalDescription(answerDesc)
   },
-  function () { console.warn("Couldn't create offer") },
+  function () { console.error("Couldn't create offer") },
   sdpConstraints)
 }
 

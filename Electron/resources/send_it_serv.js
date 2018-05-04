@@ -223,7 +223,7 @@ function setupDC1 () {
 	  console.log('Got message (pc1)');
 	  onReceiveMessageCallback(e);
 	}
-  } catch (e) { console.warn('No data channel (pc1)', e); }
+  } catch (e) { console.error('No data channel (pc1)', e); }
 }
 
 function createLocalOffer () {
@@ -240,7 +240,7 @@ function createLocalOffer () {
     send(wss_prot.ACCEPT, d, km.otherEnd);
 
   },
-  function () { console.warn("Couldn't create offer") },
+  function () { console.error("Couldn't create offer") },
 	sdpConstraints)
   p=pc1;
 }
@@ -254,6 +254,7 @@ pc1.onicecandidate = function (e) {
     var d = encrypt(pubkey, e.candidate);
     //Send ICE trickling
     //wat TODO
+    console.log("ICE in pc1: ", d);
     send(wss_prot.ICE, d, km.otherEnd);
   }else{
     console.log('Finished gathering ICE candidates!');
@@ -333,7 +334,7 @@ function handleOfferFromPC1 (offerDesc) {
     //Send Accept connection message
     send(wss_prot.ANSWER, JSON.parse(d), km.otherEnd);
   },
-  function () { console.warn("Couldn't create offer") },
+  function () { console.error("Couldn't create offer") },
   sdpConstraints)
   p=pc2;
 }
@@ -346,6 +347,7 @@ pc2.onicecandidate = function (e) {
     var d = encrypt(pubkey, e.candidate);
     //Send ICE trickling
     //wat TODO parse??
+    console.log("ICE in pc2: ", JSON.parse(d));
     send(wss_prot.ICE, JSON.parse(d), km.otherEnd);
   }else{
     console.log('Finished gathering ICE candidates!');
@@ -359,6 +361,7 @@ pc2.onicegatheringstatechange = onicegatheringstatechange
 pc2.onconnection = handleOnconnection
 
 function addIce(ice){
+  console.warn("Sharing ICE:", ice)
   p.addIceCandidate(new RTCIceCandidate(JSON.parse(ice)));
 }
 //Source: https://gist.github.com/jeromeetienne/2651899

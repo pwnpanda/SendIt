@@ -248,7 +248,7 @@ KeyManager.prototype = {
 
 	//Decrypt data by using symmetric key
 	decryptData: function(data, iv){
-		console.warn(km.iv, km.symmetric, data);
+		console.log(km.iv, km.symmetric, data);
 		return window.crypto.subtle.decrypt(
 			{
 					name: "AES-GCM",

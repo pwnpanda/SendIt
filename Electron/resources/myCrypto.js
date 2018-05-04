@@ -96,7 +96,7 @@ function encrypt(pubkey, data){
   if(pubkey != null){
     console.log('Other end has associated key!', pubkey);
     km.encrypt = convertStringToArrayBufferView(JSON.stringify(data));
-    console.warn(km.encrypt);
+    console.log(km.encrypt);
     km.iv = window.crypto.getRandomValues(new Uint8Array(12));
     //Create symmetric key  
     km.createSymmKey()
@@ -161,7 +161,7 @@ function decrypt(pubkey, data){
     })
     .then(function(decrypted){
       //returns an ArrayBuffer containing the decrypted data
-      console.warn("Data decrypted raw: ", new Uint8Array(decrypted));
+      console.log("Data decrypted raw: ", new Uint8Array(decrypted));
       decryData = new Uint8Array(decrypted);
       decryData = convertArrayBufferViewtoString(decryData);
       console.log("Data decrypted: ", decryData);
@@ -222,7 +222,7 @@ function decryptReply(data){
     km.decryptData(decryData, km.iv)
     .then(function(decrypted){
       //returns an ArrayBuffer containing the decrypted data
-      console.warn("Data decrypted raw: ", new Uint8Array(decrypted));
+      console.log("Data decrypted raw: ", new Uint8Array(decrypted));
       decryData = new Uint8Array(decrypted);
       decryData = convertArrayBufferViewtoString(decryData);
       console.log("Data decrypted: ", decryData);
