@@ -87,6 +87,15 @@ function start(){
 		//console.log(buf);
 		key.privateKey = JSON.parse(dec[0]);
 		key.publicKey = JSON.parse(dec[1]);
+
+		//create list of conn!
+		for (var i = 2; i < dec.length-1; i++) {
+			console.log(dec[i]);
+			var tmp = dec[i].split(";");
+			conn[tmp[0]] = new Object();
+			conn[tmp[0]].key = JSON.parse(tmp[1]);
+		}
+
 		key.expkey = key.publicKey;
 
 		Promise.all([
@@ -245,6 +254,7 @@ function handleMessage(sock, msg) {
 		
 		case wss_prot.REQKEY:
 			console.log("Protocol received: Request Key! Looking for key for: ", msg.data);
+			//todo fix!
 			if(msg.data in conn){
 				console.log("Found key for ", msg.data);
 				var x = msg.data;
@@ -427,7 +437,7 @@ function send(sock, sig, data=null, dst=null){
 function forward(sock, msg) {
 	if (msg.destination in conn){
 		console.log("Forwarding protocol %s to %s!",  msg.prot, msg.destination);
-		sendFw(conn[msg.destination], msg);
+		sendFw(conn[msg.destination].sock, msg);
 	} else{
 		console.log("Destination %s not connected!", msg.destination);
 		if(msg.prot==wss_prot.INIT){
@@ -554,14 +564,11 @@ async function writeFile(){
 	.then(function (keys) {
 		write =JSON.stringify(keys[0]) + ";\n" + JSON.stringify(keys[1]) + ";\n";
 		
-		/*
-		TODO store connections!
-		for(email in km.keys){
-			write = write + email +";"+JSON.stringify(km.keys[email])+";\n";
+		//TEST!
+		for(con in conn){
+			write = write + con +";"+JSON.stringify(conn[con].key)+";\n";
 		}
-		*/
-		//Call some function that writes to file, sending write as an argument.
-	
+				
 		try{
 	 		fs.writeFileSync("./keys.crp", write);
 		}catch(err){

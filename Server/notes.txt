@@ -1,8 +1,3 @@
-Todo:
-	- Create server
-
-----------------------------------------------------
-
 New functionality change:
 	*CHANGE TO TWO STEPS!!!
 		-1 Connect and 'register' as present (establish WSS) - Authenticate with keys if previously registered email!
@@ -51,11 +46,13 @@ openssl genrsa -out server-key.pem 2048
 openssl req -new -key server-key.pem -out server-csr.pem
 openssl x509 -req -in server-csr.pem -signkey server-key.pem -out server-cert.pem
 
+-----------------------------------------------------------
 How to create reqkey with confirmation from other end?
 
 -----------------------------------------------------------
 How to deal with message queues?
-	Check queue on connection. Start handling if present!
+	Check queue on connection.
+		Start handling right after authentication if present!
 	
 
 How to authenticate?
@@ -63,7 +60,7 @@ How to authenticate?
 		-If encrypted email returns correctly, authenticate
 		-If not, deny
 
-Currently storing server's public key for no reason.
+Currently storing server's public key for no reason.	Commented out!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 Server:
@@ -96,3 +93,8 @@ Client:
 
 	Auth reply:
 		If decryption is successful, true. If not, false.
+
+-------------------------------------------------------------------
+
+TODO - problems with JSOn formatting when encrypted/not!
+Test and fix!

@@ -53,8 +53,8 @@ function onReceiveMessageCallback(event) {
 		//File recieved by partner
 		console.log("File recieved by partner!");
 		curFileNum++;
-		if(curFileNum == nrOfFiles){
-			closeDataChannels({action: protocol.DONE});
+		if(curFileNum >= nrOfFiles){
+			closeDataChannels(wss_prot.DONE);
 			document.querySelector('#transferDetailsEnd').innerHTML = 'Filename: ' + fmArray[curFileNum-1].fileName + '. Filetype: '+fmArray[curFileNum-1].fileType + '. Filenumber ' + curFileNum + '/' + nrOfFiles + '. Percent: 100/100';
 			//Add line for each file completed!
 			var doc = document.querySelector('#download');
@@ -78,15 +78,16 @@ function onReceiveMessageCallback(event) {
 //https://github.com/webrtc/samples/blob/gh-pages/src/content/datachannel/filetransfer/js/main.js - INFO
 //Close channels and cleanup
 function closeDataChannels(e) {
-	if(activedc != null && activedc !== undefined && activedc.readyState === 'open' && e!=null){
-		doSend(e);
-		console.log('Closing data channel');
-		activedc.close();
+	if(sc != null && sc !== undefined && e!=null){
+		if(km.otherEnd !=null && km.otherEnd!='')	send(wss_prot.ERROR, e, km.otherEnd);		
+		send(e);
 	}
 	$('#connectedScreen').modal('hide');
 	$('#endScreen').modal('show');
 
 
+	console.log('Closing data channel');
+	activedc.close();
 	console.info('Closed data channel');
 
 	pc1.close();
@@ -242,7 +243,7 @@ function transferComplete(){
     })
 	curFileNum++;
 	
-	if(curFileNum == nrOfFiles){
+	if(curFileNum >= nrOfFiles){
   		var div = document.querySelector("#download");
 		div.innerHTML = "Files received: <br>"
 		
