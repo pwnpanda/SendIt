@@ -77,6 +77,7 @@ var handleRequest = function(request, response) {
     }
 };
 
+//Read in keypair or create one if first run.
 function start(){
 	
 	try{
@@ -163,13 +164,6 @@ var wss = new WebSocketServer({server: httpsServer});
 wss.on('connection', function(ws) {
    	ws.id=sockuuid++;
    	console.log("Client %d connected!", ws.id);
-   	var d= { files:
-		{
-			0: { fname: 'testFile', ftype: 'exe', fsize: '2000'},
-			1: { fname: 'testPic', ftype: 'jpg', fsize: '1000' }
-		}
-	}
-   	//send(ws, wss_prot.INIT, d, 'Test!');
 
     //Message received in server!
     ws.onmessage = function(message) {
@@ -195,11 +189,15 @@ function handleMessage(sock, msg) {
 		case wss_prot.LOOKUP:
 			console.log("Received mail: ", msg.origin);
 			//console.log(key.publicKey);
+
+
 			if(msg.origin in conn){
 				console.log("Found mail ", msg.origin);
-				//create session key and encrypt!
-				//Create function since it will be reused!
 				var thiscon = conn[msg.origin];
+				//Check queue for waiting connections!
+				//checkQueue(thiscon);
+
+				//create session key!
 				createSymmkey(sock, wss_prot.LOOKUP, thiscon, key.expkey);
 				//send(sock, wss_prot.LOOKUP, {res: true, symkey: key.symkey});
 			}else{
@@ -240,6 +238,9 @@ function handleMessage(sock, msg) {
 		
 		case wss_prot.DONE:
 			console.log("Protocol received: Done");
+			//Check the queue!
+			//var thiscon = conn[msg.origin];
+			//checkQueue();
 			break;
 		
 		case wss_prot.REQKEY:
@@ -314,7 +315,7 @@ function auth_S_Reply(sock, msg){
    		conn[msg.origin].sock = sock;
    		conn[msg.origin].id = uuid++;
    		var thiscon = conn[msg.origin];
-   		//TODO fix!
+
    		console.log(conn);
    		createSymmkey(sock, wss_prot.AUTH_S_REPLY, thiscon);
 
@@ -348,9 +349,9 @@ async function auth_result(sock, data){
 	}
 }
 
+//Compare and authenticate
 async function isAuth(data){
 	//console.log("isAuth data: ", data);
-	//run test! - TODO
 	//decrypt data
 	var decrypted = await decrypt(data);
 	console.log("Email: " + data.origin + " Decrypted: " + decrypted);
@@ -360,67 +361,30 @@ async function isAuth(data){
 	return false;
 }
 
+//Decrypt data and return value or empty string
 async function decrypt(data){
-//TODO revision for testing!
-//importkey
-//Decrypt symmkey
-//import symmkey
-//decrypt
-//compare
-//return string/empty string!
 	var thiscon = conn[data.origin];
 	var decryData;
-	//console.log('Data to decrypt/pass on: ', data.data);
 	data=data.data;
-	//console.log('Other end has associated key!');
-	//data=JSON.parse(data.data);
-	//console.log("Parsed", data);
-	var temp = Object.values(data.iv);
-	temp = new Uint8Array(temp);
-	thiscon.iv=temp;
-	temp = new Uint8Array( Object.values(data.wrap) );
-	//console.log("Temp buffer", temp.buffer);
 	decryData = Object.values(data.ciph);
-	//console.log(decryData);
 	
-	return await crypto.subtle.unwrapKey(
-		"raw", //the import format, must be "raw" (only available sometimes)
-		temp.buffer, //the key you want to unwrap
-		key.privateKey, //the private key with "unwrapKey" usage flag
-		{   //these are the wrapping key's algorithm options
-		    name: "RSA-OAEP",
-		    modulusLength: 2048,
-		    publicExponent: new Uint8Array([0x01, 0x00, 0x01]),
-		    hash: {name: "SHA-1"},
+	return crypto.subtle.decrypt(
+		{
+			name: "AES-GCM",
+			iv: thiscon.iv,
+			//label: Uint8Array([...]) //optional
 		},
-		{   //this what you want the wrapped key to become (same as when wrapping)
-		    name: "AES-GCM",
-		    length: 256
-		},
-		true, //whether the key is extractable (i.e. can be used in exportKey)
-		["encrypt", "decrypt"]
+		thiscon.symmetric,
+		//this.key.privateKey, //from generateKey or importKey above
+		new Uint8Array(decryData)//ArrayBuffer of the data
 	)
-	.then(function(symKey){
-		thiscon.symmetric=symKey;
-		console.log(symKey);
-		return crypto.subtle.decrypt(
-			{
-					name: "AES-GCM",
-					iv: thiscon.iv,
-					//label: Uint8Array([...]) //optional
-			},
-			thiscon.symmetric,
-			//this.key.privateKey, //from generateKey or importKey above
-			new Uint8Array(decryData)//ArrayBuffer of the data
-		);
-	})
 	.then(function(decrypted){
 		//returns an ArrayBuffer containing the decrypted data
 		console.warn("Data decrypted raw: ", new Uint8Array(decrypted));
 		decryData = new Uint8Array(decrypted);
 		decryData = convertArrayBufferViewtoString(decryData);
 		console.log("Data decrypted: ", decryData);
-		return JSON.parse(decryData);
+		return decryData;
 	})
 	.catch(function(err){
 		console.error(err);
@@ -428,6 +392,7 @@ async function decrypt(data){
 	});
 }
 
+//Convert from array buffer to string
 function convertArrayBufferViewtoString(buffer){
     var str = "";
     for (var iii = 0; iii < buffer.byteLength; iii++) 
@@ -438,26 +403,7 @@ function convertArrayBufferViewtoString(buffer){
     return str;
 }
 
-function forward(sock, msg) {
-	if (msg.destination in conn){
-		console.log("Forwarding protocol %s to %s!",  msg.prot, msg.destination);
-		sendFw(conn[msg.destination], msg);
-	} else{
-		console.log("Destination %s not connected!", msg.destination);
-		if(msg.prot==wss_prot.INIT){
-			/*todo - add checking functionality for queued messages on connect!
-			//q.add2Q(msg);
-			console.log("Waiting for %s to connect!\n Sending waiting signal to %s", msg.destination, msg.origin);
-			send(sock, wss_prot.WAIT);
-			*/
-			send(sock, wss_prot.REFUSE);
-		}else{
-			console.log("Connection error! %s went offline", sock.id);
-			send(sock, wss_prot.ERROR, 'Other end disconnected from server!');
-		}
-	}
-}
-
+//Send message through socket
 function send(sock, sig, data=null, dst=null){
 	var msg = {
 		prot: sig,
@@ -477,6 +423,27 @@ function send(sock, sig, data=null, dst=null){
     }
 }
 
+//Try to forward message
+function forward(sock, msg) {
+	if (msg.destination in conn){
+		console.log("Forwarding protocol %s to %s!",  msg.prot, msg.destination);
+		sendFw(conn[msg.destination], msg);
+	} else{
+		console.log("Destination %s not connected!", msg.destination);
+		if(msg.prot==wss_prot.INIT){
+			/*todo - add checking functionality for queued messages on connect!
+			//q.add2Q(msg);
+			console.log("Waiting for %s to connect!\n Sending waiting signal to %s", msg.destination, msg.origin);
+			send(sock, wss_prot.WAIT);
+			*/
+			send(sock, wss_prot.REFUSE);
+		}else{
+			console.log("Connection error! %s went offline", sock.id);
+			send(sock, wss_prot.ERROR, 'Other end disconnected from server!');
+		}
+	}
+}
+//Send to correct destination
 function sendFw(sock, msg){
 	msg = JSON.stringify(msg);
 	if(sock.readyState === WebSocket.OPEN) {
@@ -490,6 +457,7 @@ function sendFw(sock, msg){
     }
 }
 
+//Create symmetric key for connection
 function createSymmkey(sock, prot, thiscon, expkey=null){
 	thiscon.iv = crypto.getRandomValues(new Uint8Array(12));
 
@@ -557,7 +525,7 @@ process.on('SIGINT', closeAll, 'SIGINT');
 //process.on('exit', closeAll, 'exit');
 process.on(`uncaughtException`, closeAll, `uncaughtException`);
 
-
+//Error-handling and gracious shutdown
 async function closeAll (sig) {
 	console.log('\nShutting down gracefully after %s :)!', sig)
 	wss.clients.forEach(function(c) {
@@ -567,6 +535,7 @@ async function closeAll (sig) {
 	process.exit(sig);
 };
 
+//Write data to file
 async function writeFile(){
 	var write;
 	//Stores the own email, then own private key, then list of know hosts and public-key-pairs.
