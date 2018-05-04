@@ -102,7 +102,7 @@ KeyManager.prototype = {
 				name: "RSA-OAEP",
 				modulusLength: 2048, //can be 1024, 2048, or 4096
 				publicExponent: new Uint8Array([0x01, 0x00, 0x01]),
-				hash: {name: "SHA-512"}, //can be "SHA-1", "SHA-256", "SHA-384", or "SHA-512"
+				hash: {name: "SHA-1"}, //can be "SHA-1", "SHA-256", "SHA-384", or "SHA-512"
 			},
 			true, //whether the key is extractable (i.e. can be used in exportKey)
 			["wrapKey", "unwrapKey"]
@@ -150,7 +150,7 @@ KeyManager.prototype = {
 			key,
 			{   //these are the algorithm options
 					name: "RSA-OAEP",
-					hash: {name: "SHA-512"}, //can be "SHA-1", "SHA-256", "SHA-384", or "SHA-512"
+					hash: {name: "SHA-1"}, //can be "SHA-1", "SHA-256", "SHA-384", or "SHA-512"
 			},
 			true, //whether the key is extractable (i.e. can be used in exportKey)
 			use //"encrypt" or "wrapKey" for public key import or
@@ -166,7 +166,7 @@ KeyManager.prototype = {
 		    pubkey, //the public key with "wrapKey" usage flag
 		    {   //these are the wrapping key's algorithm options
 		        name: "RSA-OAEP",
-		        hash: {name: "SHA-512"},
+		        hash: {name: "SHA-1"},
 		    }
 		)
 		.then(function(wrapped){
@@ -190,7 +190,7 @@ KeyManager.prototype = {
 		        name: "RSA-OAEP",
 		        modulusLength: 2048,
 		        publicExponent: new Uint8Array([0x01, 0x00, 0x01]),
-		        hash: {name: "SHA-512"},
+		        hash: {name: "SHA-1"},
 		    },
 		    {   //this what you want the wrapped key to become (same as when wrapping)
 		        name: "AES-GCM",
@@ -201,7 +201,7 @@ KeyManager.prototype = {
 		)
 		.then(function(key){
 		    //returns a key object
-		    console.log(key);
+		    //console.log(key);
 		    km.symmetric=key;
 		    return key;
 		})
@@ -230,7 +230,7 @@ KeyManager.prototype = {
 	},
 	
 	//Encrypt data by using symmetric key
-	encryptData: function(key, data){
+	encryptData: function(key, data, iv){
 		console.log("Encrypting: ", data, key);
 		if(key == null){
 			console.error("There is no key associated with this address!!!");
@@ -238,7 +238,7 @@ KeyManager.prototype = {
 		return window.crypto.subtle.encrypt(
 			{
 					name: "AES-GCM",
-					iv: km.iv,
+					iv: iv,
 					//label: Uint8Array([...]) //optional
 			},
 			key, //from generateKey or importKey above
@@ -247,12 +247,12 @@ KeyManager.prototype = {
 	},
 
 	//Decrypt data by using symmetric key
-	decryptData: function(data){
+	decryptData: function(data, iv){
 		console.warn(km.iv, km.symmetric, data);
 		return window.crypto.subtle.decrypt(
 			{
 					name: "AES-GCM",
-					iv: km.iv,
+					iv: iv,
 					//label: Uint8Array([...]) //optional
 			},
 			km.symmetric,

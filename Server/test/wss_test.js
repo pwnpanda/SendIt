@@ -295,15 +295,6 @@ function init(){
 	}
 }
 
-//------------------------------------------------------------------------------
-//Handles graceful shutdown!
-window.addEventListener('unload', messageSend, false);
-
-function messageSend(){
-    //sc.send(JSON.stringify({'log': log, 'uuid': uuid}));
-    sc.close();
-}
-
 function convertStringToArrayBufferView(str){
     var bytes = new Uint8Array(str.length);
     for (var iii = 0; iii < str.length; iii++) 
@@ -313,3 +304,12 @@ function convertStringToArrayBufferView(str){
 
     return bytes;
 }   
+
+//------------------------------------------------------------------------------
+//Handles graceful shutdown!
+window.addEventListener('unload', messageSend, false);
+
+function messageSend(){
+    //sc.send(JSON.stringify({'log': log, 'uuid': uuid}));
+    sc.close();
+}

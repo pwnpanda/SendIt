@@ -165,7 +165,7 @@ $('#initSendBtn').click(function () {
   km.otherEnd=sanatize($("#recMailInput").val());
 
   stageFiles();
-  wsInit();
+  wsInitFiles();
   reset();
   $('#showHome').modal('hide');
   $('#myStat').html('Waiting for Receiver to answer...');

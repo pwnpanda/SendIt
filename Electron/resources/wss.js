@@ -60,7 +60,7 @@ function wscon(){
 
 
 	sc.onopen = function () {
-	   	send(wss_prot.TEST, myMail);
+	   	send(wss_prot.LOOKUP);
 	};
 
 	sc.onmessage = gotMessageFromServer;
@@ -80,20 +80,18 @@ function gotMessageFromServer(message){
 	var msg = JSON.parse(message.data);
 	//console.log("Received: ", msg);
 	switch(msg.prot){
-		case wss_prot.TEST:
-			console.log("Message received: ", msg.data);
-			if(msg.data === 'pong'){
-				console.log("PingPong done!");
-				authSetup();
-			}
+		//TODO change
+		case wss_prot.LOOKUP:
+			console.log("Lookup message received: ", msg.data);
+			lookupReply(msg.data);
 			break;
 
 		case wss_prot.AUTH_S_REPLY:
 			console.log("Protocol received: Authentication setup reply");
-			if(msg.data){
+			if((msg.data).res){
 				console.log("Authentication setup successful!");
 				//Test the authentication set up!
-				authInit();
+				authenticate(msg.data);
 			}else{
 				console.log("Authentication setup failed!");
 				sc.close();
@@ -105,7 +103,6 @@ function gotMessageFromServer(message){
 			console.log("Protocol received: Authentication Result");
 			if(msg.data){
 				console.log("Authentication successful!");
-				//init();
 			}else{
 				console.log("Authentication failed!");
 				sc.close();
@@ -124,6 +121,7 @@ function gotMessageFromServer(message){
 		case wss_prot.INIT:
 			console.log("Protocol received: Initialize connection. Data: ", msg.data);
 			reset();
+			//Show correct information on screen
     		$('#showHome').modal('hide');
     		//TODO beautify!
     		var st = 'Current email: '+km.email+'<br><br>Receivers email: '+msg.destination+'<br><i>Indicated by sender</i><br><br>Senders email: '+msg.origin;
@@ -141,14 +139,6 @@ function gotMessageFromServer(message){
 			}
 			document.getElementById('listRec').innerHTML = '<ul style="list-style-type: none;">' + output.join('') + '</ul>';
   			$('#showReceive').modal('show');
-			
-			/*if(confirm('Receive!')){
-				var offer = "offer";
-				send(wss_prot.ACCEPT, offer, msg.origin);
-			}else{
-				console.log('Declined receiving data from %s!', msg.origin);
-				send(wss_prot.REFUSE, null, msg.origin);
-			}*/
 			break;
 
 		case wss_prot.KEY:
@@ -207,20 +197,27 @@ function gotMessageFromServer(message){
 	}	
 }
 
-function send(sig, data=null, dst=null){
-	var msg = {
-		prot: sig,
-		origin: myMail,
-		destination: dst,
-		data: data
-	}
-	msg = JSON.stringify(msg);
-	if(sc.readyState === WebSocket.OPEN) {
-		console.log("Sending: ", msg);
-        sc.send(msg);
-    }else{
-		console.log("Error sending! Socket state: ", sc.readyState);
-    }
+function lookupReply(msg){
+	/*servkey=msg.key;
+	console.log(servkey);
+	//Import server's key
+	km.importKey(servkey, ["encrypt", "wrapKey"])
+	.then(function(key){
+		//km.servkey=key;
+		km.storeKey(server, servkey);*/
+		//If previously connected to the server, authenticate
+		if(msg.res){			
+			console.log("Email found in server!");
+			authenticate(msg);
+		//If not setup 
+		}else{
+			console.log("Email not found in server!");
+			authSetup();
+		}
+	/*})
+	.catch(function(e){
+		console.error("Reading in error: ", e);
+	})*/
 }
 
 function authSetup(){
@@ -242,15 +239,40 @@ function authSetup(){
 	});
 }
 
-function authInit(){
-	//Create authentication proof! TODO
-	//console.log(km);
-	//var msg = encrypt(km.key.privateKey, km.email);
-	var msg='OK!';
-	send(wss_prot.AUTH_INIT, msg);
+async function authenticate(msg){
+	console.log("Authenticate", msg);
+
+	//Retrieve IV
+	var temp = Object.values(msg.iv);
+	temp = new Uint8Array(temp);
+	km.serviv=temp;
+	//Get wrapped session key
+	temp = new Uint8Array( Object.values(msg.wrap) );
+	//Unwrap session key
+	await km.unwrapKey(temp.buffer, km.key.privateKey)
+//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	//Proves you have private key corresponding to servers stored public key!
+//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	//Encrypt own email with correct sessionkey
+	.then(function(symKey){
+		km.servSymmetric=symKey;
+		//console.log(symKey);
+		return km.encryptData(km.servSymmetric, convertStringToArrayBufferView(myMail), km.serviv)
+	})
+	//returns an ArrayBuffer containing the encrypted data
+	.then(function(encrypted){
+		encryData = new Uint8Array(encrypted);
+		console.info("Data encrypted: ", encryData);
+		var msg = {ciph: encryData}
+		console.log("Encrypted", msg);
+	  	send(wss_prot.AUTH_INIT, msg);
+	})
+	.catch(function(err){
+		console.error(err);
+	});
 }
 
-function wsInit(){
+function wsInitFiles(){
 	//Need meta-data of file!
 	var data;
 	//console.warn(fmArray);
@@ -270,6 +292,34 @@ function wsInit(){
 	send(wss_prot.INIT, data, km.otherEnd);
 }
 
+function send(sig, data=null, dst=null){
+	var msg = {
+		prot: sig,
+		origin: myMail,
+		destination: dst,
+		data: data
+	}
+	msg = JSON.stringify(msg);
+	if(sc.readyState === WebSocket.OPEN) {
+		console.log("Sending: ", msg);
+        sc.send(msg);
+    }else{
+		console.log("Error sending! Socket state: ", sc.readyState);
+    }
+}
+
+function convertStringToArrayBufferView(str){
+    var bytes = new Uint8Array(str.length);
+    for (var iii = 0; iii < str.length; iii++) 
+    {
+        bytes[iii] = str.charCodeAt(iii);
+    }
+
+    return bytes;
+}   
+
+//------------------------------------------------------------------------------
+//Handles graceful shutdown!
 window.addEventListener('unload', messageSend, false);
 
 function messageSend(){

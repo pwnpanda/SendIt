@@ -102,7 +102,7 @@ function encrypt(pubkey, data){
     km.createSymmKey()
     .then(function(key){
       //Encrypt with symmetric key
-      return km.encryptData(key, km.encrypt)
+      return km.encryptData(key, km.encrypt, km.iv)
     })
     //returns an ArrayBuffer containing the encrypted data
     .then(function(encrypted){
@@ -157,7 +157,7 @@ function decrypt(pubkey, data){
     .then(function(symKey){
       km.symmetric=symKey;
       console.log(symKey);
-      return km.decryptData(new Uint8Array(temp));
+      return km.decryptData(new Uint8Array(temp), km.iv);
     })
     .then(function(decrypted){
       //returns an ArrayBuffer containing the decrypted data
@@ -186,7 +186,7 @@ function encryptReply(pubkey, data){
   km.encrypt = convertStringToArrayBufferView(JSON.stringify(data));
   console.log('Data to encrypt/pass on: ', km.encrypt);
   if(pubkey != null){
-    km.encryptData(km.symmetric, km.encrypt)
+    km.encryptData(km.symmetric, km.encrypt, km.iv)
     //returns an ArrayBuffer containing the encrypted data
     .then(function(encrypted){
       encryData = new Uint8Array(encrypted);
@@ -219,7 +219,7 @@ function decryptReply(data){
     //console.log("1",decryData);
     decryData = new Uint8Array(decryData);
     //console.log("2",decryData);
-    km.decryptData(decryData)
+    km.decryptData(decryData, km.iv)
     .then(function(decrypted){
       //returns an ArrayBuffer containing the decrypted data
       console.warn("Data decrypted raw: ", new Uint8Array(decrypted));

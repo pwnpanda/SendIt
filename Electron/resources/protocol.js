@@ -78,15 +78,15 @@ function onReceiveMessageCallback(event) {
 //https://github.com/webrtc/samples/blob/gh-pages/src/content/datachannel/filetransfer/js/main.js - INFO
 //Close channels and cleanup
 function closeDataChannels(e) {
-	if(activedc.readyState === 'open' && e!=null){
+	if(activedc != null && activedc !== undefined && activedc.readyState === 'open' && e!=null){
 		doSend(e);
+		console.log('Closing data channel');
+		activedc.close();
 	}
 	$('#connectedScreen').modal('hide');
 	$('#endScreen').modal('show');
 
 
-	console.log('Closing data channel');
-	activedc.close();
 	console.info('Closed data channel');
 
 	pc1.close();
