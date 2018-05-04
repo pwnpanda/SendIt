@@ -33,7 +33,9 @@ var servkey;
 
 
 var  sc = new WebSocket('wss://' + window.location.hostname + ':7443');
+//when connected to websocket
 sc.onopen = function () {
+	//Create keypair
 	window.crypto.subtle.generateKey(
 		{
 			name: "RSA-OAEP",
@@ -47,6 +49,7 @@ sc.onopen = function () {
 	)
 	.then(function(keys){
 		keypair=keys;
+		//Get public key ready for sharing
 		return window.crypto.subtle.exportKey(
 			"jwk",
 			keys.publicKey
@@ -54,6 +57,7 @@ sc.onopen = function () {
 	})
 	.then(function(expkey){
 		pubkey=expkey;
+		//Initiate connection
    		send(wss_prot.LOOKUP);
 	})
 	.catch(function(e){
@@ -73,6 +77,7 @@ sc.onerror = function(err){
 
 };
 
+//Handle messages from server
 function gotMessageFromServer(message){
 	var msg = JSON.parse(message.data);
 	//console.log("Received: ", msg);
@@ -81,6 +86,7 @@ function gotMessageFromServer(message){
 			console.log("Message received: ", msg.data);
 			servkey=(msg.data).key;
 			console.log(servkey);
+			//Import server's key
 			window.crypto.subtle.importKey(
 				"jwk", //can be "jwk" (public or private), "spki" (public only), or "pkcs8" (private only)
 				servkey,
@@ -93,9 +99,11 @@ function gotMessageFromServer(message){
 			)
 			.then(function(key){
 				servkey=key;
+				//If previously connected to the server, authenticate
 				if((msg.data).res){
 					console.log("Email found in server!");
 					authInit(msg.data);
+				//If not setup 
 				}else{
 					console.log("Email not found in server!");
 					authSetup();
@@ -218,12 +226,14 @@ function authSetup(){
 
 async function authInit(msg){
 	console.log(msg);
-	//Create authentication proof! TODO
-	//Unwrap, decrypt, return
+
+	//Retrieve IV
 	var temp = Object.values(msg.iv);
 	temp = new Uint8Array(temp);
 	var iv=temp;
+	//Get wrapped session key
 	temp = new Uint8Array( Object.values(msg.wrap) );
+	//Unwrap session key
 	await crypto.subtle.unwrapKey(
 		"raw", //the import format, must be "raw" (only available sometimes)
 		temp.buffer, //the key you want to unwrap
@@ -241,6 +251,10 @@ async function authInit(msg){
 		true, //whether the key is extractable (i.e. can be used in exportKey)
 		["encrypt", "decrypt"]
 	)
+//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	//Proves you have private key corresponding to servers stored public key!
+//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	//Encrypt own email with correct sessionkey
 	.then(function(symKey){
 		symmetric=symKey;
 		console.log(symKey);
@@ -250,17 +264,16 @@ async function authInit(msg){
 				iv: iv,
 			},
 			symKey, //from generateKey or importKey above
-			email
+			convertStringToArrayBufferView(email)
 			)
 	})
 	//returns an ArrayBuffer containing the encrypted data
 	.then(function(encrypted){
 		encryData = new Uint8Array(encrypted);
 		console.info("Data encrypted: ", encryData);
-		var msg = {enc: encryData}
+		var msg = {ciph: encryData}
 		console.log("Object", msg);
 	  	send(wss_prot.AUTH_INIT, msg);
-	// HERE IS LAST CHANGE!
 	})
 	.catch(function(err){
 		console.error(err);
@@ -282,67 +295,13 @@ function init(){
 	}
 }
 
+//------------------------------------------------------------------------------
+//Handles graceful shutdown!
 window.addEventListener('unload', messageSend, false);
 
 function messageSend(){
     //sc.send(JSON.stringify({'log': log, 'uuid': uuid}));
     sc.close();
-}
-
-//Review!! TODO!
-//TESTING!
-function encrypt(data){
-	console.log("Data in : ",data)
-	var encryData;
-	encryData = convertStringToArrayBufferView(JSON.stringify(data));
-	console.warn(encryData);
-	var iv = window.crypto.getRandomValues(new Uint8Array(12));
-	//Create symmetric key  	
-	window.crypto.subtle.generateKey(
-			{
-				name: "AES-GCM",
-				length: 256,	
-			},
-			true,
-			["encrypt", "decrypt"]
-	)
-	.then(function(key){
-		//Encrypt with symmetric key
-		symmetric=key;
-		return window.crypto.subtle.encrypt(
-			{
-				name: "AES-GCM",
-				iv: iv,
-			},
-			key, //from generateKey or importKey above
-			encryData)
-	})
-	//returns an ArrayBuffer containing the encrypted data
-	.then(function(encrypted){
-		encryData = new Uint8Array(encrypted);
-		console.info("Data encrypted: ", encryData);
-		//encrypt (wrap) symmetric key with server public key
-		return window.crypto.subtle.wrapKey(
-			"raw", //the export format, must be "raw" (only available sometimes)
-		    symmetric, //the key you want to wrap, must be able to fit in RSA-OAEP padding
-		    servkey, //the public key with "wrapKey" usage flag
-		    {   //these are the wrapping key's algorithm options
-		        name: "RSA-OAEP",
-		        hash: {name: "SHA-1"},
-		    }
-		)
-	})
-	.then(function(wrapKey){
-	  //Create object for sharing: iv, wrapped symmetric key amnd cipher
-	  //wrapKey is null?!? TODO
-	  var wrapped = new Uint8Array(wrapKey);
-	  var msg = {iv: iv, wrap: wrapped, ciph: encryData};
-	  console.log("Object", msg);
-	  send(wss_prot.AUTH_INIT, msg);
-	})
-	.catch(function(err){
-	  console.error(err);
-	});
 }
 
 function convertStringToArrayBufferView(str){
