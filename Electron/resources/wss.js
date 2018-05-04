@@ -156,6 +156,9 @@ function gotMessageFromServer(message){
 			//console.log(message.data);
     		var pubkey = km.findKey(km.otherEnd);
     		console.log("Object?", msg.data)
+    		if(pubkey != null){
+    			msg.data=JSON.parse(msg.data);
+    		}
 			var d=decrypt(pubkey, JSON.stringify(msg.data));
 			handleOfferFromPC1(d);
 			break;

@@ -253,6 +253,7 @@ pc1.onicecandidate = function (e) {
     //ENCRYPT!
     var d = encrypt(pubkey, e.candidate);
     //Send ICE trickling
+    //wat TODO
     send(wss_prot.ICE, d, km.otherEnd);
   }else{
     console.log('Finished gathering ICE candidates!');
@@ -344,6 +345,7 @@ pc2.onicecandidate = function (e) {
     //ENCRYPT!
     var d = encrypt(pubkey, e.candidate);
     //Send ICE trickling
+    //wat TODO parse??
     send(wss_prot.ICE, JSON.parse(d), km.otherEnd);
   }else{
     console.log('Finished gathering ICE candidates!');
