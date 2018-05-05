@@ -76,7 +76,7 @@ function wscon(){
 	};
 }
 
-function gotMessageFromServer(message){
+async function gotMessageFromServer(message){
 	var msg = JSON.parse(message.data);
 	//console.log("Received: ", msg);
 	switch(msg.prot){
@@ -155,11 +155,8 @@ function gotMessageFromServer(message){
 			//create answer
 			//console.log(message.data);
     		var pubkey = km.findKey(km.otherEnd);
-    		console.log("Object?", msg.data)
-    		if(pubkey != null){
-    			msg.data=JSON.parse(msg.data);
-    		}
-			var d=decrypt(pubkey, JSON.stringify(msg.data));
+			var d = await decrypt(pubkey, JSON.stringify(msg.data));
+
 			handleOfferFromPC1(d);
 			break;
 
@@ -173,7 +170,7 @@ function gotMessageFromServer(message){
 		case wss_prot.ANSWER:
 			console.log("Protocol received: Answer! Answer: ", msg.data);
 			//set remote description msg.data!
-			var d = decryptReply(JSON.stringify(msg.data));
+			var d = await decryptReply(JSON.stringify(msg.data));
 		    $('#myStat').html('Waiting for connection to be established...');
 			handleAnswerFromPC2(d);
 			break;
@@ -181,7 +178,7 @@ function gotMessageFromServer(message){
 		case wss_prot.ICE:
 			console.log("Protocol received: ICE! ICE: ", msg.data);
 			//Test!
-			addIce(msg.data);
+			addIce(JSON.stringify(msg.data));
 			break;
 
 		case wss_prot.AUTH_SETUP:

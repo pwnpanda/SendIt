@@ -88,7 +88,7 @@ function processAuth(reply){
   }
 }
 
-function encrypt(pubkey, data){
+async function encrypt(pubkey, data){
   console.log("Key in: ", pubkey);
   console.log("Data in : ",data)
   var encryData;
@@ -96,10 +96,10 @@ function encrypt(pubkey, data){
   if(pubkey != null){
     console.log('Other end has associated key!', pubkey);
     km.encrypt = convertStringToArrayBufferView(JSON.stringify(data));
-    console.log(km.encrypt);
+    console.log("To encrypt: ", km.encrypt);
     km.iv = window.crypto.getRandomValues(new Uint8Array(12));
     //Create symmetric key  
-    km.createSymmKey()
+    return km.createSymmKey()
     .then(function(key){
       //Encrypt with symmetric key
       return km.encryptData(key, km.encrypt, km.iv)
@@ -112,7 +112,7 @@ function encrypt(pubkey, data){
       return km.importKey(pubkey, pubkey.key_ops)
     })
     .then(function(key){
-      console.log("Received in next promise: ", key, encryData);
+      console.log("Key imported, encrypted data: ", key, encryData);
       pubkey=key;
       //encrypt (wrap) symmetric key with public key
       return km.wrapKey(km.symmetric, pubkey);
@@ -121,8 +121,9 @@ function encrypt(pubkey, data){
       //Create object for sharing: iv, wrapped symmetric key amnd cipher
       var msg = {iv: km.iv, wrap: wrapKey, ciph: encryData};
       console.log("Object", msg);
-      msg = JSON.stringify(msg);
-      console.log("String", msg);
+      
+      //msg = JSON.stringify(msg);
+      //console.log("String", msg);
       //Show in window
       showenc(msg);
       return msg;
@@ -133,30 +134,32 @@ function encrypt(pubkey, data){
 
   } else {
     console.log('Other end has NO associated key!');
-    km.encrypt = JSON.stringify(data);
-    showenc(km.encrypt);
+    km.encrypt = data;
+    showenc(JSON.stringify(km.encrypt));
     return km.encrypt;
   }
 }
 
-function decrypt(pubkey, data){
+async function decrypt(pubkey, data){
   var decryData;
   //if we have the receivers key in the list:
+  data=JSON.parse(data);
   console.log('Data to decrypt/pass on: ', data);
   if(pubkey != null){
     //console.log('Other end has associated key!');
-    data=JSON.parse(data);
-    console.log("Parsed", data);
+    //console.log("Parsed", data);
+
     var temp = Object.values(data.iv);
     km.iv = new Uint8Array(temp);
     temp = Object.values(data.wrap);
     decryData = new Uint8Array(temp);
     temp = Object.values(data.ciph);
-    console.log(decryData);
-    km.unwrapKey(decryData.buffer, (km.key).privateKey)
+    console.log("Key to be unwrapped:", decryData);
+    
+    return km.unwrapKey(decryData.buffer, (km.key).privateKey)
     .then(function(symKey){
       km.symmetric=symKey;
-      console.log(symKey);
+      console.log("Symmetric key:", symKey);
       return km.decryptData(new Uint8Array(temp), km.iv);
     })
     .then(function(decrypted){
@@ -164,8 +167,8 @@ function decrypt(pubkey, data){
       console.log("Data decrypted raw: ", new Uint8Array(decrypted));
       decryData = new Uint8Array(decrypted);
       decryData = convertArrayBufferViewtoString(decryData);
-      console.log("Data decrypted: ", decryData);
       decryData = JSON.parse(decryData);
+      console.log("Data decrypted: ", decryData);
       setDescr(decryData, true);
       return decryData;
     })
@@ -174,43 +177,44 @@ function decrypt(pubkey, data){
     });
   }else{
     console.log('Other end has NO associated key!');
-    decryData=JSON.parse(data);
-    console.log(decryData);
-    setDescr(decryData, true);
-    return decryData;
+    console.log("Data returned:", data);
+    setDescr(data, true);
+    return data;
   }
 }
 
-function encryptReply(pubkey, data){
+async function encryptReply(pubkey, data){
   var encryData;
   km.encrypt = convertStringToArrayBufferView(JSON.stringify(data));
   console.log('Data to encrypt/pass on: ', km.encrypt);
   if(pubkey != null){
-    km.encryptData(km.symmetric, km.encrypt, km.iv)
+    return km.encryptData(km.symmetric, km.encrypt, km.iv)
     //returns an ArrayBuffer containing the encrypted data
     .then(function(encrypted){
       encryData = new Uint8Array(encrypted);
       console.info("Data encrypted: ", encryData);
       return encryData;
     })
-    .then(function(data){
-      showenc(JSON.stringify(data));
-      return JSON.stringify(data);
+    .then(function(dat){
+      showenc(JSON.stringify(dat));
+      return dat;
     })
     .catch(function(err){
       console.error(err);
     });
   }else{
     console.log('Other end has NO associated key!');
-    km.encrypt = JSON.stringify(pc2.localDescription);
-    showenc(km.encrypt);
+    km.encrypt = data;
+    showenc(JSON.stringify(km.encrypt));
+    return km.encrypt;
   }
 
 }
 
-function decryptReply(data){
+async function decryptReply(data){
   var pubkey = km.findKey(km.otherEnd);
   var decryData;
+  console.log("Decrypt reply data in:", data);
   data = JSON.parse(data);
   console.log('Data to decrypt/pass on: ', data);
 
@@ -219,15 +223,15 @@ function decryptReply(data){
     //console.log("1",decryData);
     decryData = new Uint8Array(decryData);
     //console.log("2",decryData);
-    km.decryptData(decryData, km.iv)
+    return km.decryptData(decryData, km.iv)
     .then(function(decrypted){
       //returns an ArrayBuffer containing the decrypted data
       console.log("Data decrypted raw: ", new Uint8Array(decrypted));
       decryData = new Uint8Array(decrypted);
       decryData = convertArrayBufferViewtoString(decryData);
-      console.log("Data decrypted: ", decryData);
       decryData = JSON.parse(decryData);
-      setDescr(JSON.parse(decryData), false);
+      console.log("Data decrypted: ", decryData);
+      setDescr(decryData, false);
       return decryData;
     })
     .catch(function(err){

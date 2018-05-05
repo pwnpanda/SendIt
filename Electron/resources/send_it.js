@@ -392,6 +392,7 @@ function getOtherEnd(offer){
 }
 
 function showenc(data){
+    data=JSON.stringify(data);
     copy.writeSync(data);
     
     $(place).html(data);

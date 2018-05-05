@@ -18,6 +18,7 @@ var cfg = {'iceServers': [{'url': 'stun:stun.gmx.net'}]},
 // activedc tracks which of the two possible datachannel variables we're using.
 var activedc;
 var p;
+var candQueue=[];
 //Declares necessary information about the connection
 var sdpConstraints = {
   optional: [],
@@ -228,33 +229,37 @@ function setupDC1 () {
 
 function createLocalOffer () {
   setupDC1()
-  pc1.createOffer(function (desc) {
+  pc1.createOffer(async function (desc) {
 	  pc1.setLocalDescription(desc, function () {}, function () {})
 	  console.info('created local offer', desc);
      //Update info!
     $('#myStat').html('Waiting for Sender...');
     var pubkey = km.findKey(km.otherEnd);
     //Encrypt!
-    var d=encrypt(pubkey, desc);
+    var d = await encrypt(pubkey, desc);
+    //TODO does not wait for encryption!
     //Send Accept connection message
+    console.warn("Created offer: ", d)
     send(wss_prot.ACCEPT, d, km.otherEnd);
 
   },
   function () { console.error("Couldn't create offer") },
 	sdpConstraints)
   p=pc1;
+  addCandidates();
 }
 
 //CHANGE HANDLING TO EACH CANDIDATE (TRICKLING)
-pc1.onicecandidate = function (e) {
+pc1.onicecandidate = async function (e) {
   console.info('ICE candidate (pc1)', e)
   if(e.candidate){
     var pubkey = km.findKey(km.otherEnd);
     //ENCRYPT!
-    var d = encrypt(pubkey, e.candidate);
+    var d = await encryptReply(pubkey, e.candidate);
     //Send ICE trickling
     //wat TODO
-    console.log("ICE in pc1: ", d);
+    //Does not wait for encryption!!!
+    console.warn("ICE in pc1 encrypted: ", d);
     send(wss_prot.ICE, d, km.otherEnd);
   }else{
     console.log('Finished gathering ICE candidates!');
@@ -292,6 +297,7 @@ pc1.oniceconnectionstatechange = oniceconnectionstatechange
 pc1.onicegatheringstatechange = onicegatheringstatechange
 
 function handleAnswerFromPC2 (answerDesc) {
+  console.log("Answer received: ", answerDesc);
   var ans = new RTCSessionDescription(answerDesc);
   console.log(ans);
   console.info('Received remote answer: ', ans)
@@ -321,34 +327,38 @@ pc2.ondatachannel = function (e) {
 }
 
 function handleOfferFromPC1 (offerDesc) {
-  var off = new RTCSessionDescription(JSON.parse(offerDesc));
+  console.warn("Offer received:", offerDesc);
+  var off = new RTCSessionDescription(offerDesc);
   pc2.setRemoteDescription(off)
-  pc2.createAnswer(function (answerDesc) {
+  pc2.createAnswer(async function (answerDesc) {
 	  console.info('Created local answer: ', answerDesc)
 	  pc2.setLocalDescription(answerDesc)
     //Update info!
     $('#myStat').html('Waiting for receiver to connect...');
     var pubkey = km.findKey(km.otherEnd);
     //Encrypt!
-    var d=encrypt(pubkey, answerDesc);
+    var d = await encryptReply(pubkey, answerDesc);
     //Send Accept connection message
-    send(wss_prot.ANSWER, JSON.parse(d), km.otherEnd);
+    console.warn("Answer from PC2: ", d);
+    send(wss_prot.ANSWER, d, km.otherEnd);
   },
   function () { console.error("Couldn't create offer") },
   sdpConstraints)
   p=pc2;
+  addCandidates();
 }
 
-pc2.onicecandidate = function (e) {
+pc2.onicecandidate = async function (e) {
   console.log('ICE candidate (pc2)', e)
   if(e.candidate){
+    console.log("Candidate in:", e.candidate)
     var pubkey = km.findKey(km.otherEnd);
     //ENCRYPT!
-    var d = encrypt(pubkey, e.candidate);
+    var d = await encryptReply(pubkey, e.candidate);
     //Send ICE trickling
     //wat TODO parse??
-    console.log("ICE in pc2: ", JSON.parse(d));
-    send(wss_prot.ICE, JSON.parse(d), km.otherEnd);
+    console.warn("ICE in pc2 encrypted: ", d);
+    send(wss_prot.ICE, d, km.otherEnd);
   }else{
     console.log('Finished gathering ICE candidates!');
   }
@@ -360,9 +370,28 @@ pc2.onicegatheringstatechange = onicegatheringstatechange
 
 pc2.onconnection = handleOnconnection
 
-function addIce(ice){
-  console.warn("Sharing ICE:", ice)
-  p.addIceCandidate(new RTCIceCandidate(JSON.parse(ice)));
+async function addIce(ice){
+  console.warn("Adding ICE:", ice);
+  //Decrypt!
+  if(p){
+    var d = await decryptReply(ice);
+    console.log("Adding ICE directly!");
+    p.addIceCandidate(new RTCIceCandidate(d));
+  }else{
+    candQueue.push(ice);
+    console.log("Storing ICE in queue! Now %d in queue", candQueue.length);
+  }
+
+}
+
+async function addCandidates(){
+  //Add all ICE candidates from queue
+  for(i=0; i<candQueue.length; i++){
+    console.log("Adding candidate: ", i);
+    var d = await decryptReply(candQueue[i]);
+    p.addIceCandidate(new RTCIceCandidate(d));
+  }
+  candQueue=[];
 }
 //Source: https://gist.github.com/jeromeetienne/2651899
 /**

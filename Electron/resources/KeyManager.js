@@ -123,7 +123,7 @@ KeyManager.prototype = {
 		["encrypt", "decrypt"]
 		).then(function(key){
 			//returns a keypair object
-			console.log("Key created!", key);
+			console.log("Symmetric key created!", key);
 			km.symmetric = key;
 			return key;
 		})
@@ -248,7 +248,7 @@ KeyManager.prototype = {
 
 	//Decrypt data by using symmetric key
 	decryptData: function(data, iv){
-		console.log(km.iv, km.symmetric, data);
+		console.log("IV, Symmetrickey, data:", km.iv, km.symmetric, data);
 		return window.crypto.subtle.decrypt(
 			{
 					name: "AES-GCM",
