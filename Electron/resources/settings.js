@@ -192,7 +192,7 @@ function saveConf(init=false){
 			"myMail": myMail,
 			"server": server
 	}
-	console.log(data);
+	console.log("Data written: ", data);
 	writeToFile(JSON.stringify(data), defPath+splitter+'config.conf', init);
 	ensureDirectoryExistence(ulPath+"/.");
 	if(serverChange){

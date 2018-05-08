@@ -54,7 +54,11 @@ function onReceiveMessageCallback(event) {
 		console.log("File recieved by partner!");
 		curFileNum++;
 		if(curFileNum >= nrOfFiles){
-			closeDataChannels(wss_prot.DONE);
+			try{
+				closeDataChannels(wss_prot.DONE);
+			}catch(e){
+				closeDataChannels();
+			}
 			document.querySelector('#transferDetailsEnd').innerHTML = 'Filename: ' + fmArray[curFileNum-1].fileName + '. Filetype: '+fmArray[curFileNum-1].fileType + '. Filenumber ' + curFileNum + '/' + nrOfFiles + '. Percent: 100/100';
 			//Add line for each file completed!
 			var doc = document.querySelector('#download');
@@ -78,7 +82,7 @@ function onReceiveMessageCallback(event) {
 //https://github.com/webrtc/samples/blob/gh-pages/src/content/datachannel/filetransfer/js/main.js - INFO
 //Close channels and cleanup
 function closeDataChannels(e) {
-	if(sc != null && sc !== undefined && e!=null){
+	if(typeof sc !== 'undefined' && sc != null && sc !== undefined && e!=null){
 		if(km.otherEnd !=null && km.otherEnd!='')	send(wss_prot.ERROR, e, km.otherEnd);		
 		send(e);
 	}
@@ -108,7 +112,13 @@ function createAuthMsg(type){
 	console.log("Creating message of type ", type);
 	//Sending authentication setup/ setup reply
 	//Gets the promise for exportKey.
-	km.exportKey(km.key.publicKey)
+	
+	Promise.resolve(km.key)
+	.then(function(key){
+		console.log("Keypair created!", key);
+		km.key=key;
+		return km.exportKey(key.publicKey)
+	})
 	.then(function(keydata){
 		//Once the data has been calculated, itreturns the exported key data
 		console.info("Exported key: ", keydata);
