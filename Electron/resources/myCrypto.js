@@ -125,7 +125,7 @@ async function encrypt(pubkey, data){
       //msg = JSON.stringify(msg);
       //console.log("String", msg);
       //Show in window
-      showenc(msg);
+      showenc(JSON.stringify(msg));
       return msg;
     })
     .catch(function(err){
@@ -185,8 +185,8 @@ async function decrypt(pubkey, data){
 
 async function encryptReply(pubkey, data){
   var encryData;
+  console.log('Data to encrypt/pass on: ', data);
   km.encrypt = convertStringToArrayBufferView(JSON.stringify(data));
-  console.log('Data to encrypt/pass on: ', km.encrypt);
   if(pubkey != null){
     return km.encryptData(km.symmetric, km.encrypt, km.iv)
     //returns an ArrayBuffer containing the encrypted data
@@ -205,7 +205,7 @@ async function encryptReply(pubkey, data){
   }else{
     console.log('Other end has NO associated key!');
     km.encrypt = data;
-    showenc(JSON.stringify(km.encrypt));
+    showenc(km.encrypt);
     return km.encrypt;
   }
 
@@ -231,7 +231,10 @@ async function decryptReply(data){
       decryData = convertArrayBufferViewtoString(decryData);
       decryData = JSON.parse(decryData);
       console.log("Data decrypted: ", decryData);
-      setDescr(decryData, false);
+      //Hacky workaround! Throws error when trying for server-based!
+      try{
+        setDescr(JSON.parse(decryData), false);
+      }catch(e){};
       return decryData;
     })
     .catch(function(err){

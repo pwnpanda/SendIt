@@ -1,16 +1,6 @@
 /*
 TODO
-
 Lacking:
-	- Server setup / authentication:
-		*Which functionality?
-		*Setup is always OK, unless already registered.
-			-Add email confirmation later?
-		*Encrypt same message with private key & servers public key
-			-If same when decrypted:
-				APPROVe
-			 Else:
-			 	Deny
 	- Queue handling:
 		*How to check for queued messages?
 		*How to prioritize?

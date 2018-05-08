@@ -125,10 +125,10 @@ $('#offerSentBtn').click(function () {
 })
 
 $('#offerRecdBtn').click(function () {
-  //Here!
+  //Sanatize!
   var offer = sanatize( $('#remoteOffer').val() );
-  console.log("Offer before fixing: ", offer);
-  sanatize(offer);
+  //TESTING!
+  offer = JSON.parse(offer);
   //Decrypt!
   var pubkey = km.findKey(km.otherEnd);
   decrypt(pubkey, offer);
@@ -140,6 +140,8 @@ $('#answerSentBtn').click(function () {
 
 $('#answerRecdBtn').click(function () {
   var answer = sanatize( $('#remoteAnswer').val() );
+  //TESTING!
+  answer = JSON.parse(answer);
   //Decrypt
   decryptReply(answer);
 })
@@ -416,7 +418,7 @@ function setDescr(data, off){
 }
 
 function initTransfer(){
-      offerShare();
+  offerShare();
 }
 
 function sanatize(str){
