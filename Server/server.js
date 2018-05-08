@@ -330,7 +330,7 @@ function auth_S_Reply(sock, msg){
    		createSymmkey(sock, wss_prot.AUTH_S_REPLY, thiscon);
 
    	}else{
-	   	//Share symkey! TODO
+	   	//Share symkey!
 		send(sock, wss_prot.AUTH_S_REPLY, {res: auth}, msg.origin);
 	}
 }
@@ -512,7 +512,6 @@ function createSymmkey(sock, prot, thiscon, expkey=null){
 	})
 	.then(function(wrapKey){
 	  //Create object for sharing: iv, wrapped symmetric key amnd cipher
-	  //wrapKey is null?!? TODO
 	  var wrapped = new Uint8Array(wrapKey);
 	  var msg;
 	  if(expkey){

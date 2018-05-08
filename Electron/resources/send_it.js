@@ -309,6 +309,9 @@ console.assert  = function(cond, text, msg=null){
   //My addition
   $("#error").html(text || "Assertion failed!");
   closeDataChannels(msg);
+  /* TODO TEST!
+  $('#progerror').html(test);
+  */
   //--------------
   throw new Error(text || "Assertion failed!");
 };
