@@ -70,7 +70,7 @@ async function gotMessageFromServer(message){
 	var msg = JSON.parse(message.data);
 	//console.log("Received: ", msg);
 	switch(msg.prot){
-		//TODO change
+		//Lookup message
 		case wss_prot.LOOKUP:
 			console.log("Lookup message received: ", msg.data);
 			lookupReply(msg.data);
@@ -131,6 +131,7 @@ async function gotMessageFromServer(message){
   			$('#showReceive').modal('show');
 			break;
 
+		//TODO
 		case wss_prot.KEY:
 			if(msg.data){
 				console.log("Received key: ", msg.data);

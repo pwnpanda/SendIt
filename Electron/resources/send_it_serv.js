@@ -237,7 +237,6 @@ function createLocalOffer () {
     var pubkey = km.findKey(km.otherEnd);
     //Encrypt!
     var d = await encrypt(pubkey, desc);
-    //TODO does not wait for encryption!
     //Send Accept connection message
     console.warn("Created offer: ", d)
     send(wss_prot.ACCEPT, d, km.otherEnd);
@@ -257,8 +256,6 @@ pc1.onicecandidate = async function (e) {
     //ENCRYPT!
     var d = await encryptReply(pubkey, e.candidate);
     //Send ICE trickling
-    //wat TODO
-    //Does not wait for encryption!!!
     console.warn("ICE in pc1 encrypted: ", d);
     send(wss_prot.ICE, d, km.otherEnd);
   }else{
@@ -356,7 +353,6 @@ pc2.onicecandidate = async function (e) {
     //ENCRYPT!
     var d = await encryptReply(pubkey, e.candidate);
     //Send ICE trickling
-    //wat TODO parse??
     console.warn("ICE in pc2 encrypted: ", d);
     send(wss_prot.ICE, d, km.otherEnd);
   }else{

@@ -36,11 +36,7 @@ function beginAuth (){
   var key = km.findKey(km.otherEnd);
   //if we have the receivers key in the list:
   if(key != null){
-    //!!!!!!!!!!!!!!!!!!!!!!!!!
-    //TODO Wrong side in server-solution
-    //stageFiles();
-    //offerShare();
-    //Replaced! Needs testing!
+    //initiates the transfer
     initTransfer();
   } else {
   //If setup:
@@ -73,11 +69,7 @@ function processAuth(reply){
     	km.storeKey(reply.sender, reply.key);
     	//Authentication setup complete - start transfer!
     	console.log("Authentication setup complete! Starting transfer!");
-      //!!!!!!!!!!!!!!!!!!!!!!!!!
-      //TODO Wrong side in server-solution
-      //stageFiles();
-      //offerShare();
-      //Replaced! Needs testing!
+      //initiates the transfer
       initTransfer();
     	break;
     
