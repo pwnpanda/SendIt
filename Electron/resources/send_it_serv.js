@@ -224,7 +224,10 @@ function setupDC1 () {
 	  console.log('Got message (pc1)');
 	  onReceiveMessageCallback(e);
 	}
-  } catch (e) { console.error('No data channel (pc1)', e); }
+  } catch (e) {
+    $('#progerror').html('No data channel (pc1)');
+    console.error('No data channel (pc1)', e);
+  }
 }
 
 function createLocalOffer () {
@@ -242,7 +245,10 @@ function createLocalOffer () {
     send(wss_prot.ACCEPT, d, km.otherEnd);
 
   },
-  function () { console.error("Couldn't create offer") },
+  function () {
+    $('#progerror').html("Couldn't create offer");
+    console.error("Couldn't create offer");
+  },
 	sdpConstraints)
   p=pc1;
   addCandidates();
@@ -339,7 +345,10 @@ function handleOfferFromPC1 (offerDesc) {
     console.warn("Answer from PC2: ", d);
     send(wss_prot.ANSWER, d, km.otherEnd);
   },
-  function () { console.error("Couldn't create offer") },
+  function () {
+    $('#progerror').html("Couldn't create offer");
+    console.error("Couldn't create offer");
+  },
   sdpConstraints)
   p=pc2;
   addCandidates();

@@ -169,7 +169,10 @@ function setupDC1 () {
 	  console.log('Got message (pc1)');
 	  onReceiveMessageCallback(e);
 	}
-  } catch (e) { console.error('No data channel (pc1)', e); }
+  } catch (e) {
+    $('#progerror').html('No data channel (pc1)');
+    console.error('No data channel (pc1)', e);
+  }
 }
 
 function createLocalOffer () {
@@ -178,7 +181,10 @@ function createLocalOffer () {
 	pc1.setLocalDescription(desc, function () {}, function () {})
 	console.info('created local offer', desc)
   },
-  function () { console.error("Couldn't create offer") },
+  function () {
+    $('#progerror').html("Couldn't create offer");
+    console.error("Couldn't create offer");
+  },
 	sdpConstraints)
 }
 
@@ -264,7 +270,10 @@ function handleOfferFromPC1 (offerDesc) {
 	console.info('Created local answer: ', answerDesc)
 	pc2.setLocalDescription(answerDesc)
   },
-  function () { console.error("Couldn't create offer") },
+  function () {
+    $('#progerror').html("Couldn't create answer");
+    console.error("Couldn't create answer")
+  },
   sdpConstraints)
 }
 
@@ -309,8 +318,8 @@ console.assert  = function(cond, text, msg=null){
   //My addition
   $("#error").html(text || "Assertion failed!");
   closeDataChannels(msg);
+  $('#progerror').html(text);
   /* TODO TEST!
-  $('#progerror').html(test);
   */
   //--------------
   throw new Error(text || "Assertion failed!");
@@ -363,7 +372,10 @@ function createSetup(offer){
         km = new KeyManager("new", myMail);
         getOtherEnd(offer);
     }
-  }).catch(console.error);
+  }).catch(function(err){
+    $('#progerror').html(err);
+    console.error(err);
+  });
 }
 
 function getOtherEnd(offer){
@@ -393,7 +405,10 @@ function getOtherEnd(offer){
     }else{
       $('#getRemoteOffer').modal('show');
     }
-  }).catch(console.error);
+  }).catch(function(err){
+    $('#progerror').html(err);
+    console.error(err);
+  });
 }
 
 function showenc(data){

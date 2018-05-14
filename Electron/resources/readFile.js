@@ -43,6 +43,7 @@ function loadFiles(){
 		var items = fs.readdirSync(ulPath)
 		if(items.length == 0){
 			alert("No files to send! Make sure there are files present in: " + ulPath)
+    		$('#progerror').html("No files to send!");
 			console.error("No files to send!");
 			try{
 				activedc.close();
@@ -191,6 +192,7 @@ function writeToFile(data, dir, show=true){
 	       	alert("The file was saved: \n" + path.parse(dir).base);
 	    }
 	}catch(err){
+    	$('#progerror').html("Failed to write file!");
 		console.log("Writing file error: ", err);
     }
 }

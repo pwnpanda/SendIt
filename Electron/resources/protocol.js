@@ -134,6 +134,7 @@ function createAuthMsg(type){
 	})
 	.catch(function(err){
 		//Error-handling just in case
+    	$('#progerror').html('Authentication error');
 		console.error(err);
 	 }
 	);
@@ -221,6 +222,7 @@ function handleSignal(msg) {
 		
 		//If none of the above, something strange happened!
 		default:
+    		$('#progerror').html("Unrecognized signal received! Signal: " + msg.action);
 			console.error("Unrecognized signal received! Signal: " + msg.action);
 			break;
 	}

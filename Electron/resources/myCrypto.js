@@ -6,6 +6,7 @@ var fs = require('fs');
 
 //Hits, but is supposed to be implemented - WHY!?!
 if (!window.crypto || !window.crypto.subtle) {
+    $('#progerror').html("Your current browser does not support the Web Cryptography API! This page will not work.");
     console.error("Your current browser does not support the Web Cryptography API! This page will not work.");
 }
 //Main crypto function
@@ -27,6 +28,7 @@ function readCrypto(){
 		//console.log(buf);
 		km = new KeyManager("existing", buf);
 	}catch(err){
+    $('#progerror').html("Error reading information in cryptofile!");
 		console.error("Error reading cryptofile: ", err);
 	}
 }
@@ -74,7 +76,8 @@ function processAuth(reply){
     	break;
     
     //Error!
-    default: 
+    default:
+      $('#progerror').html("Malformed message type: ", reply.action);
     	console.error("Malformed message type: ", reply.action);
     	break;
   }
@@ -121,6 +124,7 @@ async function encrypt(pubkey, data){
       return msg;
     })
     .catch(function(err){
+      $('#progerror').html("Encryption error!");
       console.error(err);
     });
 
@@ -165,6 +169,7 @@ async function decrypt(pubkey, data){
       return decryData;
     })
     .catch(function(err){
+      $('#progerror').html("Decryption error!");
       console.error(err);
     });
   }else{
@@ -192,6 +197,7 @@ async function encryptReply(pubkey, data){
       return dat;
     })
     .catch(function(err){
+      $('#progerror').html("Encryption error!");
       console.error(err);
     });
   }else{
@@ -230,6 +236,7 @@ async function decryptReply(data){
       return decryData;
     })
     .catch(function(err){
+      $('#progerror').html("Decryption error!");
       console.error(err);
     });
   }else{
