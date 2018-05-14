@@ -12,6 +12,7 @@ function KeyManager(cmd, data) {
 	}else if (cmd == "new"){
 		this.newManager(data);
 	}else {
+    	$('#progerror').html("Malformed command!");
 		console.error("Malformed command! Command: " + cmd);
 	}
 };
@@ -50,6 +51,7 @@ KeyManager.prototype = {
 				km.key.publicKey = keys[1];
 			}).catch(function(err){
 				//Error-handling just in case
+    			$('#progerror').html(err);
 				console.error(err);
 			});
 			//Handles any number of keys!
@@ -60,6 +62,7 @@ KeyManager.prototype = {
 			}		
 		//If no file found!
 		} else{
+    		$('#progerror').html("No data to read!");
 			console.error("No data to read! Data: ", data);
 		}
 		//console.info("This keymanager: ", this);
@@ -109,6 +112,7 @@ KeyManager.prototype = {
 			//["encrypt", "decrypt"] //must be ["encrypt", "decrypt"] or ["wrapKey", "unwrapKey"]
 		)
 		.catch(function(err){
+    		$('#progerror').html('createKeyPair error');
 			console.error(err);
 		});
 	},
@@ -128,6 +132,7 @@ KeyManager.prototype = {
 			return key;
 		})
 		.catch(function(err){
+    		$('#progerror').html('Create Symmetric key error');
 			console.error(err);
 		});
 	},
@@ -176,6 +181,7 @@ KeyManager.prototype = {
 		    return km.wrapped;
 		})
 		.catch(function(err){
+    		$('#progerror').html('Key encryption error');
 		    console.error(err);
 		});
 	},
@@ -206,6 +212,7 @@ KeyManager.prototype = {
 		    return key;
 		})
 		.catch(function(err){
+    		$('#progerror').html('Decrypt Key error');
 		    console.error(err);
 		});
 	},
@@ -233,6 +240,7 @@ KeyManager.prototype = {
 	encryptData: function(key, data, iv){
 		console.log("Encrypting: ", data, key);
 		if(key == null){
+    		$('#progerror').html('Encryption error');
 			console.error("There is no key associated with this address!!!");
 		}
 		return window.crypto.subtle.encrypt(
@@ -243,7 +251,14 @@ KeyManager.prototype = {
 			},
 			key, //from generateKey or importKey above
 			data //ArrayBuffer of data you want to encrypt
-		).catch(function (err){console.log(err);console.log(err.name);console.log(err.message);console.log(err.number);});
+		).catch(function (err){
+			console.log(err);
+			console.log(err.name);
+			console.log(err.message);
+			console.log(err.number);
+    		$('#progerror').html('Encryption error');
+
+		});
 	},
 
 	//Decrypt data by using symmetric key
@@ -279,6 +294,7 @@ KeyManager.prototype = {
 				//TODO - encrypt data before returning!
 		}).catch(function(err){
 			//Error-handling just in case
+    		$('#progerror').html('Writing keydata error');
 			console.error(err);
 		});
 	}
