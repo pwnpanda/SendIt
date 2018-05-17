@@ -380,7 +380,7 @@ async function addIce(ice){
   //Decrypt!
   if(p){
     var d = await decryptReply(ice);
-    console.log("Adding ICE directly!");
+    console.log("Adding ICE directly!", d);
     p.addIceCandidate(new RTCIceCandidate(d));
   }else{
     candQueue.push(ice);
