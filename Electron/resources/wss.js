@@ -265,7 +265,8 @@ async function authenticate(msg){
 
 function wsInitFiles(){
 	//Need meta-data of file!
-	var data;
+	var data=new Object();
+	data.files=[]
 	//console.warn(fmArray);
 	for (var i = 0; i < nrOfFiles; i++) {
 		var file= { 
@@ -273,11 +274,11 @@ function wsInitFiles(){
 		 	ftype: fmArray[i].fileType,
 		 	fsize: fmArray[i].size
 		};
-		if(data !== 'undefined'){
+		if(data === 'undefined'){
 			data = new Object();
-			data.files=new Object();
+			data.files=[]
 		}
-		(data.files)[i]=file;
+		(data.files).push(file);
 	}
 	console.log(data);
 	send(wss_prot.INIT, data, km.otherEnd);

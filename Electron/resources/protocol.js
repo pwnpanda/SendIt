@@ -99,7 +99,7 @@ function closeDataChannels(e) {
 	pc1 = null;
 	pc2 = null;
 	console.info('Closed peer connections');
-	km.getObjectData();
+	km.getObjectData(false);
 }
 
 //Show progress
@@ -249,9 +249,9 @@ function transferComplete(){
   	fs.writeFile(storePath, data, function(err) {
 	    if(err) {
 	        console.log(err);
-	    } else {
-	        alert("The file was saved: " + storePath);
-	    }
+	    } //else {
+	        //alert("The file was saved: " + storePath);
+	    //}
     })
 	curFileNum++;
 	

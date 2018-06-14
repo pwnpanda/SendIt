@@ -109,9 +109,10 @@ function loadFiles(){
 function stageFiles(){
 	for (var i=0; i<nrOfFiles; i++) {
 	    var file = ulPath + path.sep + files[i];
-	 	var name = files[i].split('.');
-	 	var type = "."+name[1];
-	 	name = name[0];
+	 	var name = files[i];
+	 	var name2 = files[i].split('.');
+	 	var type = "."+name2[(name2.length-1)];
+	 	name=name.replace("."+name2.pop(), "")
 	 	console.log("File: " + file + " Name: " + name + " Type: " + type);
 	    
 	    console.log("Read file in!");
