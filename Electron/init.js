@@ -35,7 +35,7 @@ app.once('ready', function () {
   //Start the correct type by reading previous settings!
   var dataPath = (electron.app || electron.remote.app).getPath('userData');
   var splitter = path.sep;
-  var startServ;
+  var startServ='send_it.html';
   try{
     var buf = fs.readFileSync(dataPath + splitter + "config.conf", "utf8");
     //console.log(buf);

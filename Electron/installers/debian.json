@@ -1,6 +1,6 @@
 {
-  "dest": "/home/Data/Project/Electron/release/",
-  "icon": "/home/Data/Project/Electron/Icon.png",
+  "dest": "/home/robin/Project/Electron/release/",
+  "icon": "/home/robin/Project/Electron/Icon.png",
   "categories": [
     "Utility"
   ],

@@ -60,10 +60,10 @@
 			<button class="btn btn-primary" id="resetConfig"  aria-hidden="true">Reset configuration-file!</button><br>
 			<div id="serveruse">
 				<form id="formServer">
-		    		<h3 style="-webkit-margin-after: 0;">Offer/answer exchange options:</h3>
-		    		<div style="font-size: 1.15em;">Chose if you want to share the offer/answer via a server or by your own method.</div>
-			    	<input type="radio" name="in" value="Server"> Server &emsp;
-			    	<input type="radio" name="in" value="Manual" checked> Manual<br>
+		    		<h3 style="-webkit-margin-after: 0;">Mode selection</h3>
+		    		<div style="font-size: 1.15em;">Choose which mode you want to use:</div>
+			    	<input type="radio" name="in" value="Server"> ACS &emsp;
+			    	<input type="radio" name="in" value="Manual" checked> Serverless<br>
 				</form>
 			</div>
 			<div id="serverAddr" hidden>
@@ -89,12 +89,12 @@
 
 			<div id="opt" hidden>
 		    	<form id="formCrypt">
-		    		<h3>Cryptography file selection:</h3>
+		    		<h3>Key file selection:</h3>
 			    	<input type="radio" name="in" value="Automatic" checked> Automatic &emsp;
 			    	<input type="radio" name="in" value="Manual"> Manual<br>
 				</form>
 				<!-- Add info of keys here! -->
-		    	<h5 id="txtCryptoFile" value="Manual" hidden>Manually chose cryptofile:<br>
+		    	<h5 id="txtCryptoFile" value="Manual" hidden>Manually choose a file containing the desired keys:<br>
 			    	<input type="File" id="cryptoFile" onchange="setCrypto()" accept=".crp">
 		    	</h5>
 				<div id="cryptoOpt">
