@@ -22,3 +22,7 @@ Electron/release
 
 #ignore package lock files
 Electron/package-lock.json
+
+.DS_Store
+Electron/.DS_Store
+Electron/installers/.DS_Store
