@@ -3,5 +3,8 @@ SendIt.V.1.2.0/README.md filter=lfs diff=lfs merge=lfs -text
 SendIt.V.1.2.0/LICENSE filter=lfs diff=lfs merge=lfs -text
 SendIt.V.1.2.0/Mac filter=lfs diff=lfs merge=lfs -text
 SendIt.V.1.2.0/Mac/SendIt.dmg filter=lfs diff=lfs merge=lfs -text
+SendIt.V.1.2.0/Windows/windows-installer-32/SendItInstaller.exe filter=lfs diff=lfs merge=lfs -text
+SendIt.V.1.2.0/Windows/windows-installer-64/SendItInstaller.exe filter=lfs diff=lfs merge=lfs -text
 *.dmg filter=lfs diff=lfs merge=lfs -text
 *.deb filter=lfs diff=lfs merge=lfs -text
+*.exe filter=lfs diff=lfs merge=lfs -text
