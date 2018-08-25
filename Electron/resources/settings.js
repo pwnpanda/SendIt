@@ -52,7 +52,7 @@ function keyManagement(){
 	$('#cryptoOpt').html('');
 	//Button to remove cryptofile
 	var remove = $('<button/>', {
-				text: "Remove crypto-file!",
+				text: "Remove ALL current keys!",
 				id: "removeCryptoBtn",
 				click: removeCrypto
 			});

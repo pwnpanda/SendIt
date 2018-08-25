@@ -41,6 +41,8 @@ var wss_prot = {
 
 //console.log("Argv1: " + process.argv[2]);
 
+console.log("Port: ", HTTPS_PORT);
+
 // Yes, SSL is required
 const serverConfig = {
     key: fs.readFileSync('server-key.pem'),
@@ -330,7 +332,7 @@ function auth_S_Reply(sock, msg){
    		createSymmkey(sock, wss_prot.AUTH_S_REPLY, thiscon);
 
    	}else{
-	   	//Share symkey!
+	   	//Share symkey! TODO
 		send(sock, wss_prot.AUTH_S_REPLY, {res: auth}, msg.origin);
 	}
 }
@@ -512,6 +514,7 @@ function createSymmkey(sock, prot, thiscon, expkey=null){
 	})
 	.then(function(wrapKey){
 	  //Create object for sharing: iv, wrapped symmetric key amnd cipher
+	  //wrapKey is null?!? TODO
 	  var wrapped = new Uint8Array(wrapKey);
 	  var msg;
 	  if(expkey){
