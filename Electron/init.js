@@ -73,12 +73,12 @@ var template = [{
   // Show window when page is ready
   window.once('ready-to-show', function () {
     window.maximize();
-    /* todo uncomment
+    /* todo uncomment */
     if (process.platform === 'darwin') { 
       Menu.setApplicationMenu(Menu.buildFromTemplate(template));
     }else{
       window.setMenu(null);
-    }*/
+    }/**/
     window.show()
   })
 })
