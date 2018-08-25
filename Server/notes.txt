@@ -1,0 +1,100 @@
+New functionality change:
+	*CHANGE TO TWO STEPS!!!
+		-1 Connect and 'register' as present (establish WSS) - Authenticate with keys if previously registered email!
+
+New flow:
+	Sender:
+		1. Indicate own address and receivers address to server
+		2. Server creates room. Indicates when both are online
+		3. Create offer. Share offer.
+		(4. Continous sharing of ICE-candidates!)
+		5. Receive answer.
+		(6. Continously receiving ICE-candidates)
+		7. Create connection.
+		8. Transfer files
+		9. Transfer complete
+		10. Teardown server
+	
+	Receiver:
+		1. Server notifies of connection request (accept/deny)
+		2. Receive offer.
+		(4. Continously receiving ICE-candidates)
+		5. Send answer.
+		(6. Continous sharing of ICE-candidates!)
+		8. Receive files
+		9. Transfer complete
+		10. Teardown server
+
+	Pages:
+		*Send
+			*1. Own e-mail, receivers e-mail (input required), show files to be transferred (confirm)
+			2. Waiting window (1. waiting server - 2. waiting receiver - 3. waiting channel)
+			3. Transfer window
+			4. Complete
+		*Settings
+			(same as now)
+		*(Hidden - receive)
+			1. Confirm / deny (Show sender & files to be received)
+			2. Waiting window (1. waiting server - 2. waiting receiver - 3. waiting channel)
+			3 Transfer window
+			4- Complete
+-------------------------------------------------------------------
+Create keys:
+-------------
+
+openssl genrsa -out server-key.pem 2048
+openssl req -new -key server-key.pem -out server-csr.pem
+openssl x509 -req -in server-csr.pem -signkey server-key.pem -out server-cert.pem
+
+-----------------------------------------------------------
+How to create reqkey with confirmation from other end?
+
+-----------------------------------------------------------
+How to deal with message queues?
+	Check queue on connection.
+		Start handling right after authentication if present!
+	
+
+How to authenticate?
+	Setup symmetric keys (shared wrapped in corresponding key):
+		-If encrypted email returns correctly, authenticate
+		-If not, deny
+
+Currently storing server's public key for no reason.	Commented out!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+Server:
+	Test:
+		Found:
+			Share pubkey & symkey (wrapped)
+
+		Not found:
+			Share pubkey
+
+	Auth setup:
+		OK:
+			Store pubkey, reply symkey (wrapped)
+		Not OK:
+			Reply false
+
+	Auth reply:
+		OK:
+			If symkey decrypts to correct email
+		Not OK:
+			if error or different
+
+Client:
+	Test:
+		Send email, get found/not found, pubkey (& symkey (wrapped))
+
+	Auth setup:
+		Send email & pubkey, get symkey (wrapped)
+		If failed, get false
+
+	Auth reply:
+		If decryption is successful, true. If not, false.
+
+-------------------------------------------------------------------
+
+TODO - problems with JSOn formatting when encrypted/not!
+Test and fix!

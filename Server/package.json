@@ -1,0 +1,28 @@
+{
+  "name": "server",
+  "version": "1.0.0",
+  "description": "Server for SendIt",
+  "main": "server.js",
+  "scripts": {
+    "test": "node server.js test",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Robiq/Project.git"
+  },
+  "keywords": [
+    "SendIt",
+    "Server"
+  ],
+  "author": "Robin Lunde",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Robiq/Project/issues"
+  },
+  "homepage": "https://github.com/Robiq/Project",
+  "dependencies": {
+    "@trust/webcrypto": "^0.9.0",
+    "ws": "^5.1.1"
+  }
+}

@@ -42,11 +42,13 @@
 	</div>
 </head>
 <body>
+	<h2 style='color:darkred' id='progerror'></h2>
+
 	<!-- Initial choice --> 
 	<div class="modal" id="createOrJoin" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
 		<div class="bg" id="showHome" data-keyboard="false" data-backdrop="static">
 			<img src="logo.png" style="width: 60%; height: auto;">
-			<h2>Secure, Serverless, Electron &amp; NodeJS-based, Direct Information Transfer</h2>
+			<h2>Secure, <b style="color: #dc3237;">Serverless</b>, Electron &amp; NodeJS-based, Direct Information Transfer</h2>
 		</div>
 
 	    <!--
@@ -55,28 +57,51 @@
 		    <h3 id="txtMyMail">Your e-mail address:<br>
 	    		<input id="myMail" type="text" name="mailAddr">
 	    	</h3>
-			<button class="btn btn-primary" id="resetConfig" data-dismiss="modal" aria-hidden="true">Reset configuration-file!</button><br>
+			<button class="btn btn-primary" id="resetConfig"  aria-hidden="true">Reset configuration-file!</button><br>
+			<div id="serveruse">
+				<form id="formServer">
+		    		<h3 style="-webkit-margin-after: 0;">Mode selection</h3>
+		    		<div style="font-size: 1.15em;">Choose which mode you want to use:</div>
+			    	<input type="radio" name="in" value="Server"> ACS &emsp;
+			    	<input type="radio" name="in" value="Manual" checked> Serverless<br>
+				</form>
+			</div>
+			<div id="serverAddr" hidden>
+		      <h4 style="-webkit-margin-after: 0;">Exchange server</h4>
+
+		      <div>
+		        <label for="url">Server URL:</label>
+		        <input id="url">
+		      </div>
+
+		      <div>
+		        <button id="saveServBtn">Save Server</button>
+		        <button id="resetServBtn">Reset Server</button>
+		      </div>
+
+			</div>
+
 			<form id="formInput">
-	    		<h3>File options:</h3>
+	    		<h3>File configuration options:</h3>
 		    	<input type="radio" name="in" value="Automatic" checked> Automatic &emsp;
 		    	<input type="radio" name="in" value="Manual"> Manual<br>
 			</form>
 
 			<div id="opt" hidden>
 		    	<form id="formCrypt">
-		    		<h3>Cryptofile options:</h3>
+		    		<h3>Key file selection:</h3>
 			    	<input type="radio" name="in" value="Automatic" checked> Automatic &emsp;
 			    	<input type="radio" name="in" value="Manual"> Manual<br>
 				</form>
 				<!-- Add info of keys here! -->
-		    	<h5 id="txtCryptoFile" value="Manual" hidden>Manually chose cryptofile:<br>
+		    	<h5 id="txtCryptoFile" value="Manual" hidden>Manually choose a file containing the desired keys:<br>
 			    	<input type="File" id="cryptoFile" onchange="setCrypto()" accept=".crp">
 		    	</h5>
 				<div id="cryptoOpt">
 				</div>
 
 		    	<form id="formDl">
-		    		<h3>Download options:</h3>
+		    		<h3>Download location option:</h3>
 			    	<input type="radio" name="in" value="Automatic" checked> Automatic &emsp;
 			    	<input type="radio" name="in" value="Manual"> Manual<br>
 				</form>
@@ -85,7 +110,7 @@
 		    	</h5>
 		    	
 		    	<form id="formUl">
-		    		<h3>Upload options:</h3>
+		    		<h3>Upload location option:</h3>
 			    	<input type="radio" name="in" value="Automatic" checked> Automatic &emsp;
 			    	<input type="radio" name="in" value="Manual"> Manual<br>
 				</form>
@@ -97,7 +122,7 @@
 			<h3> Current info: </h3>
 			<div id="curSet" style="border-style: dashed;"></div>
 
-	    	<button class="btn btn-primary" id="storeConfBtn" data-dismiss="modal" aria-hidden="true">Save</button>
+	    	<button class="btn btn-primary" id="storeConfBtn" aria-hidden="true">Save changes</button>
 		</div>
 	</div>
 
@@ -121,9 +146,6 @@
 		<output id="list"></output>
 		<div style='color:red' id='error'></div>
 	  </div>
-	  <h3 id="txtRecMail">Receiver's e-mail address:<br>
-	    <input id="recMail" type="text" name="mailAddr">
-	</h3>
 	  <div class="modal-footer" data-keyboard="false" data-backdrop="static">
 	    <button class="btn btn-primary" id="offerSentBtn" data-dismiss="modal" aria-hidden="true">Continue</button>
 	  </div>
@@ -196,6 +218,7 @@
 	   <!-- <button id="init" onclick="initiateSnd()">Start transfer</button><-->
 	    <p id="Error" style="color:red"></p>
 		<div id='transferDetails'></div>
+	    <button class="btn btn-primary" id="cancel" data-dismiss="modal" aria-hidden="true" hidden>Cancel transfer</button>
 	  </div>
 	</div>
 
@@ -208,8 +231,7 @@
 	    <!-- INSERT CODE HERE! -->
 		<div id='transferDetailsEnd'></div>
 	  	<div id="download">Files:<br></div>
-	    <button class="btn btn-primary" id="openInFolder" data-dismiss="modal" aria-hidden="true" hidden>Open containing folder</button>	  		
-	  	<div id="NOTE" style="color: red;" hidden> Note: Clicking the button will clear your screen!</div>
+	    <button class="btn btn-primary" id="openInFolder" aria-hidden="true" hidden>Open containing folder</button>	  		
 	  </div>
 	</div>
 

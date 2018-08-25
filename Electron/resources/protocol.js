@@ -4,13 +4,12 @@ var path = require('path');
 
 var protocol = {
 	//MINE------------------------------>
-	AUTH_CHALLENGE: "challenge",
-	AUTH_RESPONSE: "response",
 	AUTH_SETUP: "setup",
 	AUTH_S_REPLY: "setup_reply",
 	//MINE END-------------------------->
 	OFFER: "offer",
 	ANSWER: "answer",
+	REQUEST_META: 'req_meta',
 	REQUEST: "req-chunk",
 	DATA: "data",
 	DONE: "done",
@@ -25,6 +24,7 @@ var protocol = {
 var maxChunkSize = 1200;
 
 //According to https://github.com/tskimmett/rtc-pubnub-fileshare/blob/master/connection.js
+//Changed according to NodeJS! TODO test 1gb
 var MAX_FSIZE = 160;    // MiB -- browser will crash when trying to bring more than that into memory.
 
 var nChunksSent = 0;
@@ -53,10 +53,14 @@ function onReceiveMessageCallback(event) {
 		//File recieved by partner
 		console.log("File recieved by partner!");
 		curFileNum++;
-		if(curFileNum == nrOfFiles){
-			closeDataChannels();
+		if(curFileNum >= nrOfFiles){
+			try{
+				closeDataChannels(wss_prot.DONE);
+			}catch(e){
+				closeDataChannels();
+			}
 			document.querySelector('#transferDetailsEnd').innerHTML = 'Filename: ' + fmArray[curFileNum-1].fileName + '. Filetype: '+fmArray[curFileNum-1].fileType + '. Filenumber ' + curFileNum + '/' + nrOfFiles + '. Percent: 100/100';
-			//TODO - Add line for each file completed!
+			//Add line for each file completed!
 			var doc = document.querySelector('#download');
 			doc.innerHTML = "Files sent: <br>";
 			for (var i = 0; i < nrOfFiles; i++) {
@@ -77,7 +81,11 @@ function onReceiveMessageCallback(event) {
 
 //https://github.com/webrtc/samples/blob/gh-pages/src/content/datachannel/filetransfer/js/main.js - INFO
 //Close channels and cleanup
-function closeDataChannels() {
+function closeDataChannels(e) {
+	if(typeof sc !== 'undefined' && sc != null && sc !== undefined && e!=null){
+		if(km.otherEnd !=null && km.otherEnd!='')	send(wss_prot.ERROR, e, km.otherEnd);		
+		send(e);
+	}
 	$('#connectedScreen').modal('hide');
 	$('#endScreen').modal('show');
 
@@ -91,7 +99,7 @@ function closeDataChannels() {
 	pc1 = null;
 	pc2 = null;
 	console.info('Closed peer connections');
-	km.getObjectData();
+	km.getObjectData(false);
 }
 
 //Show progress
@@ -102,93 +110,34 @@ function displayProgress(perc){
 function createAuthMsg(type){
 	var msg;
 	console.log("Creating message of type ", type);
-	switch (type){
-		//Sending authentication challenge
-		case protocol.AUTH_CHALLENGE:
-			//Send the challenge encrypted with receiver's public key
-			var key = km.findKey(km.otherEnd);
-			km.importKey(key, key.key_ops)
-			.then(function(keyObject){
-				return km.encryptData(keyObject, km.challenge);
-			})
-			.then(function(encrypted){
-				//returns an ArrayBuffer containing the encrypted data
-				var encrData = new Uint8Array(encrypted);
-				console.info("Data encrypted: ", encrData);
-				return encrData;
-			})
-			.then(function(encrypted){
-				msg = {
-				challenge: encrypted,
-				sender: km.email,
-				action: type
-				};
-				doSend(msg);
-			})
-			.catch(function(err){
-			console.error(err);
-			});
-			break;
-
-		//Sending authentication response
-		case protocol.AUTH_RESPONSE:
-			//Send the calculated hash encrypted with sender's public key
-			var key = km.findKey(km.otherEnd);
-			km.importKey(key, key.key_ops)
-			.then(function(keyObject){
-				return km.encryptData(keyObject, km.curHash);
-			})
-			.then(function(encrypted){
-				//returns an ArrayBuffer containing the encrypted data
-				var encrData = new Uint8Array(encrypted);
-				console.info("Data encrypted: ", encrData);
-				return encrData;
-			})
-			.then(function(encrypted){
-				msg = {
-				challenge: encrypted,
-				sender: km.email,
-				action: type
-				};
-				doSend(msg);
-			})
-			.catch(function(err){
-			console.error(err);
-			});
-			break;
-
-		//Sending authentication setup information  
-		case protocol.AUTH_SETUP:
-		//Just let it pass through, since it is identical to AUTH_S_REPLY, except the type which is already handled
-		//Sending authentication setup reply
-		case protocol.AUTH_S_REPLY:
-			//Gets the promise for exportKey.
-			km.exportKey(km.key.publicKey)
-			.then(function(keydata){
-				//Once the data has been calculated, itreturns the exported key data
-				console.info("Exported key: ", keydata);
-				return keydata;
-			}).then(function(key){
-				//Then lastly it creates the message and sends it.
-				msg = {
-					key: key,
-					sender: km.email,
-					action: type
-				};
-				doSend(msg);
-			})
-			.catch(function(err){
-				//Error-handling just in case
-				console.error(err);
-			 }
-			);
-			break;
-
-		//Error!
-		default: 
-			console.error("Malformed message type: ", type);
-			break;
-	}
+	//Sending authentication setup/ setup reply
+	//Gets the promise for exportKey.
+	
+	Promise.resolve(km.key)
+	.then(function(key){
+		console.log("Keypair created!", key);
+		km.key=key;
+		return km.exportKey(key.publicKey)
+	})
+	.then(function(keydata){
+		//Once the data has been calculated, itreturns the exported key data
+		console.info("Exported key: ", keydata);
+		return keydata;
+	}).then(function(key){
+		//Then lastly it creates the message and sends it.
+		msg = {
+			key: key,
+			sender: km.email,
+			action: type
+		};
+		doSend(msg);
+	})
+	.catch(function(err){
+		//Error-handling just in case
+    	$('#progerror').html('Authentication error');
+		console.error(err);
+	 }
+	);
 }
 //Everything below taken from
 //https://github.com/tskimmett/rtc-pubnub-fileshare/blob/master/connection.js
@@ -238,7 +187,10 @@ function handleSignal(msg) {
 		case protocol.ANSWER:
 			console.log("THE OTHER PERSON IS READY");
 			break;
-
+		case protocol.REQUEST_META:
+			console.log("Requesting file data!");
+			offerShare();
+			break;
 		//Received offer
 		case protocol.OFFER:
 			// Sender is ready to send file data. Set up receiving structure
@@ -258,12 +210,10 @@ function handleSignal(msg) {
 		case protocol.ERR_REJECT:
 		case protocol.CANCEL:
 			alert("Unable to communicate! Stopping transfer! Error: ", msg.action);
-			closeDataChannels();
+			closeDataChannels(null);
 			break;
 		
 		//Route all authentication-signals to processAuth
-		case protocol.AUTH_CHALLENGE:
-		case protocol.AUTH_RESPONSE:
 		case protocol.AUTH_SETUP:
 		case protocol.AUTH_S_REPLY:
 			console.info("Received authentication signal: ", msg.action);
@@ -272,6 +222,7 @@ function handleSignal(msg) {
 		
 		//If none of the above, something strange happened!
 		default:
+    		$('#progerror').html("Unrecognized signal received! Signal: " + msg.action);
 			console.error("Unrecognized signal received! Signal: " + msg.action);
 			break;
 	}
@@ -294,18 +245,17 @@ function transferComplete(){
 	document.querySelector('#transferDetailsEnd').innerHTML = 'Filename: ' + fmArray[curFileNum].fileName + '. Filetype: ' + fmArray[curFileNum].fileType +  '. Filenumber: ' + (curFileNum+1) + '/' + nrOfFiles + '. Percent: 100/100';
 	var storePath = path.join(dlPath, fmArray[curFileNum].fileName+(fmArray[curFileNum].fileType));
   	ensureDirectoryExistence(storePath);
-  	//TODO - DOES NOT WORK!!!
   	var data = fmArray[curFileNum].downloadFile();
   	fs.writeFile(storePath, data, function(err) {
 	    if(err) {
 	        console.log(err);
-	    } else {
-	        alert("The file was saved: " + storePath);
-	    }
+	    } //else {
+	        //alert("The file was saved: " + storePath);
+	    //}
     })
 	curFileNum++;
 	
-	if(curFileNum == nrOfFiles){
+	if(curFileNum >= nrOfFiles){
   		var div = document.querySelector("#download");
 		div.innerHTML = "Files received: <br>"
 		
@@ -316,8 +266,7 @@ function transferComplete(){
 		}
 
   		$('#openInFolder').show();
-  		$('#NOTE').show();
-		closeDataChannels();
+		closeDataChannels({action: protocol.DONE});
 	}
 }
 //Registers the different events
@@ -326,13 +275,4 @@ function registerFileEvents(fm) {
 	fm.onprogress = displayProgress;
 	fm.ontransfercomplete = transferComplete;
 }
-//Makes sure directory exists
-//https://stackoverflow.com/questions/13542667/create-directory-when-writing-to-file-in-node-js
-function ensureDirectoryExistence(filePath) {
-  var dirname = path.dirname(filePath);
-  if (fs.existsSync(dirname)) {
-    return true;
-  }
-  ensureDirectoryExistence(dirname);
-  fs.mkdirSync(dirname);
-}
+//ensureDirectoryExistence MOVED TO readFile!

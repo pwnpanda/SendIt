@@ -1,4 +1,6 @@
 var path = require('path');
+var fs = require('fs');
+
 //Variable to handle the files we're staging
 var files;
 /*
@@ -41,6 +43,7 @@ function loadFiles(){
 		var items = fs.readdirSync(ulPath)
 		if(items.length == 0){
 			alert("No files to send! Make sure there are files present in: " + ulPath)
+    		$('#progerror').html("No files to send!");
 			console.error("No files to send!");
 			try{
 				activedc.close();
@@ -65,49 +68,64 @@ function loadFiles(){
 	 		var type = "."+name[1];
 	 		name = name[0];
 	 		console.log("File: " + file + " Name: " + name + " Type: " + type);
-	        //Need array of filemanagers, one for each file!
-			fmArray[i] = new FileManager(maxChunkSize);
-			registerFileEvents(fmArray[i]);
-
+	        
+	 		//Check for filesize 0 and ignore if it is 0 bytes
 	        console.log("Start: " + file);
 	        var stats = fs.statSync(file);
 	        console.log(stats["size"]);
-			var mbSize = Math.ceil(stats["size"] / (1024 * 1024));
-			//Todo - handle only one file exception
-	        if (mbSize > MAX_FSIZE) {
-				console.warn("Due to browser memory limitations, files greater than " + MAX_FSIZE + " MiB are unsupported. Your file is " + mbSize.toFixed(2) + " MiB.");
-				var error = document.querySelector("#Error");
-				error.innerHTML = "File " + items[i] + " is to big for the browser! It cannot be sent!";
-				throw new Error("File to big! Stop execution");
-			}
+	        if(stats["size"] <= 0){
+	        	console.warn("Filesize 0 bytes, skipping file: ", file);
+	        	// files is a FileList of File objects. List some properties.
+				output.push('<li style="color:red;">Skipping file: <strong>', escape(items[i]), '</strong> ',
+				'Size 0 bytes!','</li>');
+				nrOfFiles--;
+				fmArray.pop();
+	        }else{
 
-	        // files is a FileList of File objects. List some properties.
-			output.push('<li><strong>', escape(items[i]), '</strong> ',
-			Math.ceil((stats["size"] / 1024)) + ' kbytes','</li>');
+		        //Need array of filemanagers, one for each file!
+				fmArray[i] = new FileManager(maxChunkSize);
+				registerFileEvents(fmArray[i]);
+
+				var mbSize = Math.ceil(stats["size"] / (1024 * 1024));
+				//Todo - handle only one file exception
+		        if (mbSize > MAX_FSIZE) {
+					console.warn("Due to browser memory limitations, files greater than " + MAX_FSIZE + " MiB are unsupported. Your file is " + mbSize.toFixed(2) + " MiB.");
+					var error = document.querySelector("#Error");
+					error.innerHTML = "File " + items[i] + " is to big for the browser! It cannot be sent!";
+					throw new Error("File to big! Stop execution");
+				}
+
+		        // files is a FileList of File objects. List some properties.
+				output.push('<li><strong>', escape(items[i]), '</strong> ',
+				Math.ceil((stats["size"] / 1024)) + ' kbytes','</li>');
+			}
 	    }
-		document.getElementById('list').innerHTML = '<ul style = "list-style-type:none;">' + output.join('') + '</ul>';
+		document.getElementById('list').innerHTML = '<ul style="list-style-type: none;">' + output.join('') + '</ul>';
     }catch(e){
     	throw new Error(e);
     }
 }
 
 function stageFiles(){
-	for (var i=0; i<files.length; i++) {
+	for (var i=0; i<nrOfFiles; i++) {
 	    var file = ulPath + path.sep + files[i];
-	 	var name = files[i].split('.');
-	 	var type = "."+name[1];
-	 	name = name[0];
+	 	var name = files[i];
+	 	var name2 = files[i].split('.');
+	 	var type = "."+name2[(name2.length-1)];
+	 	name=name.replace("."+name2.pop(), "")
 	 	console.log("File: " + file + " Name: " + name + " Type: " + type);
 	    
 	    console.log("Read file in!");
+	    
+	    var stats = fs.statSync(file);
+	    var kbsize = Math.ceil(stats["size"] / ( 1024));
 	   	try{
 		    var buf = fs.readFileSync(file);
-		    fmArray[i].stageLocalFile(name, type, buf);
+		    fmArray[i].stageLocalFile(name, type, buf, kbsize);
 		}catch(e){
 			console.log('Error', e.stack);
 		}   	
     };
-	offerShare();
 }
 /* Old way of staging files - used in manual addition - Add again later!
 //https://github.com/webrtc/samples/blob/gh-pages/src/content/datachannel/filetransfer/js/main.js - INFO
@@ -169,13 +187,24 @@ function readFileInfo(x){
 function writeToFile(data, dir, show=true){
 	console.log(dir);
   	ensureDirectoryExistence(dir);
-  	fs.writeFile(dir, data, function(err) {
-	    if(err) {
-	        console.log(err);
-	    } else {
-	    	if(show){
-	        	alert("The file was saved: \n" + path.parse(dir).base);
-	        }
+  	try{
+  		fs.writeFileSync(dir, data);
+	    if(show){
+	       	alert("The file was saved: \n" + path.parse(dir).base);
 	    }
-    })
+	}catch(err){
+    	$('#progerror').html("Failed to write file!");
+		console.log("Writing file error: ", err);
+    }
+}
+
+//Makes sure directory exists
+//https://stackoverflow.com/questions/13542667/create-directory-when-writing-to-file-in-node-js
+function ensureDirectoryExistence(filePath) {
+  var dirname = path.dirname(filePath);
+  if (fs.existsSync(dirname)) {
+    return true;
+  }
+  ensureDirectoryExistence(dirname);
+  fs.mkdirSync(dirname);
 }

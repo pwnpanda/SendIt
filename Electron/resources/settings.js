@@ -1,8 +1,13 @@
 var path = require('path');
 var fs = require('fs');
 const get = require('../userDest.js');
+// include the ipc module to communicate with main process.
+const ipcRenderer = require('electron').ipcRenderer; 
 
-var myMail;
+var myMail='';
+//TODO fix correct address!
+var server= '';
+var serverChange=false;
 var defPath = new get();
 defPath = defPath.get();
 var splitter = path.sep;
@@ -10,6 +15,7 @@ cfPath=defPath+splitter+'Crypto'+splitter;
 cfName='crypto.crp';
 dlPath=defPath+splitter+"Received"+splitter;
 ulPath=defPath+splitter+"Send"+splitter;
+var selCrypto=0;
 
 //Print current settings
 function curSet(){
@@ -30,8 +36,10 @@ function readConfig(){
 		dlPath = buf.dlPath;
 		ulPath = buf.ulPath;
 		myMail = buf.myMail;
+		server = buf.server;
 
 		$("#myMail").val(myMail);
+		$("#url").val(server);
 
 	}catch(err){
 		console.log("No config-file found!", err);
@@ -44,7 +52,7 @@ function keyManagement(){
 	$('#cryptoOpt').html('');
 	//Button to remove cryptofile
 	var remove = $('<button/>', {
-				text: "Remove crypto-file!",
+				text: "Remove ALL current keys!",
 				id: "removeCryptoBtn",
 				click: removeCrypto
 			});
@@ -82,6 +90,20 @@ function settings(){
 	keyManagement();
 
 	//Show selection if change in radio buttons for manual settings
+	$('#formServer input').on('change', function() {
+		serverChange=!serverChange;
+		if( ($('input[name=in]:checked', '#formServer').val()) == "Manual"){
+			$('#serverAddr').hide();
+			server='';
+			$("#url").val(server);
+		} else {
+			$('#serverAddr').show();
+			$("#url").val(server);
+		}
+		//console.log(serverChange);
+	});
+
+	//Show selection if change in radio buttons for manual settings
 	$('#formInput input').on('change', function() {
 		if( ($('input[name=in]:checked', '#formInput').val()) == "Manual"){
 			$('#opt').show();
@@ -102,6 +124,7 @@ function settings(){
 			$('#txtCryptoFile').hide();	
 			cfPath=defPath+splitter+'Crypto'+splitter;
 			cfName='crypto.crp';
+			selCrypto=0;
 		}
 	});
 
@@ -144,33 +167,48 @@ function settings(){
 			alert("Please fill in an email address!");
 		}else{
 			saveConf();
-			$("#showConfig").modal('hide');
-		  	$('#createOrJoin').modal('show');
+			keyManagement();
 		}
 		//return;
 	});
+	$('#saveServBtn').click(saveServ);
+	$('#resetServBtn').click(resetServ);
+
 }
 //Save config to config.conf
 function saveConf(init=false){
-	myMail = $("#myMail").val();
+	myMail = sanatize( $("#myMail").val() );
 	if(!init && cfName == 'crypto.crp' || cfName == '.crp'){
 		cfName = myMail+'.crp';
 		console.log('Creating cfName for ' + myMail);
+	}else if(cfName != myMail+'.crp' && selCrypto==0){
+		cfName = myMail+'.crp';
 	}
 	var data = {
 			"cfName": cfName,
 			"cfPath": cfPath,
 			"dlPath": dlPath,
 			"ulPath": ulPath,
-			"myMail": myMail
+			"myMail": myMail,
+			"server": server
 	}
-	console.log(data);
-	writeToFile(JSON.stringify(data), defPath+splitter+'config.conf', !init);
+	console.log("Data written: ", data);
+	writeToFile(JSON.stringify(data), defPath+splitter+'config.conf', init);
 	ensureDirectoryExistence(ulPath+"/.");
-	if(!init){
-		window.location.href = "";
+	if(serverChange){
+		var useServ=true;
+		if(server==''){
+			useServ=false;
+		}
+		//send the info to main process . we can pass any arguments as second param.
+		ipcRenderer.send('server', useServ); // ipcRender.send will pass the information to main process
 	}else{
-		alert("Please move or copy the files you want to send to: \n" + ulPath);
+
+		if(!init){
+			settings();
+		}else{
+			alert("Please move or copy the files you want to send to: \n" + ulPath);
+		}
 	}
 }
 //Set crypto file
@@ -181,6 +219,7 @@ function setCrypto(){
 	cfPath = info.dir+splitter;
 	cfName = info.base;
 	console.log(cfPath + " " + cfName);
+	selCrypto=1;
 	readCrypto();
 }
 function setDownload(){
@@ -215,4 +254,17 @@ function removeCrypto(){
 			console.log(e);
 		}
 	}
+}
+
+function saveServ(){
+	server = sanatize( $("#url").val() );
+	$("#url").val(server);
+	console.log("server: ", server);
+}
+
+function resetServ(){
+	//todo fix correct address!
+	server = 'asdf';
+	$("#url").val(server);
+	console.log("server: ", server);
 }

@@ -31,12 +31,15 @@ var sdpConstraints = {
 // MY ADDITION---------------
 var fileReady = false;
 var iceReady = false;
-var mailReady = false;
 var dlPath;
 var ulPath;
 var cfPath;
 var cfName;
 var km;
+var place;
+var alertdisp;
+var descr;
+var off;
 function reset (){
   //MY ADDITION-------------------------
   $('#home').addClass("Active");
@@ -52,7 +55,6 @@ function reset (){
   $('#showLocalOffer').modal('hide')
   $('#getRemoteAnswer').modal('hide')
   $('#waitForConnection').modal('hide')
-  $('#showLocalOffer').modal('hide')
   $('#getRemoteOffer').modal('hide')
   $('#showLocalAnswer').modal('hide')
 
@@ -67,16 +69,6 @@ $( function(){
   //-------------------------------
   reset();
   readConfig();
-});
-
-//Makes sure the user inputs a receiver before proceeding
-$("#recMail").keyup( function() {
- 	if( $(this).val() != '') {
-		mailReady=true;
- 	}else{
-		mailReady=false;
- 	}
- 	isReady();
 });
 
 //MY ADDITION END----------------------------
@@ -104,33 +96,11 @@ $('#createBtn').click(function () {
   //Read in email and initiate new KeyManager if neccesary
   settings();
   if (! existCrypto()){
-    myMail;
-    prompt({
-    title: 'E-mail',
-    label: 'Please enter your e-mail address',
-    value: myMail,
-    inputAttrs: { // attrs to be set if using 'input'
-        type: 'mail'
-    },
-    type: 'input'
-    })
-    .then((r)=>{
-      if(r==null){
-        window.location.href = "";
-      }
-      var myMail = r;
-      console.info("Mail address read: " + myMail);
-
-      km = new KeyManager("new", myMail);
-      $('#showLocalOffer').modal('show')
-      createLocalOffer()
-      loadFiles();
-    }).catch(console.error);    
+    createSetup(true);    
   }else{
     //--------------------------
-    $('#showLocalOffer').modal('show');
-    createLocalOffer();
-    loadFiles();
+    //Get other end's email
+    getOtherEnd(true);
   }
 })
 
@@ -143,56 +113,44 @@ $('#joinBtn').click(function () {
  	//Read in email and initiate new KeyManager if neccesary
   settings();
   if (! existCrypto()){
-    myMail;
-    prompt({
-    title: 'E-mail',
-    label: 'Please enter your e-mail address',
-    value: myMail,
-    inputAttrs: { // attrs to be set if using 'input'
-        type: 'mail'
-    },
-    type: 'input'
-    })
-    .then((r)=>{
-      if(r==null){
-        window.location.href = "";
-      }
-      var myMail = r;
-      console.info("Mail address read: " + myMail);
-      km = new KeyManager("new", myMail);
-      $('#getRemoteOffer').modal('show')
-    }).catch(console.error);    
+    createSetup(false);    
   }else{
-  	//--------------------------
-  	$('#getRemoteOffer').modal('show')
+    //get other end's email
+    getOtherEnd(false);
   }
 })
 
 $('#offerSentBtn').click(function () {
-  //Read receiver's E-mail address & Store
-  var otherMail = $("#recMail").val();
-  console.info("Receiver's mail: " + otherMail);
-  km.otherEnd = otherMail;
-  $('#getRemoteAnswer').modal('show')
+  $('#getRemoteAnswer').modal('show');
 })
 
 $('#offerRecdBtn').click(function () {
-  var offer = $('#remoteOffer').val()
-  var offerDesc = new RTCSessionDescription(JSON.parse(offer))
-  console.info('Received remote offer', offerDesc)
-  handleOfferFromPC1(offerDesc)
-  $('#showLocalAnswer').modal('show')
+  //Sanatize!
+  var offer = sanatize( $('#remoteOffer').val() );
+  //TESTING!
+  offer = JSON.parse(offer);
+  //Decrypt!
+  var pubkey = km.findKey(km.otherEnd);
+  decrypt(pubkey, offer);
 })
 
 $('#answerSentBtn').click(function () {
-  $('#waitForConnection').modal('show')
+  $('#waitForConnection').modal('show');
 })
 
 $('#answerRecdBtn').click(function () {
-  var answer = $('#remoteAnswer').val()
-  var answerDesc = new RTCSessionDescription(JSON.parse(answer))
-  handleAnswerFromPC2(answerDesc)
-  $('#waitForConnection').modal('show')
+  var answer = sanatize( $('#remoteAnswer').val() );
+  //TESTING!
+  answer = JSON.parse(answer);
+  //Decrypt
+  decryptReply(answer);
+})
+
+//Stop transfer!
+$('#cancel').click(function () {
+  closeDataChannels({ action: protocol.CANCEL });
+  reset();
+
 })
 
 function setupDC1 () {
@@ -211,7 +169,10 @@ function setupDC1 () {
 	  console.log('Got message (pc1)');
 	  onReceiveMessageCallback(e);
 	}
-  } catch (e) { console.warn('No data channel (pc1)', e); }
+  } catch (e) {
+    $('#progerror').html('No data channel (pc1)');
+    console.error('No data channel (pc1)', e);
+  }
 }
 
 function createLocalOffer () {
@@ -220,7 +181,10 @@ function createLocalOffer () {
 	pc1.setLocalDescription(desc, function () {}, function () {})
 	console.info('created local offer', desc)
   },
-  function () { console.warn("Couldn't create offer") },
+  function () {
+    $('#progerror').html("Couldn't create offer");
+    console.error("Couldn't create offer");
+  },
 	sdpConstraints)
 }
 
@@ -229,13 +193,13 @@ pc1.onicecandidate = function (e) {
   if (e.candidate == null) {
   	iceReady = true;
   	isReady();
-    var off = JSON.stringify(pc1.localDescription);
-    copy.writeSync(off);
-  	$('#localOffer').html(off);
-    //https://stackoverflow.com/a/23102317/4400482
-    $("#success-alert").fadeTo(2000, 500).slideUp(500, function(){
-      $("#success-alert").slideUp(500);
-    });
+    place = '#localOffer';
+    alertdisp = "#success-alert";
+    //descr = JSON.stringify(pc1.localDescription);
+    //km.encrypt = descr;
+    //ENCRYPT!
+    var pubkey = km.findKey(km.otherEnd);
+    encrypt(pubkey, pc1.localDescription);
   }
 }
 
@@ -306,21 +270,25 @@ function handleOfferFromPC1 (offerDesc) {
 	console.info('Created local answer: ', answerDesc)
 	pc2.setLocalDescription(answerDesc)
   },
-  function () { console.warn("Couldn't create offer") },
+  function () {
+    $('#progerror').html("Couldn't create answer");
+    console.error("Couldn't create answer")
+  },
   sdpConstraints)
 }
 
 pc2.onicecandidate = function (e) {
   console.log('ICE candidate (pc2)', e)
   if (e.candidate == null) {
-  	$('#answerSentBtn').prop('disabled', false);
-  	var ans = JSON.stringify(pc2.localDescription);
-    copy.writeSync(ans);
-    $('#localAnswer').html(ans);
-    //https://stackoverflow.com/a/23102317/4400482
-    $("#success-alert-2").fadeTo(2000, 500).slideUp(500, function(){
-      $("#success-alert-2").slideUp(500);
-    });
+    $('#answerSentBtn').prop('disabled', false);
+    place = '#localAnswer';
+    alertdisp = "#success-alert-2";
+    descr = JSON.stringify(pc2.localDescription);
+    //KEY!
+    var pubkey = km.findKey(km.otherEnd);
+
+    //Encrypt
+    encryptReply(pubkey, descr);
   }
 }
 
@@ -344,18 +312,22 @@ pc2.onconnection = handleOnconnection
  * To trigger js debugger on failed assert, do 
  * console.assert.useDebugger = true;
 */
-console.assert  = function(cond, text){
+console.assert  = function(cond, text, msg=null){
   if( cond )  return;
   if( console.assert.useDebugger )  debugger;
   //My addition
-  closeDataChannels();
+  $("#error").html(text || "Assertion failed!");
+  closeDataChannels(msg);
+  $('#progerror').html(text);
+  /* TODO TEST!
+  */
   //--------------
   throw new Error(text || "Assertion failed!");
 };
 
 //My own!------------------------------------
 function isReady(){
-  if (/*fileReady &&*/ iceReady && mailReady) {
+  if (/*fileReady &&*/ iceReady) {
     $('#offerSentBtn').prop('disabled', false);
   }else{
     $('#offerSentBtn').prop('disabled', true);
@@ -376,4 +348,101 @@ $('#openInFolder').click(function () {
     }
 });
 
+function createSetup(offer){
+  var label1='Please enter your e-mail address';
+  var label2='Please enter the recipients e-mail address';
+  if(!offer){
+    label2='Please enter the senders e-mail address';
+  }
+  prompt({
+  title: 'E-mail',
+  label: label1,
+  value: myMail,
+  inputAttrs: { // attrs to be set if using 'input'
+      type: 'mail'
+  },
+  type: 'input'
+  })
+  .then((r)=>{
+    if(r==null){
+      window.location.href = "";
+    } else{
+        myMail = sanatize(r);
+        console.info("Mail address read: " + myMail);
+        km = new KeyManager("new", myMail);
+        getOtherEnd(offer);
+    }
+  }).catch(function(err){
+    $('#progerror').html(err);
+    console.error(err);
+  });
+}
+
+function getOtherEnd(offer){
+  var label1='Please enter the recipients e-mail address';
+  if(!offer){
+    label1='Please enter the senders e-mail address';
+  }
+  prompt({
+    title: 'E-mail',
+    label: label1,
+    value: '',
+    inputAttrs: { // attrs to be set if using 'input'
+        type: 'mail'
+    },
+    type: 'input'
+    })
+  .then((rec)=>{
+    if(rec==null){
+        window.location.href = "";
+    }
+    km.otherEnd=sanatize(rec);
+    if(offer){
+      $('#showLocalOffer').modal('show');
+      createLocalOffer();
+      loadFiles();
+      stageFiles();
+    }else{
+      $('#getRemoteOffer').modal('show');
+    }
+  }).catch(function(err){
+    $('#progerror').html(err);
+    console.error(err);
+  });
+}
+
+function showenc(data){
+    data=JSON.stringify(data);
+    copy.writeSync(data);
+    
+    $(place).html(data);
+    //https://stackoverflow.com/a/23102317/4400482
+    $(alertdisp).fadeTo(2000, 500).slideUp(500, function(){
+      $(alertdisp).slideUp(500);
+    });
+}
+
+function setDescr(data, off){
+  var desc = new RTCSessionDescription(data);
+  if(off){
+    console.info('Received remote offer', desc);
+    handleOfferFromPC1(desc);
+    $('#showLocalAnswer').modal('show');
+  }else{
+    console.info('Received remote answer', desc);
+    handleAnswerFromPC2(desc);
+    $('#waitForConnection').modal('show');
+  }
+}
+
+function initTransfer(){
+  offerShare();
+}
+
+function sanatize(str){
+  var div = document.createElement('div');
+  div.appendChild(document.createTextNode(str));  
+  console.log("Escaped: ", div.innerHTML);
+  return div.innerHTML;
+}
 //---------------------------------------------

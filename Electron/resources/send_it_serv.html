@@ -1,0 +1,214 @@
+<!doctype html>
+<!-- 
+*	TAKEN FROM: https://github.com/cjb/serverless-webrtc 
+*	Bugfixes and small alterations made!
+-->
+<html>
+<head>
+    <meta charset="utf-8">
+    <!-- TAKEN FROM https://stackoverflow.com/questions/32621988/electron-jquery-is-not-defined -->
+    <!-- Insert this line above script imports  -->
+	<script>if (typeof module === 'object') {window.module = module; module = undefined;}</script>
+
+	<!-- normal script imports etc  -->
+		<script type="text/javascript" src="Scripts/base64binary.js"></script>
+	    <script src="Scripts/jquery-3.2.1.js"></script>
+	    <script src="Scripts/bootstrap.js"></script>
+
+	<!-- Insert this line after script imports -->
+	<script>if (window.module) module = window.module;</script>
+
+    <!-- TITLE: 
+    SEND IT - Serverless Secure Encrypted NodeJS-based Direct Information Transfer
+    -->
+    <title>SEND IT</title>
+    <link rel="icon" href="favicon.png" />
+    <script type="text/javascript" src="KeyManager.js"></script>
+	<script type="text/javascript" src="FileManager.js"></script>
+	<script type="text/javascript" src="myCrypto.js"></script>
+	<script type="text/javascript" src="protocol.js"></script>
+	<script type="text/javascript" src="settings.js"></script>
+  	<script type="text/javascript" src="wss.js"></script>
+    <!-- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! -->
+    <link href="send_it.css" rel="stylesheet">
+
+    <div class="modal-header" data-keyboard="false" data-backdrop="static">
+	    <ul class="ul">
+		  <li class="li"><a id="home" href="" class="Active">Home</a></li>
+		  <li class="li"><a id="createBtn">Send</a></li>
+		  <li class="li"><a id="config">Configuration</a></li>
+		  <li class="li" style="float: right;"><img src="favicon.png" ></li>
+		</ul>
+	</div>
+</head>
+<body>
+	<h2 style='color:darkred' id='sockerror'></h2>
+	<h2 style='color:darkred' id='progerror'></h2>
+
+	<!-- Initial choice --> 
+	<div class="modal" id="createOrJoin" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+		<div class="bg" id="showHome" data-keyboard="false" data-backdrop="static">
+			<img src="logo.png" style="width: 60%; height: auto;">
+			<h2>Secure, <s style="color: #dc3237;">Serverless</s>, Electron &amp; NodeJS-based, Direct Information Transfer</h2>
+		</div>
+
+	    <!--
+		-->
+		<div class="modal-body" id="showConfig" data-keyboard="false" data-backdrop="static" hidden>
+		    <h3 id="txtMyMail">Your e-mail address:<br>
+	    		<input id="myMail" type="text" name="mailAddr">
+	    	</h3>
+			<button class="btn btn-primary" id="resetConfig"  aria-hidden="true">Reset configuration-file!</button><br>
+			<div id="serveruse">
+				<form id="formServer">
+		    		<h3 style="-webkit-margin-after: 0;">Mode selection</h3>
+		    		<div style="font-size: 1.15em;">Choose which mode you want to use:</div>
+			    	<input type="radio" name="in" value="Server" checked> ACS &emsp;
+			    	<input type="radio" name="in" value="Manual"> Serverless<br>
+				</form>
+			</div>
+			<div id="serverAddr">
+		      <h4 style="-webkit-margin-after: 0;">Exchange server</h4>
+
+		      <div>
+		        <label for="url">Server URL:</label>
+		        <input id="url">
+		      </div>
+
+		      <div>
+		        <button id="saveServBtn">Save Server</button>
+		        <button id="resetServBtn">Reset Server</button>
+		      </div>
+
+			</div>
+
+			<form id="formInput">
+	    		<h3>File configuration options:</h3>
+		    	<input type="radio" name="in" value="Automatic" checked> Automatic &emsp;
+		    	<input type="radio" name="in" value="Manual"> Manual<br>
+			</form>
+
+			<div id="opt" hidden>
+		    	<form id="formCrypt">
+		    		<h3>Key file selection:</h3>
+			    	<input type="radio" name="in" value="Automatic" checked> Automatic &emsp;
+			    	<input type="radio" name="in" value="Manual"> Manual<br>
+				</form>
+				<!-- Add info of keys here! -->
+		    	<h5 id="txtCryptoFile" value="Manual" hidden>Manually choose a file containing the desired keys:<br>
+			    	<input type="File" id="cryptoFile" onchange="setCrypto()" accept=".crp">
+		    	</h5>
+				<div id="cryptoOpt">
+				</div>
+
+		    	<form id="formDl">
+		    		<h3>Download location option:</h3>
+			    	<input type="radio" name="in" value="Automatic" checked> Automatic &emsp;
+			    	<input type="radio" name="in" value="Manual"> Manual<br>
+				</form>
+		    	<h5 id="setDlLoc" hidden>Download to:<br>
+			    	<input type="File" id="downloadFolder" onchange="setDownload()" webkitdirectory directory>
+		    	</h5>
+		    	
+		    	<form id="formUl">
+		    		<h3>Upload location option:</h3>
+			    	<input type="radio" name="in" value="Automatic" checked> Automatic &emsp;
+			    	<input type="radio" name="in" value="Manual"> Manual<br>
+				</form>
+		    	<h5 id="setUlLoc" hidden>Upload from:<br>
+			    	<input type="File" id="uploadFolder" onchange="setUpload()"  value="" webkitdirectory directory>
+		    	</h5>
+		    </div>
+	    	
+			<h3> Current info: </h3>
+			<div id="curSet" style="border-style: dashed;"></div>
+
+	    	<button class="btn btn-primary" id="storeConfBtn" aria-hidden="true">Save changes</button>
+		</div>
+	</div>
+
+	<!-- Initiate sending --> 
+	<div class="modal" id="showSend" data-keyboard="false" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" hidden>
+	  <div class="modal-header" data-keyboard="false" data-backdrop="static">
+	    <h3 id="myModalLabel">Sending details:</h3>
+	  </div>
+	  <div class="modal-body" data-keyboard="false" data-backdrop="static">
+	  <!-- Read in own e-mail, recipients e-mail and file info! -->
+	  	<h3 id="myMailIn">Your e-mail address:<br>
+	    		<input id="myMailInput" type="text" name="mailAddr" readonly="true" style="background-color: lightgrey;">
+	    </h3>
+	    <h3 id="recMailIn">Recipients e-mail address:<br>
+	    		<input id="recMailInput" type="text" name="mailAddr">
+	    </h3>
+	  </div>
+	  <div>
+	  	<!-- Re-enable later!
+	  	<div id="drop_zone">Drop files here</div>
+	  	-->
+		<output id="list"></output>
+		<div style='color:red' id='error'></div>
+	  </div>
+	  <div class="modal-footer" data-keyboard="false" data-backdrop="static">
+	    <button class="btn btn-primary" id="initSendBtn" data-dismiss="modal" aria-hidden="true">Continue</button>
+	  </div>
+	</div>
+
+	<!-- Initiate receiving --> 
+	<div class="modal" id="showReceive" data-keyboard="false" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" hidden>
+	  <div class="modal-header" data-keyboard="false" data-backdrop="static">
+	    <h2 id="myModalLabel" style="text-decoration: underline;">Receiving details:</h2>
+	  </div>
+	  <div class="modal-body" data-keyboard="false" data-backdrop="static">
+	  	<div id="emailDet"></div>
+		<output id="listRec"></output>
+		<div style='color:red' id='error'></div>
+	  </div>
+	  <div class="modal-footer" data-keyboard="false" data-backdrop="static">
+	    <button class="btn btn-primary" id="accRecvBtn" data-dismiss="modal" aria-hidden="true">Accept connection</button>
+	    <button class="btn btn-primary" id="declRecvBtn" data-dismiss="modal" aria-hidden="true">Decline connection</button>
+	  </div>
+	</div>
+
+
+	<!-- Wait for the other PC to connect --> 
+	<div class="modal" id="waitForConnection" data-keyboard="false" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" hidden>
+	  <div class="modal-header" data-keyboard="false" data-backdrop="static">
+	    <!-- UPDATE INFORMATION HERE! -->
+	    <h2 id="myModalLabel">Waiting for connection</h2>
+	    <h4 id="myStat">Creating offer...</h4>
+	  </div>
+	  <div class="modal-body" data-keyboard="false" data-backdrop="static">
+	    This dialog will disappear when a connection is made.
+	  </div>
+	</div>
+
+	<!-- Connected screen -->
+	<div class="modal" id="connectedScreen" data-keyboard="false" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" hidden>
+	  <div class="modal-header" data-keyboard="false" data-backdrop="static">
+	    <h3 id="myModalLabel">Connected!</h3>
+	  </div>
+	  <div class="modal-body" data-keyboard="false" data-backdrop="static">
+	   <!-- <button id="init" onclick="initiateSnd()">Start transfer</button><-->
+	    <p id="Error" style="color:red"></p>
+		<div id='transferDetails'></div>
+	    <button class="btn btn-primary" id="cancel" data-dismiss="modal" aria-hidden="true" hidden>Cancel transfer</button>	  		
+	  </div>
+	</div>
+
+		<!-- End screen-->
+	<div class="modal" id="endScreen" data-keyboard="false" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" hidden>
+	  <div class="modal-header" data-keyboard="false" data-backdrop="static">
+	    <h3 id="myModalLabel">Connection terminated!</h3>
+	  </div>
+	  <div class="modal-body" data-keyboard="false" data-backdrop="static">
+	    <!-- INSERT CODE HERE! -->
+		<div id='transferDetailsEnd'></div>
+	  	<div id="download">Files:<br></div>
+	    <button class="btn btn-primary" id="openInFolder" aria-hidden="true" hidden>Open containing folder</button>	  		
+	  </div>
+	</div>
+
+	<script type="text/javascript" src="readFile.js"></script>
+  	<script type="text/javascript" src="send_it_serv.js"></script>
+</body>
+</html>
