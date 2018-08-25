@@ -2,3 +2,13 @@
 ../SendIt.V.1.2.0/Linux/SendIt_1.2.0_amd64.deb filter=lfs diff=lfs merge=lfs -text
 ../SendIt.V.1.2.0/Linux/SendIt_1.2.0_i386.deb filter=lfs diff=lfs merge=lfs -text
 *.deb filter=lfs diff=lfs merge=lfs -text
+../SendIt.V.1.2.0/Windows filter=lfs diff=lfs merge=lfs -text
+../SendIt.V.1.2.0/Windows/windows-installer-32 filter=lfs diff=lfs merge=lfs -text
+../SendIt.V.1.2.0/Windows/windows-installer-64 filter=lfs diff=lfs merge=lfs -text
+../SendIt.V.1.2.0/Windows/windows-installer-32/RELEASES filter=lfs diff=lfs merge=lfs -text
+../SendIt.V.1.2.0/Windows/windows-installer-32/SendIt-1.2.0-full.nupkg filter=lfs diff=lfs merge=lfs -text
+../SendIt.V.1.2.0/Windows/windows-installer-32/SendItInstaller.exe filter=lfs diff=lfs merge=lfs -text
+../SendIt.V.1.2.0/Windows/windows-installer-64/SendItInstaller.exe filter=lfs diff=lfs merge=lfs -text
+../SendIt.V.1.2.0/Windows/windows-installer-64/RELEASES filter=lfs diff=lfs merge=lfs -text
+../SendIt.V.1.2.0/Windows/windows-installer-64/SendIt-1.2.0-full.nupkg filter=lfs diff=lfs merge=lfs -text
+.exe filter=lfs diff=lfs merge=lfs -text
